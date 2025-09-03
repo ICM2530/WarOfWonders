@@ -30,13 +30,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warofwonders.R
+import com.example.warofwonders.home.HomeScreen
 
 @Composable
 fun ClanScreen(
-    onClose: () -> Unit
+
 ) {
     var selectedTab by remember { mutableStateOf("Información") }
 
@@ -85,7 +87,7 @@ fun ClanScreen(
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
                     .size(32.dp)
-                    .clickable { onClose() }
+                    .clickable { }
             )
         }
     }
@@ -318,4 +320,11 @@ fun ClanMemberItem(member: ClanMember) {
             }
         }
     }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun ClanScreenPreview() {
+    ClanScreen()
 }
