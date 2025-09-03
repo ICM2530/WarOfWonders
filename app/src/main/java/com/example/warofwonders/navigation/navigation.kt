@@ -53,5 +53,8 @@ fun Navigation() {
         composable(route = AppScreens.Items.name) {
             ItemsScreen(navController)
         }
+        composable(route = AppScreens.Settings.name) {
+            SettingsScreen(navController)
+        }
     }
 }*/

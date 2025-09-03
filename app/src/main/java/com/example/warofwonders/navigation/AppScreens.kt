@@ -11,5 +11,6 @@ enum class AppScreens {
     Combat,
     Home,
     Creatures,
-    Items
+    Items,
+    Settings
 }
