@@ -4,7 +4,6 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.warofwonders.battle.BattleScreen
 import com.example.warofwonders.chat.ChatScreen
 import com.example.warofwonders.clan.ClanScreen
 import com.example.warofwonders.combat.CombatScreen
@@ -30,18 +29,15 @@ fun Navigation() {
         composable(route = AppScreens.SignUp.name) {
             SignUpScreen(navController)
         }
-        composable(route = AppScreens.Battle.name) {
-            BattleScreen(navController)
-        }
         composable(route = AppScreens.Map.name) {
             MapScreen(navController)
         }
-        /*composable(route = AppScreens.Clan.name) {
+        composable(route = AppScreens.Clan.name) {
             ClanScreen(navController)
         }
         composable(route = AppScreens.Chat.name) {
             ChatScreen(navController)
-        }*/
+        }
         composable(route = AppScreens.Profile.name) {
             ProfileScreen(navController)
         }

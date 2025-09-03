@@ -1,4 +1,8 @@
 package com.example.warofwonders.clan
 
-class ClanMember {
-}
+data class ClanMember(
+    val name: String,
+    val role: String,
+    val details: String,
+    val profileImage: Int
+)

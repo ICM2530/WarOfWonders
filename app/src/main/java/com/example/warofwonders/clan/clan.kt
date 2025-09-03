@@ -209,6 +209,7 @@ fun ClanInfoTab() {
             painter = painterResource(id = R.drawable.shield),
             contentDescription = "Shield",
             modifier = Modifier.size(60.dp)
+            
         )
 
         Column {

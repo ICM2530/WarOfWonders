@@ -3,7 +3,6 @@ package com.example.warofwonders.navigation
 enum class AppScreens {
     LogIn,
     SignUp,
-    Battle,
     Map,
     Clan,
     Chat,
