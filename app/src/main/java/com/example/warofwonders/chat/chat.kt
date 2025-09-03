@@ -1,6 +1,7 @@
 package com.example.warofwonders.chat
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
+import com.example.warofwonders.navigation.AppScreens
 
 @Composable
 fun ChatScreen(navController: NavController) {
@@ -81,7 +83,7 @@ fun ChatScreen(navController: NavController) {
                     Image(
                         painter = painterResource(id = R.drawable.closechat),
                         contentDescription = "Close chat",
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(32.dp).clickable(onClick = {navController.navigate(AppScreens.Home.name)})
                     )
                 }
             }
@@ -145,18 +147,43 @@ fun ChatScreen(navController: NavController) {
 
 @Composable
 fun ChatBubble(message: ChatMessage) {
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+    val isUser11 = message.user == "user #11"
+
+    Box(
+        modifier = Modifier.fillMaxWidth(),
+        contentAlignment = if (isUser11) Alignment.CenterEnd else Alignment.CenterStart
+    ) {
         Image(
-            painter = painterResource(R.drawable.chatbubbletext),
+            painter = painterResource(
+                if (isUser11) R.drawable.chatbubbletextinverted else R.drawable.chatbubbletext
+            ),
             contentDescription = "Bubble",
             modifier = Modifier.fillMaxWidth(),
             contentScale = ContentScale.FillWidth
         )
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(text = message.user, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Color.Black)
-            Text(text = message.role, fontSize = 12.sp, color = Color.Gray)
+
+        Column(
+            modifier = Modifier
+                .padding(16.dp),
+            horizontalAlignment = if (isUser11) Alignment.End else Alignment.Start
+        ) {
+            Text(
+                text = message.user,
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = Color.Black
+            )
+            Text(
+                text = message.role,
+                fontSize = 12.sp,
+                color = Color.Gray
+            )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(text = message.message, fontSize = 14.sp, color = Color.Black)
+            Text(
+                text = message.message,
+                fontSize = 14.sp,
+                color = Color.Black
+            )
         }
     }
 }
