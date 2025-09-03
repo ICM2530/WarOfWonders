@@ -161,9 +161,8 @@ fun ChatBubble(message: ChatMessage) {
     }
 }
 
-@Preview
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ChatScreenPreview() {
-    val navController = rememberNavController()
-    ChatScreen(navController)
+    ChatScreen(navController = rememberNavController())
 }
