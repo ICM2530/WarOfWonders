@@ -16,7 +16,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.warofwonders.R
+import com.example.warofwonders.navigation.AppScreens
 
 @Composable
 fun ChatScreen() {
@@ -85,7 +87,11 @@ fun ChatScreen() {
                     Image(
                         painter = painterResource(id = R.drawable.closechat),
                         contentDescription = "Close chat",
-                        modifier = Modifier.size(32.dp).clickable {}
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable(
+                                onClick = { navController.navigate(AppScreens.Clan.name) }
+                            )
                     )
                 }
             }
@@ -124,7 +130,9 @@ fun ChatScreen() {
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Box(
-                    modifier = Modifier.size(50.dp),
+                    modifier = Modifier
+                        .size(50.dp)
+                        ,
                     contentAlignment = Alignment.Center
                 ) {
                     Image(
@@ -201,10 +209,9 @@ fun ChatBubble(message: ChatMessage) {
     }
 }
 
-
-
-@Preview(showSystemUi = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ChatScreenPreview() {
     ChatScreen()
 }
+

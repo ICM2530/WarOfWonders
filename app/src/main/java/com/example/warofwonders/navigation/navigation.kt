@@ -1,5 +1,5 @@
 package com.example.warofwonders.navigation
-/*
+
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -15,6 +15,7 @@ import com.example.warofwonders.login.LogInScreen
 import com.example.warofwonders.map.MapScreen
 import com.example.warofwonders.profile.ProfileScreen
 import com.example.warofwonders.signup.SignUpScreen
+import com.example.warofwonders.settings.SettingsScreen
 
 @Composable
 fun Navigation() {
@@ -35,12 +36,12 @@ fun Navigation() {
         composable(route = AppScreens.Map.name) {
             MapScreen(navController)
         }
-        composable(route = AppScreens.Clan.name) {
+        /*composable(route = AppScreens.Clan.name) {
             ClanScreen(navController)
         }
         composable(route = AppScreens.Chat.name) {
             ChatScreen(navController)
-        }
+        }*/
         composable(route = AppScreens.Profile.name) {
             ProfileScreen(navController)
         }
@@ -57,4 +58,4 @@ fun Navigation() {
             SettingsScreen(navController)
         }
     }
-}*/
+}

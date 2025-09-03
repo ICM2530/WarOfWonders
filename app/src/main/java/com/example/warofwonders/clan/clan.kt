@@ -33,13 +33,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
+import com.example.warofwonders.chat.ChatScreen
 import com.example.warofwonders.home.HomeScreen
 
 @Composable
-fun ClanScreen(
-
-) {
+fun ClanScreen(navController: NavController) {
     var selectedTab by remember { mutableStateOf("Información") }
 
     Box(
@@ -326,5 +327,6 @@ fun ClanMemberItem(member: ClanMember) {
 @Preview(showBackground = true)
 @Composable
 fun ClanScreenPreview() {
-    ClanScreen()
+    val navcontroller= rememberNavController()
+    ClanScreen(navcontroller)
 }

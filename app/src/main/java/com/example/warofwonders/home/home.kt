@@ -1,6 +1,7 @@
 package com.example.warofwonders.home
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -13,10 +14,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
+import com.example.warofwonders.navigation.AppScreens
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavController) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -52,7 +56,7 @@ fun HomeScreen() {
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
 
-                   Column(){ Text(
+                   Column { Text(
                        text = "User #11",
                        style = TextStyle(
                            fontSize = 20.sp,
@@ -127,16 +131,25 @@ fun HomeScreen() {
                 painter = painterResource(id = R.drawable.mousebutton),
                 contentDescription = "criaturas",
                 modifier = Modifier.size(100.dp)
+                    .clickable(
+                        onClick = { navController.navigate(AppScreens.Creatures.name) }
+                    )
             )
             Image(
                 painter = painterResource(id = R.drawable.battlebutton),
                 contentDescription = "Batalla",
                 modifier = Modifier.size(120.dp)
+                    .clickable(
+                        onClick = { navController.navigate(AppScreens.Battle) }
+                    )
             )
             Image(
                 painter = painterResource(id = R.drawable.clanbutton),
                 contentDescription = "Clan",
                 modifier = Modifier.size(100.dp)
+                    .clickable(
+                        onClick = { navController.navigate(AppScreens.Chat.name) }
+                    )
             )
         }
 
@@ -151,8 +164,9 @@ fun HomeScreen() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun HomeScreenPreview() {
-    HomeScreen()
+    val navcontroller= rememberNavController()
+    HomeScreen(navcontroller)
 }
