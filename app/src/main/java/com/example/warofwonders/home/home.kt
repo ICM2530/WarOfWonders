@@ -46,6 +46,9 @@ fun HomeScreen(navController: NavController) {
                     painter = painterResource(id = R.drawable.bracketname),
                     contentDescription = "nombre",
                     modifier = Modifier.fillMaxSize()
+                        .clickable(
+                            onClick = { navController.navigate(AppScreens.Profile.name) }
+                        )
                 )
 
                 Row(
@@ -105,9 +108,10 @@ fun HomeScreen(navController: NavController) {
                painter =  painterResource(id = R.drawable.configbutton),
                 contentDescription = "Config",
                 modifier = Modifier.size(50.dp)
+                    .clickable(
+                        onClick = { navController.navigate(AppScreens.Settings.name) }
+                    )
             )
-
-
         }
 
         Box(
@@ -118,6 +122,9 @@ fun HomeScreen(navController: NavController) {
                 painter = painterResource(id = R.drawable.map),
                 contentDescription = "Mapa",
                 modifier = Modifier.size(220.dp)
+                    .clickable(
+                        onClick = { navController.navigate(AppScreens.Map.name) }
+                    )
             )
         }
 
@@ -140,7 +147,7 @@ fun HomeScreen(navController: NavController) {
                 contentDescription = "Batalla",
                 modifier = Modifier.size(120.dp)
                     .clickable(
-                        onClick = { navController.navigate(AppScreens.Battle) }
+                        onClick = { navController.navigate(AppScreens.Combat.name) }
                     )
             )
             Image(

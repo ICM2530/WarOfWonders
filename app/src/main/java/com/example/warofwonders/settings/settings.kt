@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
 import com.example.warofwonders.chat.ChatScreen
+import com.example.warofwonders.navigation.AppScreens
 
 @Composable
 fun SettingsScreen(navController: NavController) {
@@ -74,7 +75,9 @@ fun SettingsScreen(navController: NavController) {
                 contentDescription = "Cerrar",
                 modifier = Modifier
                     .size(48.dp)
-                    .clickable { /* volver atrás */ }
+                    .clickable(
+                        onClick = { navController.navigate(AppScreens.Home.name) }
+                    )
             )
         }
     }

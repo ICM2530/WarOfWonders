@@ -5,7 +5,6 @@ enum class AppScreens {
     Register,
     StartUp,
     SignUp,
-    Battle,
     Map,
     Clan,
     Chat,
