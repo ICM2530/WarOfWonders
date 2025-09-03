@@ -39,7 +39,7 @@ fun HomeScreen() {
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.bracketname),
-                    contentDescription = "Name Bracket",
+                    contentDescription = "nombre",
                     modifier = Modifier.fillMaxSize()
                 )
                 Text(
@@ -71,7 +71,7 @@ fun HomeScreen() {
 
             Image(
                 painter = painterResource(id = R.drawable.bell),
-                contentDescription = "Notifications",
+                contentDescription = "Notis",
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -82,7 +82,7 @@ fun HomeScreen() {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.map),
-                contentDescription = "Map",
+                contentDescription = "Mapa",
                 modifier = Modifier.size(220.dp)
             )
         }
@@ -95,24 +95,24 @@ fun HomeScreen() {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.mousebutton),
-                contentDescription = "Mouse Button",
+                contentDescription = "criaturas",
                 modifier = Modifier.size(64.dp)
             )
             Image(
                 painter = painterResource(id = R.drawable.battlebutton),
-                contentDescription = "Battle Button",
+                contentDescription = "Batalla",
                 modifier = Modifier.size(64.dp)
             )
             Image(
                 painter = painterResource(id = R.drawable.clanbutton),
-                contentDescription = "Clan Button",
+                contentDescription = "Clan",
                 modifier = Modifier.size(64.dp)
             )
         }
 
         Image(
             painter = painterResource(id = R.drawable.shop),
-            contentDescription = "Shop Button",
+            contentDescription = "tienda",
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 12.dp)
