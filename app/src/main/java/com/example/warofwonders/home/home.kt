@@ -6,6 +6,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -34,7 +35,7 @@ fun HomeScreen() {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.size(width = 120.dp, height = 40.dp),
+                modifier = Modifier.size(width = 250.dp, height = 40.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
@@ -42,38 +43,67 @@ fun HomeScreen() {
                     contentDescription = "nombre",
                     modifier = Modifier.fillMaxSize()
                 )
-                Text(
-                    text = "User #11",
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                        color = androidx.compose.ui.graphics.Color.Black
-                    )
-                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+
+                   Column(){ Text(
+                       text = "User #11",
+                       style = TextStyle(
+                           fontSize = 20.sp,
+                           color = Color.White
+                       )
+                   )
+                       Text(
+                           text = "teusaquillo amigos",
+                           style = TextStyle(
+                               fontSize = 10.sp,
+                               color = Color.White
+                           )
+                       ) }
+
+
+                    Box(
+                        modifier = Modifier.size(100.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.coinbracket),
+                            contentDescription = "Coins",
+                            modifier = Modifier.fillMaxSize()
+                        )
+
+                        Text(
+                            text = "000",
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                color = Color.White
+                            )
+                        )
+                    }
+                }
             }
 
-            Box(
-                modifier = Modifier.size(width = 80.dp, height = 30.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.coinbracket),
-                    contentDescription = "Coins",
-                    modifier = Modifier.fillMaxSize()
-                )
-                Text(
-                    text = "000",
-                    style = TextStyle(
-                        fontSize = 14.sp,
-                        color = androidx.compose.ui.graphics.Color.Black
-                    )
-                )
-            }
+
 
             Image(
                 painter = painterResource(id = R.drawable.bell),
                 contentDescription = "Notis",
-                modifier = Modifier.size(28.dp)
+                modifier = Modifier.size(40.dp)
             )
+
+            Image(
+               painter =  painterResource(id = R.drawable.configbutton),
+                contentDescription = "Config",
+                modifier = Modifier.size(50.dp)
+            )
+
+
         }
 
         Box(
@@ -96,17 +126,17 @@ fun HomeScreen() {
             Image(
                 painter = painterResource(id = R.drawable.mousebutton),
                 contentDescription = "criaturas",
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(100.dp)
             )
             Image(
                 painter = painterResource(id = R.drawable.battlebutton),
                 contentDescription = "Batalla",
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(120.dp)
             )
             Image(
                 painter = painterResource(id = R.drawable.clanbutton),
                 contentDescription = "Clan",
-                modifier = Modifier.size(64.dp)
+                modifier = Modifier.size(100.dp)
             )
         }
 
