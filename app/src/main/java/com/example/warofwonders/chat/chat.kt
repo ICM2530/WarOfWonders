@@ -72,7 +72,7 @@ fun ChatScreen(navController: NavController) {
                         Image(
                             painter = painterResource(id = R.drawable.shield),
                             contentDescription = "Clan shield",
-                            modifier = Modifier.size(40.dp)
+                            modifier = Modifier.size(40.dp).clickable(onClick = {navController.navigate(AppScreens.Clan.name)})
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
