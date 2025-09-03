@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
+import com.example.warofwonders.chat.ChatScreen
 
 @Composable
 fun CreaturesScreenContent() {
@@ -82,5 +83,6 @@ fun CreaturesScreen(navController: NavController) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CreaturesScreenPreview() {
-    CreaturesScreenContent() // ya no falla en preview
+    val navcontroller= rememberNavController()
+    CreaturesScreen(navcontroller)
 }

@@ -19,9 +19,11 @@ import androidx.navigation.NavController
 import com.example.warofwonders.R
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.compose.rememberNavController
+import com.example.warofwonders.chat.ChatScreen
 
 @Composable
-fun CombatScreen() {
+fun CombatScreen(navController: NavController) {
 
     Box(Modifier.fillMaxSize()) {
         Image(
@@ -212,5 +214,6 @@ private fun HealthBar() {
 @Preview(showBackground = true)
 @Composable
 fun CombatscreenPreview() {
-    CombatScreen()
+    val navcontroller= rememberNavController()
+    CombatScreen(navcontroller)
 }
