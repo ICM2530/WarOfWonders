@@ -12,17 +12,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
-//import com.example.warofwonders.ui.theme.pixelifySans
 
 @Composable
 fun HomeScreen() {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Fondo
         Image(
             painter = painterResource(id = R.drawable.background),
             contentDescription = "Background",
@@ -30,7 +26,6 @@ fun HomeScreen() {
             contentScale = ContentScale.Crop
         )
 
-        // Parte superior
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -38,7 +33,6 @@ fun HomeScreen() {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Nombre de usuario
             Box(
                 modifier = Modifier.size(width = 120.dp, height = 40.dp),
                 contentAlignment = Alignment.Center
@@ -57,8 +51,6 @@ fun HomeScreen() {
                 )
             }
 
-
-            // Monedas
             Box(
                 modifier = Modifier.size(width = 80.dp, height = 30.dp),
                 contentAlignment = Alignment.Center
@@ -77,8 +69,6 @@ fun HomeScreen() {
                 )
             }
 
-
-            // Campana
             Image(
                 painter = painterResource(id = R.drawable.bell),
                 contentDescription = "Notifications",
@@ -86,7 +76,6 @@ fun HomeScreen() {
             )
         }
 
-        // Mapa en el centro
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -98,7 +87,6 @@ fun HomeScreen() {
             )
         }
 
-        // Botones inferiores
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -122,7 +110,6 @@ fun HomeScreen() {
             )
         }
 
-        // Botón de tienda a la izquierda
         Image(
             painter = painterResource(id = R.drawable.shop),
             contentDescription = "Shop Button",
@@ -134,10 +121,8 @@ fun HomeScreen() {
     }
 }
 
-
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
-
     HomeScreen()
 }
