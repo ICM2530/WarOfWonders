@@ -1,4 +1,4 @@
-package com.example.warofwonders.home
+package com.example.warofwonders.login
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -38,7 +38,7 @@ fun StartUpScreen(navController: NavController) {
             Image(
                 painter = painterResource(id = R.drawable.tittle),
                 contentDescription = "Logo del Juego",
-                modifier = Modifier.size(320.dp) // Ajusta el tamaño según necesites
+                modifier = Modifier.size(320.dp)
             )
 
             Spacer(modifier = Modifier.height(64.dp))
@@ -47,8 +47,8 @@ fun StartUpScreen(navController: NavController) {
                 painter = painterResource(id = R.drawable.button),
                 contentDescription = "Iniciar Sesión",
                 modifier = Modifier
-                    .size(150.dp) // Ajusta el tamaño
-                    .clickable { navController.navigate(AppScreens.Home.name) }
+                    .size(150.dp)
+                    .clickable { navController.navigate(AppScreens.LogIn.name) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -57,6 +57,7 @@ fun StartUpScreen(navController: NavController) {
                 painter = painterResource(id = R.drawable.buttonr),
                 contentDescription = "Registrarse",
                 modifier = Modifier
+                    .size(150.dp)
                     .clickable { navController.navigate(AppScreens.Register.name) }
             )
         }
