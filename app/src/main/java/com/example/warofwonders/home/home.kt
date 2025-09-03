@@ -1,9 +1,143 @@
 package com.example.warofwonders.home
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.warofwonders.R
+//import com.example.warofwonders.ui.theme.pixelifySans
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen() {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Fondo
+        Image(
+            painter = painterResource(id = R.drawable.background),
+            contentDescription = "Background",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
 
+        // Parte superior
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Nombre de usuario
+            Box(
+                modifier = Modifier.size(width = 120.dp, height = 40.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.bracketname),
+                    contentDescription = "Name Bracket",
+                    modifier = Modifier.fillMaxSize()
+                )
+                Text(
+                    text = "User #11",
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        color = androidx.compose.ui.graphics.Color.Black
+                    )
+                )
+            }
+
+
+            // Monedas
+            Box(
+                modifier = Modifier.size(width = 80.dp, height = 30.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.coinbracket),
+                    contentDescription = "Coins",
+                    modifier = Modifier.fillMaxSize()
+                )
+                Text(
+                    text = "000",
+                    style = TextStyle(
+                        fontSize = 14.sp,
+                        color = androidx.compose.ui.graphics.Color.Black
+                    )
+                )
+            }
+
+
+            // Campana
+            Image(
+                painter = painterResource(id = R.drawable.bell),
+                contentDescription = "Notifications",
+                modifier = Modifier.size(28.dp)
+            )
+        }
+
+        // Mapa en el centro
+        Box(
+            modifier = Modifier
+                .align(Alignment.Center)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.map),
+                contentDescription = "Map",
+                modifier = Modifier.size(220.dp)
+            )
+        }
+
+        // Botones inferiores
+        Row(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.mousebutton),
+                contentDescription = "Mouse Button",
+                modifier = Modifier.size(64.dp)
+            )
+            Image(
+                painter = painterResource(id = R.drawable.battlebutton),
+                contentDescription = "Battle Button",
+                modifier = Modifier.size(64.dp)
+            )
+            Image(
+                painter = painterResource(id = R.drawable.clanbutton),
+                contentDescription = "Clan Button",
+                modifier = Modifier.size(64.dp)
+            )
+        }
+
+        // Botón de tienda a la izquierda
+        Image(
+            painter = painterResource(id = R.drawable.shop),
+            contentDescription = "Shop Button",
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 12.dp)
+                .size(48.dp)
+        )
+    }
+}
+
+
+@Preview(showBackground = true)
+@Composable
+fun HomeScreenPreview() {
+
+    HomeScreen()
 }

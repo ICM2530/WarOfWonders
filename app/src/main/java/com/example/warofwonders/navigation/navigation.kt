@@ -1,5 +1,5 @@
 package com.example.warofwonders.navigation
-
+/*
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,7 +21,7 @@ fun Navigation() {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = AppScreens.Home.name) {
         composable(route = AppScreens.Home.name) {
-            HomeScreen(navController)
+            HomeScreen()
         }
         composable(route = AppScreens.LogIn.name) {
             LogInScreen(navController)
@@ -54,4 +54,4 @@ fun Navigation() {
             ItemsScreen(navController)
         }
     }
-}
+}*/
