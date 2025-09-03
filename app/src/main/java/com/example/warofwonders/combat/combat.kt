@@ -2,6 +2,7 @@ package com.example.warofwonders.combat
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.chat.ChatScreen
+import com.example.warofwonders.navigation.AppScreens
 
 @Composable
 fun CombatScreen(navController: NavController) {
@@ -173,6 +175,9 @@ fun CombatScreen(navController: NavController) {
                         painter = painterResource(id = R.drawable.play),
                         contentDescription = "PLAY",
                         modifier = Modifier.size(width = 200.dp, height = 90.dp)
+                        .clickable(
+                            onClick = { navController.navigate(AppScreens.Home.name) }
+                            )
                     )
                 }
                 Spacer(Modifier.height(6.dp))

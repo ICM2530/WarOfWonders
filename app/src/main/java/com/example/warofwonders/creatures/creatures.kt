@@ -3,6 +3,7 @@ package com.example.warofwonders.creatures
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,6 +82,9 @@ fun CreaturesScreen(navController: NavController) {
                     painter = painterResource(id = R.drawable.returnbutton),
                     contentDescription = "Regresar",
                     modifier = Modifier.fillMaxSize()
+                        .clickable(
+                            onClick = { navController.navigate(AppScreens.Home.name) }
+                        )
                 )
             }
 

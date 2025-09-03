@@ -1,6 +1,7 @@
 package com.example.warofwonders.map
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,12 +27,16 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.profile.ProfileContent
 import com.example.warofwonders.R
+import com.example.warofwonders.navigation.AppScreens
+
 //import com.example.warofwonders.navigation.AppScreens
 
 @Composable
 fun MapContent(
+    navController: NavController,
     puntoNombre: String = "A Bao Qua",
     clima: String = "Soleado",
     altitud: String = "2500 msnm",
@@ -92,12 +97,18 @@ fun MapContent(
                     painter = painterResource(id = R.drawable.returnbutton),
                     contentDescription = "retorno",
                     modifier = Modifier.size(100.dp)
+                        .clickable(
+                            onClick = { navController.navigate(AppScreens.Home.name) }
+                        )
                 )
 
                 Image(
                     painter = painterResource(id = R.drawable.inventorybutton),
                     contentDescription = "inventario",
                     modifier = Modifier.size(200.dp)
+                        .clickable(
+                            onClick = { navController.navigate(AppScreens.Creatures.name) }
+                        )
                 )
             }
         }
@@ -106,12 +117,12 @@ fun MapContent(
 
 @Composable
 fun MapScreen(navController: NavController) {
-    MapContent()
+    MapContent(navController)
     // lógica de navegación aquí si se necesita
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun MapPreview() {
-    MapContent()
+    MapContent(navController = rememberNavController())
 }

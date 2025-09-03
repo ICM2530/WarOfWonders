@@ -2,6 +2,7 @@ package com.example.warofwonders.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,11 +29,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
+import com.example.warofwonders.navigation.AppScreens
+
 //import com.example.warofwonders.navigation.AppScreens
 
 @Composable
 fun ProfileContent(
+    navController: NavController,
                    id: Int = 7777,
                    usuario: String = "Viejodamis",
                    tipo: String = "Líder",
@@ -82,8 +87,12 @@ fun ProfileContent(
             // Botones
             Row(
                 modifier = Modifier
-                    .padding(1.dp),
+                    .padding(1.dp)
+                    .clickable(
+                        onClick = { navController.navigate(AppScreens.Home.name) }
+                    ),
                 horizontalArrangement = Arrangement.spacedBy(24.dp)
+
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.returnbutton),
@@ -103,12 +112,12 @@ fun ProfileContent(
 
 @Composable
 fun ProfileScreen(navController: NavController) {
-    ProfileContent()
+    ProfileContent(navController)
     // lógica de navegación aquí si se necesita
 }
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ProfilePreview() {
-    ProfileContent()
+    ProfileContent(navController = rememberNavController())
 }
