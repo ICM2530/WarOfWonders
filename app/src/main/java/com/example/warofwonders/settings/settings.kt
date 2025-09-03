@@ -13,10 +13,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
+import com.example.warofwonders.chat.ChatScreen
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(navController: NavController) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -102,5 +105,6 @@ fun SettingOption(text: String) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun SettingsScreenPreview() {
-    SettingsScreen()
+    val navcontroller= rememberNavController()
+    SettingsScreen(navcontroller)
 }
