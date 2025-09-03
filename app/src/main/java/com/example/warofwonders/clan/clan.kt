@@ -1,5 +1,8 @@
 package com.example.warofwonders.clan
 
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -243,6 +246,8 @@ fun ClanInfoTab() {
     }
 }
 
+data class ClanMember(val name: String, val role: String, val details: String, val pfp: Int)
+
 @Composable
 fun ClanMembersTab() {
     val clanMembers = listOf(
@@ -278,15 +283,15 @@ fun ClanMemberItem(member: ClanMember) {
             modifier = Modifier.fillMaxWidth()
         )
 
-        Row(
+        /*Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        )  {
             Image(
-                painter = painterResource(id = member.profileImage),
+                painter = painterResource(id = member.pfp,
                 contentDescription = "Profile",
                 modifier = Modifier.size(50.dp)
             )
@@ -319,7 +324,7 @@ fun ClanMemberItem(member: ClanMember) {
                     modifier = Modifier.size(24.dp)
                 )
             }
-        }
+        }*/
     }
 }
 

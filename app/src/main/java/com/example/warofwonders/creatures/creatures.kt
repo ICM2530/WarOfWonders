@@ -53,7 +53,7 @@ import com.example.warofwonders.navigation.AppScreens
 import com.example.warofwonders.ui.theme.Green
 
 @Composable
-fun CreaturesScreenContent(navController: NavController) {
+fun CreaturesScreen(navController: NavController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -226,5 +226,5 @@ fun ClimateSection(title: String, items: List<Int>) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun CreaturesScreenPreview() {
-    CreaturesScreenContent(navController = rememberNavController())
+    CreaturesScreen(navController = rememberNavController())
 }

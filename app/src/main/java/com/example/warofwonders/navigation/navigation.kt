@@ -10,6 +10,7 @@ import com.example.warofwonders.clan.ClanScreen
 import com.example.warofwonders.combat.CombatScreen
 import com.example.warofwonders.creatures.CreaturesScreen
 import com.example.warofwonders.home.HomeScreen
+import com.example.warofwonders.home.StartUpScreen
 import com.example.warofwonders.items.ItemsScreen
 import com.example.warofwonders.login.LogInScreen
 import com.example.warofwonders.map.MapScreen
@@ -20,9 +21,12 @@ import com.example.warofwonders.settings.SettingsScreen
 @Composable
 fun Navigation() {
     val navController = rememberNavController()
-    NavHost(navController = navController, startDestination = AppScreens.Home.name) {
+    NavHost(navController = navController, startDestination = AppScreens.StartUp.name) {
         composable(route = AppScreens.Home.name) {
             HomeScreen(navController)
+        }
+        composable(route = AppScreens.StartUp.name) {
+            StartUpScreen(navController)
         }
         composable(route = AppScreens.LogIn.name) {
             LogInScreen(navController)

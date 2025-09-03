@@ -21,7 +21,7 @@ import com.example.warofwonders.R
 import com.example.warofwonders.navigation.AppScreens
 
 @Composable
-fun ChatScreen() {
+fun ChatScreen(navController: NavController) {
     val messages = listOf(
         ChatMessage("Jaime", "Líder", "Hola a todos"),
         ChatMessage("user #11", "miembro", "Saludos"),
@@ -212,6 +212,5 @@ fun ChatBubble(message: ChatMessage) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ChatScreenPreview() {
-    ChatScreen()
 }
 
