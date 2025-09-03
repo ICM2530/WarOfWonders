@@ -36,12 +36,12 @@ fun Navigation() {
         composable(route = AppScreens.Map.name) {
             MapScreen(navController)
         }
-        composable(route = AppScreens.Clan.name) {
+        /*composable(route = AppScreens.Clan.name) {
             ClanScreen(navController)
         }
         composable(route = AppScreens.Chat.name) {
             ChatScreen(navController)
-        }
+        }*/
         composable(route = AppScreens.Profile.name) {
             ProfileScreen(navController)
         }

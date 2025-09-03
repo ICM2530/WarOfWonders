@@ -17,11 +17,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
 
 @Composable
-fun ChatScreen(navController: NavController) {
+fun ChatScreen() {
     val messages = listOf(
         ChatMessage("Jaime", "Líder", "Hola a todos"),
         ChatMessage("user #11", "miembro", "Saludos"),
@@ -208,6 +207,6 @@ fun ChatBubble(message: ChatMessage) {
 @Preview(showSystemUi = true)
 @Composable
 fun ChatScreenPreview() {
-    val navcontroller= rememberNavController()
-    ChatScreen(navcontroller)
+    ChatScreen()
 }
+
