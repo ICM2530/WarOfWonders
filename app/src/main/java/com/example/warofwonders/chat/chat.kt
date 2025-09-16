@@ -17,7 +17,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
 import com.example.warofwonders.navigation.AppScreens
 
@@ -68,9 +67,6 @@ fun ChatScreen(navController: NavController) {
                             painter = painterResource(id = R.drawable.shield),
                             contentDescription = "Clan shield",
                             modifier = Modifier.size(40.dp)
-                                .clickable(
-                                    onClick = { navController.navigate(AppScreens.Clan.name) }
-                                )
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
@@ -94,7 +90,7 @@ fun ChatScreen(navController: NavController) {
                         modifier = Modifier
                             .size(32.dp)
                             .clickable(
-                                onClick = { navController.navigate(AppScreens.Home.name) }
+                                onClick = { navController.navigate(AppScreens.Clan.name) }
                             )
                     )
                 }
@@ -216,6 +212,5 @@ fun ChatBubble(message: ChatMessage) {
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun ChatScreenPreview() {
-    ChatScreen(navController = rememberNavController())
 }
 
