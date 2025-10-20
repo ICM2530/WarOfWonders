@@ -9,8 +9,8 @@ import com.example.warofwonders.ui.screens.clan.ClanScreen
 import com.example.warofwonders.ui.screens.home.HomeScreen
 import com.example.warofwonders.ui.screens.inventory.InventoryScreen
 import com.example.warofwonders.ui.screens.login.LogInScreen
-import com.example.warofwonders.ui.screens.login.components.SignUpScreen
-import com.example.warofwonders.ui.screens.login.components.StartUpScreen
+import com.example.warofwonders.ui.screens.signup.SignUpScreen
+import com.example.warofwonders.ui.screens.startup.StartUpScreen
 import com.example.warofwonders.ui.screens.map.MapScreen
 import com.example.warofwonders.ui.screens.profile.ProfileScreen
 import com.example.warofwonders.ui.screens.settings.SettingsScreen

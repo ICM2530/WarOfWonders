@@ -4,9 +4,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.defaultMinSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -16,18 +16,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.input.VisualTransformation
 import com.example.warofwonders.R
-import com.example.warofwonders.ui.theme.WarOfWondersTheme
 
 @Composable
 fun TextFieldImage(
     modifier: Modifier = Modifier,
     value: String,
     placeholderText: String,
-    onValueChange: (String) -> Unit
+    onValueChange: (String) -> Unit,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    supportingText: (@Composable (() -> Unit))? = null
 ) {
     Box(
         modifier = modifier.defaultMinSize(minHeight = 56.dp)
@@ -60,20 +62,14 @@ fun TextFieldImage(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
             ),
+            keyboardOptions = keyboardOptions,
+            visualTransformation = visualTransformation,
             modifier = Modifier.matchParentSize().background(Color.Transparent)
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TextFieldImagePreview() {
-    WarOfWondersTheme {
-        TextFieldImage(
-            value = "3D2YArley",
-            placeholderText = "Usuario",
-            onValueChange = { },
-            modifier = Modifier.width(250.dp).height(56.dp)
-        )
+        if (supportingText != null) {
+            Box(modifier = Modifier.padding(start = 16.dp, top = 2.dp)) {
+                supportingText()
+            }
+        }
     }
 }
