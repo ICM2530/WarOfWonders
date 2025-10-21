@@ -82,6 +82,9 @@ fun HomeTopBar(
                 painter = painterResource(id = R.drawable.bell_icon),
                 contentDescription = "Notification",
                 modifier = Modifier.size(48.dp)
+                    .clickable(
+                        onClick = { navController.navigate(AppScreens.Contacts.name) }
+                    )
             )
 
             Image(

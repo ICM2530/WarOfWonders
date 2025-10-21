@@ -3,6 +3,7 @@ package com.example.warofwonders.ui.screens.contacts
 import android.Manifest
 import android.content.ContentResolver
 import android.provider.ContactsContract
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,11 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,12 +34,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
 import com.example.warofwonders.R
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 
 data class Contact (
     val id: String,
@@ -43,10 +50,11 @@ data class Contact (
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ContactsScreen(navController: NavController) {
+fun ContactsScreen() {
     val context = LocalContext.current
     val contentResolver = context.contentResolver
     val contactsPermissionState = rememberPermissionState(Manifest.permission.READ_CONTACTS)
+    var matchedContacts by remember { mutableStateOf<List<Pair<String, Contact>>>(emptyList()) }
 
     Column (
         verticalArrangement = Arrangement.Center,
@@ -56,7 +64,12 @@ fun ContactsScreen(navController: NavController) {
         when {
             contactsPermissionState.status.isGranted -> {
                 val contacts = loadContacts(contentResolver)
-                DrawContacts(contacts)
+                LaunchedEffect(Unit) {
+                    findFriendsInFirebase(contacts) { matchedContacts = it }
+                }
+                DrawContacts(matchedContacts) { uid ->
+                    addFriend(uid, context)
+                }
             }
 
             contactsPermissionState.status.shouldShowRationale -> {
@@ -94,29 +107,36 @@ fun ContactsScreen(navController: NavController) {
     }
 }
 @Composable
-fun DrawContacts(contacts: List<Contact>) {
-    LazyColumn (
+fun DrawContacts(contacts: List<Pair<String, Contact>>, onAddFriend: (String) -> Unit) {
+    LazyColumn(
         verticalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxSize()
-    ) { items(contacts) { contact ->
-        ElevatedCard {
-            Row (
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth().padding(15.dp)
-            ) {
-                Image(
-                    painterResource(R.drawable.shield), //Acá
-                    "Contacts",
-                    modifier = Modifier.height(30.dp)
-                )
-                Spacer(modifier = Modifier.width(15.dp))
-                Text(contact.id)
-                Spacer(modifier = Modifier.width(15.dp))
-                Text(contact.name)
+    ) {
+        items(contacts) { (uid, contact) ->
+            ElevatedCard(modifier = Modifier.fillMaxWidth().padding(10.dp)) {
+                Row(
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth().padding(15.dp)
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.shield),
+                        contentDescription = "Contact",
+                        modifier = Modifier.height(30.dp)
+                    )
+                    Spacer(modifier = Modifier.width(15.dp))
+                    Text(contact.name)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(
+                        onClick = { onAddFriend(uid) },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
+                    ) {
+                        Text("Agregar")
+                    }
+                }
             }
         }
-    }}
+    }
 }
 
 fun loadContacts(contentResolver: ContentResolver): List<Contact> {
@@ -149,4 +169,39 @@ fun loadContacts(contentResolver: ContentResolver): List<Contact> {
     }
     cursor?.close()
     return contacts
+}
+
+fun findFriendsInFirebase(contacts: List<Contact>, onResult: (List<Pair<String, Contact>>) -> Unit) {
+    val database = FirebaseDatabase.getInstance().getReference("users")
+    database.get().addOnSuccessListener { snapshot ->
+        val firebaseUsers = snapshot.children.mapNotNull { userSnap ->
+            val uid = userSnap.key ?: return@mapNotNull null
+            val phone = userSnap.child("phone").getValue(String::class.java)
+            if (phone != null) uid to phone else null
+        }
+        fun normalize(num: String) = num.filter { it.isDigit() }.takeLast(10)
+        val firebasePhones = firebaseUsers.map { it.first to normalize(it.second) }
+        val matched = contacts.mapNotNull { contact ->
+            val normalizedContact = normalize(contact.phone)
+            val match = firebasePhones.find { it.second == normalizedContact }
+            match?.let { it.first to contact }
+        }
+        onResult(matched)
+    }
+}
+
+fun addFriend(uidFriend: String, context: android.content.Context) {
+    val currentUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    val db = FirebaseDatabase.getInstance().getReference("users")
+    val currentUserRef = db.child(currentUid).child("friends").child(uidFriend)
+
+    currentUserRef.get().addOnSuccessListener { snapshot ->
+        if (snapshot.exists()) {
+            Toast.makeText(context, "Ya agregaste a este amigo", Toast.LENGTH_SHORT).show()
+        } else {
+            currentUserRef.setValue(true)
+            db.child(uidFriend).child("friends").child(currentUid).setValue(true)
+            Toast.makeText(context, "Amigo agregado", Toast.LENGTH_SHORT).show()
+        }
+    }
 }

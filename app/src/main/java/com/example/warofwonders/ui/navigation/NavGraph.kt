@@ -62,7 +62,7 @@ fun NavGraph() {
         }
 
         composable(route = AppScreens.Contacts.name) {
-            ContactsScreen(navController = navController)
+            ContactsScreen()
         }
     }
 }
