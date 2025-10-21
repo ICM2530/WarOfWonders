@@ -11,5 +11,6 @@ enum class AppScreens {
     Combat,
     Home,
     Inventory,
-    Settings
+    Settings,
+    Contacts
 }

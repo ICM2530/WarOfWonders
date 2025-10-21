@@ -6,6 +6,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.ui.screens.chat.ChatScreen
 import com.example.warofwonders.ui.screens.clan.ClanScreen
+import com.example.warofwonders.ui.screens.contacts.ContactsScreen
 import com.example.warofwonders.ui.screens.home.HomeScreen
 import com.example.warofwonders.ui.screens.inventory.InventoryScreen
 import com.example.warofwonders.ui.screens.login.LogInScreen
@@ -58,6 +59,10 @@ fun NavGraph() {
 
         composable(route = AppScreens.Settings.name) {
             SettingsScreen(navController = navController)
+        }
+
+        composable(route = AppScreens.Contacts.name) {
+            ContactsScreen(navController = navController)
         }
     }
 }

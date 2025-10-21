@@ -114,7 +114,7 @@ fun login(model: UserAuthViewModel, email: String, password: String, navControll
                 }
             } else {
                 Toast.makeText(
-                    context, "Login error ${it.exception.toString()}",
+                    context, "Error en ingreso ${it.exception.toString()}",
                     Toast.LENGTH_LONG
                 ).show()
             }
