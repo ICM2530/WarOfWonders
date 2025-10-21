@@ -125,15 +125,10 @@ fun HomeTopBar(
                 painter = painterResource(id = R.drawable.shop),
                 contentDescription = "tienda",
                 modifier = Modifier.size(48.dp)
+                    .clickable(
+                        onClick = { navController.navigate(AppScreens.Camera.name) }
+                    )
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun HomeTopBarPreview() {
-    WarOfWondersTheme {
-        HomeTopBar(navController = rememberNavController())
     }
 }

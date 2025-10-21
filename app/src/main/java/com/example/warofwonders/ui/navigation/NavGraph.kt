@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.warofwonders.ui.screens.camera.CameraScreen
 import com.example.warofwonders.ui.screens.chat.ChatScreen
 import com.example.warofwonders.ui.screens.clan.ClanScreen
 import com.example.warofwonders.ui.screens.contacts.ContactsScreen
@@ -63,6 +64,10 @@ fun NavGraph() {
 
         composable(route = AppScreens.Contacts.name) {
             ContactsScreen()
+        }
+
+        composable(route = AppScreens.Camera.name) {
+            CameraScreen()
         }
     }
 }
