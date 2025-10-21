@@ -1,50 +1,48 @@
 package com.example.warofwonders.ui.screens.signup
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.components.ImageButton
 import com.example.warofwonders.ui.components.TextFieldImage
-import com.example.warofwonders.ui.model.database
+import com.example.warofwonders.ui.model.MyUserViewModel
 import com.example.warofwonders.ui.model.MyUserState
-import com.example.warofwonders.ui.model.pathUsers
+import com.example.warofwonders.ui.model.SignUpViewModel
 import com.example.warofwonders.ui.navigation.AppScreens
-import com.google.firebase.auth.FirebaseAuth
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpScreen(navController: NavHostController) {
+fun SignUpScreen(navController: NavController) {
     val context = LocalContext.current
-    val auth = FirebaseAuth.getInstance()
+    val signUpViewModel: SignUpViewModel = viewModel()
+    val usersViewModel: MyUserViewModel = viewModel()
+    val state by signUpViewModel.form.collectAsState()
 
-    var name by remember { mutableStateOf("") }
-    var lastName by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         Image(
             modifier = Modifier.fillMaxSize(),
             painter = painterResource(id = R.drawable.background_image),
@@ -52,8 +50,23 @@ fun SignUpScreen(navController: NavHostController) {
             contentScale = ContentScale.Crop
         )
 
+        Image(
+            painter = painterResource(id = R.drawable.closechat),
+            contentDescription = "Cerrar",
+            modifier = Modifier
+                .size(32.dp)
+                .align(Alignment.TopEnd)
+                .padding(16.dp)
+                .clickable {
+                    navController.navigate(AppScreens.StartUp.name) {
+                        popUpTo(AppScreens.SignUp.name) { inclusive = true }
+                    }
+                }
+        )
         Column(
-            modifier = Modifier.fillMaxSize().padding(16.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 80.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -64,99 +77,121 @@ fun SignUpScreen(navController: NavHostController) {
             )
 
             TextFieldImage(
-                value = name,
-                onValueChange = { name = it },
+                value = state.name,
+                onValueChange = signUpViewModel::updateName,
                 placeholderText = "Nombre",
                 modifier = Modifier.width(250.dp)
             )
+            if (state.nameError.isNotEmpty())
+                Text(state.nameError, color = Color.Red, modifier = Modifier.width(250.dp))
 
             TextFieldImage(
-                value = lastName,
-                onValueChange = { lastName = it },
+                value = state.lastName,
+                onValueChange = signUpViewModel::updateLastName,
                 placeholderText = "Apellido",
                 modifier = Modifier.width(250.dp)
             )
+            if (state.lastNameError.isNotEmpty())
+                Text(state.lastNameError, color = Color.Red, modifier = Modifier.width(250.dp))
 
             TextFieldImage(
-                value = phone,
-                onValueChange = { phone = it },
+                value = state.phone,
+                onValueChange = signUpViewModel::updatePhone,
                 placeholderText = "Teléfono",
                 modifier = Modifier.width(250.dp)
             )
+            if (state.phoneError.isNotEmpty())
+                Text(state.phoneError, color = Color.Red, modifier = Modifier.width(250.dp))
 
             TextFieldImage(
-                value = email,
-                onValueChange = { email = it },
+                value = state.email,
+                onValueChange = signUpViewModel::updateEmail,
                 placeholderText = "Correo",
                 modifier = Modifier.width(250.dp)
             )
+            if (state.emailError.isNotEmpty())
+                Text(state.emailError, color = Color.Red, modifier = Modifier.width(250.dp))
 
             TextFieldImage(
-                value = password,
-                onValueChange = { password = it },
+                value = state.password,
+                onValueChange = signUpViewModel::updatePassword,
                 placeholderText = "Contraseña",
                 modifier = Modifier.width(250.dp)
             )
+            if (state.passError.isNotEmpty())
+                Text(state.passError, color = Color.Red, modifier = Modifier.width(250.dp))
+
+            Spacer(modifier = Modifier.height(12.dp))
 
             ImageButton(
                 imageRes = R.drawable.button_signup,
-                contentDescription = "Sign Up",
+                contentDescription = "Registrar",
                 modifier = Modifier.width(120.dp),
                 onClick = {
-                    registerUser(
-                        auth,
-                        name,
-                        lastName,
-                        phone,
-                        email,
-                        password,
-                        context,
-                        onSuccess = { navController.navigate(AppScreens.LogIn.name) },
-                        onFailure = { e -> Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show() }
-                    )
+                    if (validateSignUpForm(signUpViewModel, state)) {
+                        usersViewModel.saveUser(state)
+                        clearForm(signUpViewModel)
+                        Toast.makeText(context, "Usuario registrado correctamente", Toast.LENGTH_SHORT).show()
+                        navController.navigate(AppScreens.Home.name) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
                 }
             )
         }
     }
 }
 
-fun registerUser(
-    auth: FirebaseAuth,
-    name: String,
-    lastName: String,
-    phone: String,
-    email: String,
-    password: String,
-    context: Context,
-    onSuccess: () -> Unit,
-    onFailure: (Exception) -> Unit
-) {
-    if (email.isEmpty() || password.isEmpty() || name.isEmpty() || lastName.isEmpty() || phone.isEmpty()) {
-        Toast.makeText(context, "Todos los campos son obligatorios", Toast.LENGTH_LONG).show()
-        return
+fun validateSignUpForm(signUpViewModel: SignUpViewModel, s: MyUserState): Boolean {
+    var ok = true
+
+    if (s.name.isEmpty()) {
+        signUpViewModel.updateNameError("Nombre vacío")
+        ok = false
+    } else signUpViewModel.updateNameError("")
+
+    if (s.lastName.isEmpty()) {
+        signUpViewModel.updateLastNameError("Apellido vacío")
+        ok = false
+    } else signUpViewModel.updateLastNameError("")
+
+    if (s.phone.isEmpty()) {
+        signUpViewModel.updatePhoneError("Teléfono vacío")
+        ok = false
+    } else signUpViewModel.updatePhoneError("")
+
+    if (s.email.isEmpty()) {
+        signUpViewModel.updateEmailError("Correo vacío")
+        ok = false
+    } else signUpViewModel.updateEmailError("")
+
+    if (!validEmailAddress(s.email)) {
+        signUpViewModel.updateEmailError("Correo inválido")
+        ok = false
     }
 
-    auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
-        if (task.isSuccessful) {
-            val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
-            val user = MyUserState(
-                name = name,
-                lastName = lastName,
-                phone = phone,
-                email = email
-            )
+    if (s.password.isEmpty()) {
+        signUpViewModel.updatePassError("Contraseña vacía")
+        ok = false
+    } else signUpViewModel.updatePassError("")
 
-            val ref = database.getReference(pathUsers)
-            ref.child(uid).setValue(user)
-                .addOnSuccessListener {
-                    Toast.makeText(context, "Registro exitoso", Toast.LENGTH_SHORT).show()
-                    onSuccess()
-                }
-                .addOnFailureListener { e ->
-                    onFailure(e)
-                }
-        } else {
-            onFailure(task.exception ?: Exception("Error desconocido"))
-        }
+    if (s.password.length < 6) {
+        signUpViewModel.updatePassError("Contraseña demasiado corta")
+        ok = false
     }
+
+    return ok
+}
+
+fun clearForm(signUpViewModel: SignUpViewModel) {
+    signUpViewModel.updateName("")
+    signUpViewModel.updateLastName("")
+    signUpViewModel.updatePhone("")
+    signUpViewModel.updateEmail("")
+    signUpViewModel.updatePassword("")
+}
+
+fun validEmailAddress(email: String): Boolean {
+    val regex = """^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"""
+    return email.matches(regex.toRegex())
 }

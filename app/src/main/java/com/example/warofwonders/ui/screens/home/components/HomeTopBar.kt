@@ -23,14 +23,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.navigation.AppScreens
-import com.example.warofwonders.ui.theme.WarOfWondersTheme
 
 @Composable
 fun HomeTopBar(
