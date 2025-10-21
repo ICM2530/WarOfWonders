@@ -106,21 +106,6 @@ fun ProfileScreen(
                     contentDescription = "editar",
                     modifier = Modifier.size(100.dp)
                 )
-
-                IconButton(
-                    onClick = {
-                        firebaseAuth.signOut()
-                        navController.navigate(AppScreens.StartUp.name) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.shield),
-                        contentDescription = "Logout Icon",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
             }
         }
     }

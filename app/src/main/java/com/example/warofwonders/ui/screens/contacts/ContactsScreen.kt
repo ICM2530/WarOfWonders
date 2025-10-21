@@ -28,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.warofwonders.R
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -42,7 +43,7 @@ data class Contact (
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun ContactsScreen() {
+fun ContactsScreen(navController: NavController) {
     val context = LocalContext.current
     val contentResolver = context.contentResolver
     val contactsPermissionState = rememberPermissionState(Manifest.permission.READ_CONTACTS)
