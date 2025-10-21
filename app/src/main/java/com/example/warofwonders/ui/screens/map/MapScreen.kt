@@ -13,6 +13,8 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,23 +30,28 @@ import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
 import com.example.warofwonders.ui.shared.utils.shouldShowPermissionRationale
 import com.example.warofwonders.ui.theme.WarOfWondersTheme
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MapStyleOptions
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
-import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.example.warofwonders.R
+import com.example.warofwonders.ui.shared.utils.bitmapDescriptorFromVector
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CircleOptions
+import com.google.maps.android.compose.Circle
+import com.google.maps.android.compose.Polygon
+import com.google.maps.android.compose.Polyline
 
 @Composable
-fun MapScreen(
-    navController: NavController,
-    viewModel: MapViewModel
-) {
+fun MapScreen(navController: NavController, viewModel: MapViewModel) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
-
     var showRationale by remember { mutableStateOf(false) }
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -54,81 +61,165 @@ fun MapScreen(
         if (granted) viewModel.toggleLocationUpdates()
     }
 
+    DisposableEffect(Unit) {
+        viewModel.startLightSensor()
+        onDispose { viewModel.stopLightSensor() }
+    }
+
     MapScreenContent(
         uiState = uiState,
         onLocationButtonClick = {
             if (uiState.permissionStatus) {
                 viewModel.toggleLocationUpdates()
             } else {
-                if (shouldShowPermissionRationale(context, locationPermission)) {
+                if (shouldShowPermissionRationale(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
                     showRationale = true
                 } else {
-                    permissionLauncher.launch(locationPermission)
+                    permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                 }
             }
         },
-        onSearchQueryChange = { query -> viewModel.updateSearchQuery(query) }
+        onSearchQueryChange = { viewModel.updateSearchQuery(it) },
+        onSearchSubmit = { viewModel.searchLocation() },
+        onMapClick = { viewModel.clearMarkers() },
+        onMapLongClick = { viewModel.onMapLongClick(it) }
     )
 
     if (showRationale) {
         AlertDialogPopup(
             title = "Permission Required",
-            message = "This application requires access to your location to provide"
-                    + "you with information based on your current position.",
+            message = "This app requires access to your location.",
             onAccept = {
                 showRationale = false
-                permissionLauncher.launch(locationPermission)
+                permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             },
             onCancel = { showRationale = false }
         )
     }
 }
 
+val teusaquilloPolygonPoints = listOf(
+    LatLng(4.6488, -74.0930), // Noroeste
+    LatLng(4.6488, -74.0660), // Noreste
+    LatLng(4.6300, -74.0660), // Sureste
+    LatLng(4.6300, -74.0930)  // Suroeste
+)
+
 @Composable
 fun MapScreenContent(
     uiState: MapUiState,
     onLocationButtonClick: () -> Unit,
-    onSearchQueryChange: (String) -> Unit
+    onSearchQueryChange: (String) -> Unit,
+    onSearchSubmit: () -> Unit,
+    onMapClick: () -> Unit,
+    onMapLongClick: (LatLng) -> Unit
 ) {
-    val markerState = rememberUpdatedMarkerState(
-        position = LatLng(uiState.currentLocation.latitude, uiState.currentLocation.longitude)
-    )
-
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(
             LatLng(uiState.currentLocation.latitude, uiState.currentLocation.longitude),
-            18f
+            17f
         )
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    LaunchedEffect(uiState.currentLocation) {
+        if (uiState.isCameraFollowing) {
+            cameraPositionState.animate(
+                CameraUpdateFactory.newCameraPosition(
+                    CameraPosition.fromLatLngZoom(
+                        LatLng(
+                            uiState.currentLocation.latitude,
+                            uiState.currentLocation.longitude
+                        ),
+                        17f
+                    )
+                )
+            )
+        }
+    }
+
+    val mapProperties = MapProperties(
+        isMyLocationEnabled = uiState.permissionStatus && uiState.locationUpdates,
+        mapStyleOptions = if (uiState.isDarkMap)
+            MapStyleOptions.loadRawResourceStyle(LocalContext.current, R.raw.map_dark)
+        else
+            MapStyleOptions.loadRawResourceStyle(LocalContext.current, R.raw.map_light)
+    )
+
+    Box(Modifier.fillMaxSize()) {
         GoogleMap(
             modifier = Modifier.fillMaxSize(),
             cameraPositionState = cameraPositionState,
-            properties = MapProperties(
-                isMyLocationEnabled = uiState.permissionStatus && uiState.locationUpdates
-            ),
+            properties = mapProperties,
             uiSettings = MapUiSettings(
                 zoomControlsEnabled = false,
                 compassEnabled = true
+            ),
+            onMapClick = { onMapClick() },
+            onMapLongClick = { onMapLongClick(it) }
+        ) {
+            // Marcadores
+            uiState.staticMarkers.forEach { marker ->
+                Marker(
+                    state = MarkerState(marker),
+                    title = "Estático",
+                    snippet = "Punto de interés",
+                    icon = bitmapDescriptorFromVector(context = LocalContext.current, R.drawable.castillo)
+                )
+            }
+
+            uiState.searchMarker?.let { marker ->
+                Marker(
+                    state = MarkerState(marker),
+                    title = "Búsqueda",
+                    snippet = "Marcador buscado",
+                )
+            }
+
+            uiState.clickMarker?.let { marker ->
+                Marker(
+                    state = MarkerState(marker),
+                    title = "Click Largo",
+                    snippet = "Marcador agregado",
+                )
+            }
+
+            // Ruta
+            if (uiState.routePoints.isNotEmpty()) {
+                Polyline(
+                    points = uiState.routePoints,
+                    color = if (uiState.isDarkMap) androidx.compose.ui.graphics.Color.Cyan
+                    else androidx.compose.ui.graphics.Color.Blue,
+                    width = 6f
+                )
+            }
+
+            Polygon(
+                points = teusaquilloPolygonPoints,
+                fillColor = androidx.compose.ui.graphics.Color.Gray.copy(alpha = 0.3f),
+                strokeColor = androidx.compose.ui.graphics.Color.Gray.copy(alpha = 0.5f),
+                strokeWidth = 2f
             )
-        ) { }
+        }
 
         TextFieldSearch(
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             place = uiState.searchQuery,
-            placeholderText = "Search",
-            onPlaceChange = onSearchQueryChange
+            placeholderText = "Buscar lugar...",
+            onPlaceChange = onSearchQueryChange,
+            onSearchSubmit = onSearchSubmit
         )
 
         FloatingActionButton(
             onClick = onLocationButtonClick,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(16.dp)
         ) {
             Icon(
-                imageVector = if (uiState.locationUpdates) Icons.Default.LocationOff else Icons.Default.MyLocation,
+                imageVector = if (uiState.locationUpdates)
+                    Icons.Default.LocationOff else Icons.Default.MyLocation,
                 contentDescription = "Toggle Location Updates"
             )
         }
@@ -142,7 +233,10 @@ fun MapScreenContentPreview() {
         MapScreenContent(
             uiState = MapUiState(),
             onLocationButtonClick = { },
-            onSearchQueryChange = { }
+            onSearchQueryChange = { },
+            onSearchSubmit = { },
+            onMapClick = { },
+            onMapLongClick = {}
         )
     }
 }

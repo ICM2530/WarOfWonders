@@ -2,10 +2,13 @@ package com.example.warofwonders.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.warofwonders.data.repository.GeoRepository
 import com.example.warofwonders.data.repository.LocationRepository
+import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.ui.screens.camera.CameraScreen
 import com.example.warofwonders.ui.screens.chat.ChatScreen
 import com.example.warofwonders.ui.screens.clan.ClanScreen
@@ -24,7 +27,10 @@ import com.example.warofwonders.ui.shared.GenericViewModelFactory
 
 @Composable
 fun NavGraph(
-    locationRepository: LocationRepository
+    locationRepository: LocationRepository,
+    geoRepository: GeoRepository,
+    lightSensorDataSource: LightSensorDataSource,
+    navController: NavHostController = androidx.navigation.compose.rememberNavController()
 ) {
     val navController = rememberNavController()
 
@@ -52,10 +58,17 @@ fun NavGraph(
         composable(route = AppScreens.Map.name) {
             val mapViewModel: MapViewModel = viewModel(
                 factory = GenericViewModelFactory {
-                    MapViewModel(locationRepository)
+                    MapViewModel(
+                        locationRepository = locationRepository,
+                        geoRepository = geoRepository,
+                        lightSensorDataSource = lightSensorDataSource
+                    )
                 }
             )
-            MapScreen(navController = navController, viewModel = mapViewModel)
+            MapScreen(
+                navController = navController,
+                viewModel = mapViewModel
+            )
         }
 
         composable(route = AppScreens.Clan.name) {

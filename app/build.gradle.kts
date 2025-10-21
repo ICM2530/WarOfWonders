@@ -73,6 +73,8 @@ dependencies {
     implementation("com.google.android.gms:play-services-maps:19.2.0")
     implementation(libs.play.services.location)
     implementation("androidx.compose.material:material-icons-extended:1.6.0")
+    implementation("com.google.maps.android:android-maps-utils:2.3.0")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
