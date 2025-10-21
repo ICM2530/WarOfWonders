@@ -3,6 +3,7 @@ package com.example.warofwonders.ui.screens.settings
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -11,14 +12,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
+import com.example.warofwonders.ui.model.firebaseAuth
 import com.example.warofwonders.ui.navigation.AppScreens
-import com.example.warofwonders.ui.theme.WarOfWondersTheme
 
 @Composable
 fun SettingsScreen(navController: NavHostController) {
@@ -63,6 +62,20 @@ fun SettingsScreen(navController: NavHostController) {
             SettingOption(text = "Notificaciones")
             SettingOption(text = "Idioma")
             SettingOption(text = "Cuenta")
+            IconButton(
+                onClick = {
+                    firebaseAuth.signOut()
+                    navController.navigate(AppScreens.StartUp.name) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.shield),
+                    contentDescription = "Logout Icon",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
 
         Box(
@@ -80,6 +93,20 @@ fun SettingsScreen(navController: NavHostController) {
                         onClick = { navController.navigate(AppScreens.Home) }
                     )
             )
+            IconButton(
+                onClick = {
+                    firebaseAuth.signOut()
+                    navController.navigate(AppScreens.StartUp.name) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.shield),
+                    contentDescription = "Logout Icon",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
     }
 }
@@ -103,13 +130,5 @@ fun SettingOption(text: String) {
                 color = Color.Black
             )
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SettingsScreenPreview() {
-    WarOfWondersTheme {
-        SettingsScreen(navController = rememberNavController())
     }
 }

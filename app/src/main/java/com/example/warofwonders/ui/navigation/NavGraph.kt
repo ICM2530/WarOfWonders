@@ -4,8 +4,11 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.warofwonders.ui.screens.camera.CameraScreen
 import com.example.warofwonders.ui.screens.chat.ChatScreen
 import com.example.warofwonders.ui.screens.clan.ClanScreen
+import com.example.warofwonders.ui.screens.combat.CombatScreen
+import com.example.warofwonders.ui.screens.contacts.ContactsScreen
 import com.example.warofwonders.ui.screens.home.HomeScreen
 import com.example.warofwonders.ui.screens.inventory.InventoryScreen
 import com.example.warofwonders.ui.screens.login.LogInScreen
@@ -37,7 +40,7 @@ fun NavGraph() {
         }
 
         composable(route = AppScreens.Inventory.name) {
-            InventoryScreen(navController = rememberNavController())
+            InventoryScreen()
         }
 
         composable(route = AppScreens.Map.name) {
@@ -45,7 +48,7 @@ fun NavGraph() {
         }
 
         composable(route = AppScreens.Clan.name) {
-            ClanScreen(navController = navController)
+            ClanScreen()
         }
 
         composable(route = AppScreens.Chat.name) {
@@ -58,6 +61,18 @@ fun NavGraph() {
 
         composable(route = AppScreens.Settings.name) {
             SettingsScreen(navController = navController)
+        }
+
+        composable(route = AppScreens.Contacts.name) {
+            ContactsScreen()
+        }
+
+        composable(route = AppScreens.Combat.name) {
+            CombatScreen()
+        }
+
+        composable(route = AppScreens.Camera.name) {
+            CameraScreen()
         }
     }
 }

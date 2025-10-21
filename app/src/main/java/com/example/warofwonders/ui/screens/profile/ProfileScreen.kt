@@ -22,14 +22,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.navigation.AppScreens
-import com.example.warofwonders.ui.theme.WarOfWondersTheme
 
 @Composable
 fun ProfileScreen(
@@ -57,7 +54,6 @@ fun ProfileScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.height(125.dp))
-            // Imagen de perfil
             Image(
                 painter = painterResource(id = imagen),
                 contentDescription = "User profile image",
@@ -68,7 +64,6 @@ fun ProfileScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Datos principales
             Text(usuario, fontSize = 44.sp, fontWeight = FontWeight.Bold, color = Color.White)
             Spacer(modifier = Modifier.height(16.dp))
             Text("ID: $id", fontSize = 32.sp, color = Color.LightGray)
@@ -79,8 +74,6 @@ fun ProfileScreen(
             Text("País: $pais", fontSize = 32.sp, color = Color.Yellow)
 
             Spacer(modifier = Modifier.height(16.dp))
-
-            // Botones
             Row(
                 modifier = Modifier
                     .padding(1.dp)
@@ -92,7 +85,7 @@ fun ProfileScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.returnbutton),
-                    contentDescription = "retorno",
+                    contentDescription = "Retorno",
                     modifier = Modifier.size(100.dp).clickable {
                         navController.navigate(AppScreens.Home.name)
                     }
@@ -100,18 +93,10 @@ fun ProfileScreen(
 
                 Image(
                     painter = painterResource(id = R.drawable.editbutton),
-                    contentDescription = "editar",
+                    contentDescription = "Editar",
                     modifier = Modifier.size(100.dp)
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ProfileScreenPreview() {
-    WarOfWondersTheme {
-        ProfileScreen(navController = rememberNavController())
     }
 }
