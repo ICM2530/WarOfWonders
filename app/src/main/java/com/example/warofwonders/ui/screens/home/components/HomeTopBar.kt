@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
@@ -34,98 +35,143 @@ fun HomeTopBar(
     navController: NavHostController
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().wrapContentHeight()
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentHeight()
     ) {
+        // --- Fila superior: perfil + iconos ---
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.width(250.dp).height(48.dp),
+                modifier = Modifier
+                    .width(200.dp)
+                    .height(48.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.bracket_name),
                     contentDescription = "Usuario",
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                         .clickable { navController.navigate(AppScreens.Profile.name) },
                     contentScale = ContentScale.FillBounds
                 )
 
-                Row(
-                    modifier = Modifier.width(240.dp).fillMaxHeight(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "World Recoverer",
-                            fontSize = 18.sp,
-                            color = Color.White,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = "Teusaquillo amigos",
-                            fontSize = 14.sp,
-                            color = Color.White,
-                            fontStyle = FontStyle.Italic
-                        )
-                    }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "World Recoverer",
+                        fontSize = 18.sp,
+                        color = Color.White,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "Teusaquillo amigos",
+                        fontSize = 14.sp,
+                        color = Color.White,
+                        fontStyle = FontStyle.Italic
+                    )
                 }
             }
 
-            Image(
-                painter = painterResource(id = R.drawable.bell_icon),
-                contentDescription = "Notification",
-                modifier = Modifier.size(48.dp)
-                    .clickable(
-                        onClick = { navController.navigate(AppScreens.Contacts.name) }
-                    )
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.bell_icon),
+                    contentDescription = "Notificaciones",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable {
+                            navController.navigate(AppScreens.Contacts.name)
+                        }
+                )
 
-            Image(
-                painter =  painterResource(id = R.drawable.configbutton),
-                contentDescription = "Config",
-                modifier = Modifier.size(48.dp)
-                    .clickable(
-                        onClick = { navController.navigate(AppScreens.Settings.name) }
-                    )
-            )
+                Image(
+                    painter = painterResource(id = R.drawable.iconcontactos),
+                    contentDescription = "Contactos",
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable {
+                            navController.navigate(AppScreens.Contacts.name)
+                        }
+                )
+
+                Image(
+                    painter = painterResource(id = R.drawable.configbutton),
+                    contentDescription = "Configuración",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable {
+                            navController.navigate(AppScreens.Settings.name)
+                        }
+                )
+            }
         }
 
+
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(100.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Bloque de monedas: fijo y centrado dentro del contenedor
             Box(
-                modifier = Modifier.weight(1F),
+                modifier = Modifier
+                    .width(120.dp)
+                    .height(48.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.bracket_coin),
-                    contentDescription = "Coins",
-                    modifier = Modifier.width(120.dp).height(48.dp)
+                    contentDescription = "Monedas",
+                    modifier = Modifier.matchParentSize(),
+                    contentScale = ContentScale.FillBounds
                 )
 
                 Text(
                     text = "000",
                     style = TextStyle(
                         fontSize = 14.sp,
-                        color = Color.White
-                    )
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    ),
+                    modifier = Modifier.align(Alignment.Center)
                 )
             }
 
-            Image(
-                painter = painterResource(id = R.drawable.shop),
-                contentDescription = "tienda",
-                modifier = Modifier.size(48.dp)
-                    .clickable(
-                        onClick = { navController.navigate(AppScreens.Camera.name) }
-                    )
-            )
+            // Columna con shop arriba y cámara abajo (alineadas a la derecha)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.shop),
+                    contentDescription = "Tienda",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable {
+                            navController.navigate(AppScreens.Contacts.name)
+                        }
+                )
+
+                Image(
+                    painter = painterResource(id = R.drawable.camara),
+                    contentDescription = "Cámara",
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clickable {
+                            navController.navigate(AppScreens.Camera.name)
+                        }
+                )
+            }
         }
+
     }
 }
