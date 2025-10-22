@@ -8,6 +8,9 @@ data class Clan(val nombre: String, val poder: Int)
 
 data class PuntoInteres(
     val id: Int,
+    val nombre: String,
+    val lat: Double,
+    val lng: Double,
     val clima: String,
     val altitud: Int,
     val zona: String,
@@ -15,56 +18,62 @@ data class PuntoInteres(
     val clanesPeleando: List<Clan>
 ) {
     fun toJSON(): JSONObject {
-        val obj = JSONObject()
-        obj.put("id", id)
-        obj.put("clima", clima)
-        obj.put("altitud", altitud)
-        obj.put("zona", zona)
+        val json = JSONObject()
+        json.put("id", id)
+        json.put("nombre", nombre)
+        json.put("lat", lat)
+        json.put("lng", lng)
+        json.put("clima", clima)
+        json.put("altitud", altitud)
+        json.put("zona", zona)
 
-        val recursosArray = JSONArray()
-        for (r in recursos) {
-            val rObj = JSONObject()
-            rObj.put("nombre", r.nombre)
-            rObj.put("cantidad", r.cantidad)
-            recursosArray.put(rObj)
+        val recursosArray = org.json.JSONArray()
+        recursos.forEach {
+            val r = JSONObject()
+            r.put("nombre", it.nombre)
+            r.put("cantidad", it.cantidad)
+            recursosArray.put(r)
         }
-        obj.put("recursos", recursosArray)
+        json.put("recursos", recursosArray)
 
-        val clanesArray = JSONArray()
-        for (c in clanesPeleando) {
-            val cObj = JSONObject()
-            cObj.put("nombre", c.nombre)
-            cObj.put("poder", c.poder)
-            clanesArray.put(cObj)
+        val clanesArray = org.json.JSONArray()
+        clanesPeleando.forEach {
+            val c = JSONObject()
+            c.put("nombre", it.nombre)
+            c.put("poder", it.poder)
+            clanesArray.put(c)
         }
-        obj.put("clanesPeleando", clanesArray)
+        json.put("clanesPeleando", clanesArray)
 
-        return obj
+        return json
     }
 
     companion object {
         fun fromJSON(obj: JSONObject): PuntoInteres {
-            val recursosList = mutableListOf<Recurso>()
-            val recursosArray = obj.getJSONArray("recursos")
+            val recursosArray = obj.optJSONArray("recursos") ?: org.json.JSONArray()
+            val recursos = mutableListOf<Recurso>()
             for (i in 0 until recursosArray.length()) {
-                val rObj = recursosArray.getJSONObject(i)
-                recursosList.add(Recurso(rObj.getString("nombre"), rObj.getInt("cantidad")))
+                val r = recursosArray.getJSONObject(i)
+                recursos.add(Recurso(r.getString("nombre"), r.getInt("cantidad")))
             }
 
-            val clanesList = mutableListOf<Clan>()
-            val clanesArray = obj.getJSONArray("clanesPeleando")
+            val clanesArray = obj.optJSONArray("clanesPeleando") ?: org.json.JSONArray()
+            val clanes = mutableListOf<Clan>()
             for (i in 0 until clanesArray.length()) {
-                val cObj = clanesArray.getJSONObject(i)
-                clanesList.add(Clan(cObj.getString("nombre"), cObj.getInt("poder")))
+                val c = clanesArray.getJSONObject(i)
+                clanes.add(Clan(c.getString("nombre"), c.getInt("poder")))
             }
 
             return PuntoInteres(
                 id = obj.getInt("id"),
+                nombre = obj.getString("nombre"),
+                lat = obj.getDouble("lat"),
+                lng = obj.getDouble("lng"),
                 clima = obj.getString("clima"),
                 altitud = obj.getInt("altitud"),
                 zona = obj.getString("zona"),
-                recursos = recursosList,
-                clanesPeleando = clanesList
+                recursos = recursos,
+                clanesPeleando = clanes
             )
         }
     }

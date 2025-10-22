@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.warofwonders.data.repository.GeoRepository
+import com.example.warofwonders.data.repository.InterestPointRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
@@ -27,6 +28,7 @@ class MainActivity : ComponentActivity() {
         val temperatureSensorDataSource = TemperatureSensorDataSource(context = this)
         val stepDetectorDataSource = StepDetectorDataSource (context = this)
         val magnetometerDataSource = MagnetometerDataSource (context = this)
+        val interestPointRepository = InterestPointRepository(context = this)
 
         setContent {
             NavGraph(
@@ -36,7 +38,8 @@ class MainActivity : ComponentActivity() {
                 barometerSensorDataSource = barometerSensorDataSource,
                 temperatureSensorDataSource = temperatureSensorDataSource,
                 stepDetectorDataSource = stepDetectorDataSource,
-                magnetometerDataSource = magnetometerDataSource
+                magnetometerDataSource = magnetometerDataSource,
+                interestPointRepository = interestPointRepository
             )
         }
     }

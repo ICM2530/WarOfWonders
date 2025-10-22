@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.repository.GeoRepository
+import com.example.warofwonders.data.repository.InterestPointRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.google.android.gms.maps.model.LatLng
@@ -19,30 +20,23 @@ import okhttp3.Request
 class MapViewModel(
     private val locationRepository: LocationRepository,
     private val geoRepository: GeoRepository,
-    private val lightSensorDataSource: LightSensorDataSource
+    private val lightSensorDataSource: LightSensorDataSource,
+    private val interestPointRepository: InterestPointRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState
 
     init {
-        // Marcadores estáticos Bogotá
-        val staticPoints = listOf(
-            LatLng(4.60971, -74.08175), // Candelaria
-            LatLng(4.6736, -74.0565),   // Monserrate
-            LatLng(4.6486, -74.2479),   // Usaquén
-            LatLng(4.6510, -74.0962),   // Parque 93
-            LatLng(4.5852, -74.0995),   // Salitre
-            // Nuevos puntos en Teusaquillo cerca de calle 46 #16-09
-            LatLng(4.6430, -74.0880), // Punto 1
-            LatLng(4.6445, -74.0825), // Punto 2
-            LatLng(4.6395, -74.0850), // Punto 3
-            LatLng(4.6365334, -74.07784), // Punto 4
-            LatLng(4.6363018, -74.07410)  // Punto 5
-        )
-        _uiState.update { it.copy(staticMarkers = staticPoints) }
+        loadInterestPoints() // 👈 ahora carga desde el JSON
     }
 
+    private fun loadInterestPoints() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val puntos = interestPointRepository.readJSONFile()
+            _uiState.update { it.copy(staticMarkers = puntos) }
+        }
+    }
 
     fun updatePermissionStatus(granted: Boolean) {
         _uiState.update { it.copy(permissionStatus = granted) }

@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.data.repository.GeoRepository
+import com.example.warofwonders.data.repository.InterestPointRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
@@ -38,7 +39,7 @@ fun NavGraph(
     temperatureSensorDataSource: TemperatureSensorDataSource,
     stepDetectorDataSource: StepDetectorDataSource,
     magnetometerDataSource: MagnetometerDataSource,
-    navController: NavHostController = androidx.navigation.compose.rememberNavController()
+    interestPointRepository: InterestPointRepository
 ) {
     val navController = rememberNavController()
 
@@ -69,7 +70,8 @@ fun NavGraph(
                     MapViewModel(
                         locationRepository = locationRepository,
                         geoRepository = geoRepository,
-                        lightSensorDataSource = lightSensorDataSource
+                        lightSensorDataSource = lightSensorDataSource,
+                        interestPointRepository = interestPointRepository
                     )
                 }
             )

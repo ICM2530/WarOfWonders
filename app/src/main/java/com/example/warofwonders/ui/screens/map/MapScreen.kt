@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -98,13 +100,19 @@ fun MapScreen(navController: NavController, viewModel: MapViewModel) {
     }
 }
 
-val teusaquilloPolygonPoints = listOf(
-    LatLng(4.6488, -74.0930), // Noroeste
-    LatLng(4.6488, -74.0660), // Noreste
-    LatLng(4.6300, -74.0660), // Sureste
-    LatLng(4.6300, -74.0930)  // Suroeste
+val teusaquilloRectanglePoints = listOf(
+    LatLng(4.6395, -74.0760), // Noroeste
+    LatLng(4.6395, -74.0695), // Noreste (se amplía hacia el este)
+    LatLng(4.6325, -74.0695), // Sureste (un poco más al sur)
+    LatLng(4.6325, -74.0760)  // Suroeste
 )
 
+// 🔺 Triángulo en Chapinero (zona más al oriente)
+val chapineroTrianglePoints = listOf(
+    LatLng(4.6520, -74.0645), // Norte (Zona G)
+    LatLng(4.6425, -74.0605), // Este (Chapinero Alto)
+    LatLng(4.6460, -74.0715)  // Oeste (cerca Rosales)
+)
 @Composable
 fun MapScreenContent(
     uiState: MapUiState,
@@ -158,11 +166,11 @@ fun MapScreenContent(
             onMapLongClick = { onMapLongClick(it) }
         ) {
             // Marcadores
-            uiState.staticMarkers.forEach { marker ->
+            uiState.staticMarkers.forEach { punto ->
                 Marker(
-                    state = MarkerState(marker),
-                    title = "Estático",
-                    snippet = "Punto de interés",
+                    state = MarkerState(LatLng(punto.lat, punto.lng)),
+                    title = punto.nombre,
+                    snippet = "Zona: ${punto.zona} | Clima: ${punto.clima}",
                     icon = bitmapDescriptorFromVector(context = LocalContext.current, R.drawable.castillo)
                 )
             }
@@ -187,17 +195,23 @@ fun MapScreenContent(
             if (uiState.routePoints.isNotEmpty()) {
                 Polyline(
                     points = uiState.routePoints,
-                    color = if (uiState.isDarkMap) androidx.compose.ui.graphics.Color.Cyan
-                    else androidx.compose.ui.graphics.Color.Blue,
+                    color = if (uiState.isDarkMap) Color.Cyan
+                    else Color.Blue,
                     width = 6f
                 )
             }
 
             Polygon(
-                points = teusaquilloPolygonPoints,
-                fillColor = androidx.compose.ui.graphics.Color.Gray.copy(alpha = 0.3f),
-                strokeColor = androidx.compose.ui.graphics.Color.Gray.copy(alpha = 0.5f),
+                points = teusaquilloRectanglePoints,
+                fillColor = Gray.copy(alpha = 0.3f),
+                strokeColor = Gray.copy(alpha = 0.5f),
                 strokeWidth = 2f
+            )
+            Polygon(
+                points = chapineroTrianglePoints,
+                fillColor = Color.Blue.copy(alpha = 0.2f),
+                strokeColor = Color.Blue.copy(alpha = 0.6f),
+                strokeWidth = 3f
             )
         }
 

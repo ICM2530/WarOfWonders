@@ -2,79 +2,74 @@ package com.example.warofwonders.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.example.warofwonders.R
 import com.example.warofwonders.data.model.Clan
 import com.example.warofwonders.data.model.PuntoInteres
 import com.example.warofwonders.data.model.Recurso
 import org.json.JSONArray
+import org.json.JSONObject
 import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.io.File
-import java.io.FileReader
-import java.io.FileWriter
-import java.io.IOException
 
 class InterestPointRepository(private val context: Context) {
 
     private val filename = "puntos_interes.json"
     private val file = File(context.getExternalFilesDir(null), filename)
 
-    private val puntos = mutableListOf<PuntoInteres>()
-
-    init {
-        puntos.add(
-            PuntoInteres(
-                id = 1,
-                clima = "Frío",
-                altitud = 2600,
-                zona = "Montaña",
-                recursos = listOf(Recurso("Agua", 30), Recurso("Madera", 15)),
-                clanesPeleando = listOf(Clan("Dragones", 120), Clan("Fénix", 90))
-            )
-        )
-        puntos.add(
-            PuntoInteres(
-                id = 2,
-                clima = "Cálido",
-                altitud = 200,
-                zona = "Costa",
-                recursos = listOf(Recurso("Pescado", 50), Recurso("Arena", 100)),
-                clanesPeleando = listOf(Clan("Tiburones", 70))
-            )
-        )
-    }
-
-    fun writeJSONFile() {
-        val jsonArray = JSONArray()
-        for (p in puntos) jsonArray.put(p.toJSON())
-
-        try {
-            val output = BufferedWriter(FileWriter(file))
-            output.write(jsonArray.toString(2))
-            output.close()
-            Log.i("PUNTO_INTERES", "Archivo guardado en: ${file.absolutePath}")
-        } catch (e: IOException) {
-            Log.e("PUNTO_INTERES", "Error al escribir archivo", e)
-        }
-    }
-
     fun readJSONFile(): List<PuntoInteres> {
-        if (!file.exists()) return emptyList()
+        val jsonText: String = try {
+            // 1️⃣ Primero busca en almacenamiento externo
+            if (file.exists()) {
+                file.readText()
+            } else {
+                // 2️⃣ Si no existe, lee desde res/raw
+                context.resources.openRawResource(R.raw.puntos_interes)
+                    .bufferedReader().use(BufferedReader::readText)
+            }
+        } catch (e: Exception) {
+            Log.e("PUNTO_INTERES", "Error al leer archivo", e)
+            return emptyList()
+        }
 
         return try {
-            val input = BufferedReader(FileReader(file))
-            val jsonText = input.readText()
-            input.close()
-
             val jsonArray = JSONArray(jsonText)
             val list = mutableListOf<PuntoInteres>()
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
-                list.add(PuntoInteres.Companion.fromJSON(obj))
+                list.add(parsePunto(obj))
             }
             list
         } catch (e: Exception) {
-            Log.e("PUNTO_INTERES", "Error al leer archivo", e)
+            Log.e("PUNTO_INTERES", "Error al parsear JSON", e)
             emptyList()
         }
+    }
+
+    private fun parsePunto(obj: JSONObject): PuntoInteres {
+        val recursosJson = obj.optJSONArray("recursos") ?: JSONArray()
+        val recursos = mutableListOf<Recurso>()
+        for (i in 0 until recursosJson.length()) {
+            val r = recursosJson.getJSONObject(i)
+            recursos.add(Recurso(r.getString("nombre"), r.getInt("cantidad")))
+        }
+
+        val clanesJson = obj.optJSONArray("clanesPeleando") ?: JSONArray()
+        val clanes = mutableListOf<Clan>()
+        for (i in 0 until clanesJson.length()) {
+            val c = clanesJson.getJSONObject(i)
+            clanes.add(Clan(c.getString("nombre"), c.getInt("poder")))
+        }
+
+        return PuntoInteres(
+            id = obj.getInt("id"),
+            nombre = obj.getString("nombre"),
+            lat = obj.getDouble("lat"),
+            lng = obj.getDouble("lng"),
+            clima = obj.getString("clima"),
+            altitud = obj.getInt("altitud"),
+            zona = obj.getString("zona"),
+            recursos = recursos,
+            clanesPeleando = clanes
+        )
     }
 }
