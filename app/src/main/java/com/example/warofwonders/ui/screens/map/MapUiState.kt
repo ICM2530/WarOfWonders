@@ -9,6 +9,15 @@ data class MapUiState(
     val searchMarker: LatLng? = null, // Marcador de búsqueda
     val clickMarker: LatLng? = null,  // Marcador de click largo
     val isDarkMap: Boolean = false,
+    val isHigh: Boolean = false,
+    val isCold: Boolean = false,
+    val isHot: Boolean = false,
+    val pressureCreatureFound: Boolean = false,
+    val pressureCreatureCaptured: Boolean = false,
+    val coldCreatureFound: Boolean = false,
+    val coldCreatureCaptured: Boolean = false,
+    val hotCreatureFound: Boolean = false,
+    val hotCreatureCaptured: Boolean = false,
     val locationUpdates: Boolean = false,
     val permissionStatus: Boolean = false,
     val isCameraFollowing: Boolean = false,

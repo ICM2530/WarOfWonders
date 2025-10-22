@@ -6,6 +6,8 @@ import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.repository.GeoRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
+import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
+import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +21,9 @@ import okhttp3.Request
 class MapViewModel(
     private val locationRepository: LocationRepository,
     private val geoRepository: GeoRepository,
-    private val lightSensorDataSource: LightSensorDataSource
+    private val lightSensorDataSource: LightSensorDataSource,
+    private val barometerSensorDataSource: BarometerSensorDataSource,
+    private val temperatureSensorDataSource: TemperatureSensorDataSource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
@@ -153,6 +157,36 @@ class MapViewModel(
         ) }
     }
 
+    fun startBarometerSensor() {
+        barometerSensorDataSource.startListening { hPa ->
+            val isHigh = hPa > 1000
+            if (isHigh != _uiState.value.isHigh) {
+                _uiState.update { it.copy(isHigh = isHigh) }
+            }
+        }
+    }
+
+    fun stopBarometerSensor() {
+        barometerSensorDataSource.stopListening()
+    }
+
+    fun startTemperatureSensor() {
+        temperatureSensorDataSource.startListening { cel ->
+            val isCold = cel < 15
+            val isHot = cel > 30
+            if (isCold != _uiState.value.isCold) {
+                _uiState.update { it.copy(isCold = isCold) }
+            }
+            else if (isHot != _uiState.value.isHot) {
+                _uiState.update { it.copy(isHot = isHot) }
+            }
+        }
+    }
+
+    fun stopTemperatureSensor() {
+        temperatureSensorDataSource.stopListening()
+    }
+
     fun startLightSensor() {
         lightSensorDataSource.startListening { lux ->
             val isDark = lux < 2000f
@@ -168,7 +202,32 @@ class MapViewModel(
 
     override fun onCleared() {
         stopLightSensor()
+        stopBarometerSensor()
         stopLocationUpdates()
         super.onCleared()
+    }
+
+    fun showPressureCreatureAlert(show: Boolean) {
+        _uiState.value = _uiState.value.copy(pressureCreatureFound = show)
+    }
+
+    fun capturePressureCreature() {
+        _uiState.value = _uiState.value.copy(pressureCreatureCaptured = true, pressureCreatureFound = false)
+    }
+
+    fun showColdCreatureAlert(show: Boolean) {
+        _uiState.value = _uiState.value.copy(coldCreatureFound = show)
+    }
+
+    fun captureColdCreature() {
+        _uiState.value = _uiState.value.copy(coldCreatureCaptured = true, coldCreatureFound = false)
+    }
+
+    fun showHotCreatureAlert(show: Boolean) {
+        _uiState.value = _uiState.value.copy(hotCreatureFound = show)
+    }
+
+    fun captureHotCreature() {
+        _uiState.value = _uiState.value.copy(hotCreatureCaptured = true, hotCreatureFound = false)
     }
 }
