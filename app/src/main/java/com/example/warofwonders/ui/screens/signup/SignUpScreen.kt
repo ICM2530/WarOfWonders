@@ -3,12 +3,28 @@ package com.example.warofwonders.ui.screens.signup
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,8 +51,6 @@ fun SignUpScreen(navController: NavController) {
     val usersViewModel: MyUserViewModel = viewModel()
     val state by signUpViewModel.form.collectAsState()
 
-    var showPassword by remember { mutableStateOf(false) }
-    var showConfirmPassword by remember { mutableStateOf(false) }
     var confirmPassword by remember { mutableStateOf("") }
     var confirmPasswordError by remember { mutableStateOf("") }
 
@@ -68,14 +82,13 @@ fun SignUpScreen(navController: NavController) {
                 .padding(top = 80.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Contenedor con scroll
             Column(
                 modifier = Modifier
                     .weight(1f)
-                    .fillMaxWidth() // <- asegura que ocupe todo el ancho
+                    .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.Top,
-                horizontalAlignment = Alignment.CenterHorizontally // <- centra todos los elementos dentro
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
                     modifier = Modifier.size(280.dp, 220.dp),
@@ -83,7 +96,6 @@ fun SignUpScreen(navController: NavController) {
                     contentDescription = "Title"
                 )
 
-                // --- Campos del formulario ---
                 TextFieldImage(
                     value = state.name,
                     onValueChange = signUpViewModel::updateName,
@@ -152,7 +164,6 @@ fun SignUpScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // --- Botón fijo centrado ---
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -168,25 +179,29 @@ fun SignUpScreen(navController: NavController) {
                         if (confirmPassword != state.password) {
                             confirmPasswordError = "Las contraseñas no coinciden"
                         }
+
                         if (valid && confirmPasswordError.isEmpty()) {
-                            usersViewModel.saveUser(state)
-                            clearForm(signUpViewModel)
-                            confirmPassword = ""
-                            Toast.makeText(context, "Usuario registrado correctamente", Toast.LENGTH_SHORT).show()
-                            navController.navigate(AppScreens.Home.name) {
-                                popUpTo(0) { inclusive = true }
-                            }
+                            usersViewModel.registerUserWithFirebase(
+                                state,
+                                onSuccess = {
+                                    clearForm(signUpViewModel)
+                                    confirmPassword = ""
+                                    Toast.makeText(context, "Usuario registrado correctamente", Toast.LENGTH_SHORT).show()
+                                    navController.navigate(AppScreens.Home.name) {
+                                        popUpTo(0) { inclusive = true }
+                                    }
+                                },
+                                onError = { e ->
+                                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                }
+                            )
                         }
                     }
                 )
             }
         }
-
-
     }
 }
-
-// --- Composable para mostrar errores con animación suave ---
 
 @Composable
 fun AnimatedErrorText(error: String) {
@@ -206,8 +221,6 @@ fun AnimatedErrorText(error: String) {
     }
 }
 
-
-// --- Validaciones ---
 fun validateSignUpForm(signUpViewModel: SignUpViewModel, s: MyUserState): Boolean {
     var ok = true
 

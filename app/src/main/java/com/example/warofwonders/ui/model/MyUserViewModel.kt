@@ -1,5 +1,6 @@
 package com.example.warofwonders.ui.model
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.net.Uri
@@ -18,13 +19,12 @@ const val pathUsers = "users/"
 class MyUserViewModel(application: Application) : AndroidViewModel(application) {
 
     private val myRef = database.getReference(pathUsers)
+    @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
 
-    // Todos los usuarios (lista completa)
     private val _users = MutableStateFlow(listOf<MyUserState>())
     val users = _users.asStateFlow()
 
-    // Usuario actual (el logueado)
     private val _currentUser = MutableStateFlow<MyUserState?>(null)
     val currentUser = _currentUser.asStateFlow()
 
@@ -45,24 +45,47 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         }
     )
 
+    fun registerUserWithFirebase(
+        user: MyUserState,
+        onSuccess: () -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val auth = FirebaseAuth.getInstance()
+        val email = user.email.trim()
+        val password = user.password.trim()
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
+
+                    val userData = mapOf(
+                        "name" to user.name,
+                        "lastName" to user.lastName,
+                        "phone" to user.phone,
+                        "email" to user.email,
+                        "coins" to user.coins,
+                        "level" to user.level,
+                        "xp" to user.xp,
+                        "team" to user.team,
+                        "profileImageUrl" to user.profileImageUrl
+                    )
+
+                    myRef.child(uid).setValue(userData)
+                        .addOnSuccessListener {
+                            cacheUserLocally(user)
+                            onSuccess()
+                        }
+                        .addOnFailureListener { e -> onError(e) }
+                } else {
+                    onError(task.exception ?: Exception("Error al crear usuario"))
+                }
+            }
+    }
+
     fun saveUser(user: MyUserState) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
-        val cleanUser = mapOf(
-            "id" to uid,
-            "name" to user.name,
-            "lastName" to user.lastName,
-            "phone" to user.phone,
-            "email" to user.email,
-            "password" to user.password,
-            "coins" to user.coins,
-            "level" to user.level,
-            "xp" to user.xp,
-            "team" to user.team,
-            "profileImageUrl" to user.profileImageUrl
-        )
-
-        myRef.child(uid).setValue(cleanUser)
+        myRef.child(uid).setValue(user)
         cacheUserLocally(user)
     }
 
