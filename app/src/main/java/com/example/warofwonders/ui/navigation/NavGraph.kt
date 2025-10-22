@@ -10,6 +10,7 @@ import com.example.warofwonders.data.repository.GeoRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
+import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.ui.screens.camera.CameraScreen
 import com.example.warofwonders.ui.screens.chat.ChatScreen
 import com.example.warofwonders.ui.screens.clan.ClanScreen
@@ -32,6 +33,7 @@ fun NavGraph(
     geoRepository: GeoRepository,
     lightSensorDataSource: LightSensorDataSource,
     barometerSensorDataSource: BarometerSensorDataSource,
+    temperatureSensorDataSource: TemperatureSensorDataSource,
     navController: NavHostController = androidx.navigation.compose.rememberNavController()
 ) {
     val navController = rememberNavController()
