@@ -61,7 +61,8 @@ fun NavGraph(
         }
 
         composable(route = AppScreens.Inventory.name) {
-            InventoryScreen(navController = navController, viewModel = viewModel)
+            val mapViewModel: MapViewModel = viewModel ()
+            InventoryScreen(navController = navController, viewModel = mapViewModel)
         }
 
         composable(route = AppScreens.Map.name) {
