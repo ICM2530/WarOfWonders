@@ -25,7 +25,6 @@ import com.example.warofwonders.ui.screens.signup.SignUpScreen
 import com.example.warofwonders.ui.screens.startup.StartUpScreen
 import com.example.warofwonders.ui.screens.map.MapScreen
 import com.example.warofwonders.ui.screens.map.MapViewModel
-import com.example.warofwonders.ui.screens.profile.ProfileScreen
 import com.example.warofwonders.ui.screens.settings.SettingsScreen
 import com.example.warofwonders.ui.shared.GenericViewModelFactory
 
@@ -60,7 +59,7 @@ fun NavGraph(
         }
 
         composable(route = AppScreens.Inventory.name) {
-            InventoryScreen()
+            InventoryScreen(navController = navController)
         }
 
         composable(route = AppScreens.Map.name) {
@@ -87,9 +86,6 @@ fun NavGraph(
             ChatScreen(navController = navController)
         }
 
-        composable(route = AppScreens.Profile.name) {
-            ProfileScreen(navController = navController)
-        }
 
         composable(route = AppScreens.Settings.name) {
             SettingsScreen(navController = navController)

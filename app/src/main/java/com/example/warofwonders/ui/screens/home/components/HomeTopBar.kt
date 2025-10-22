@@ -56,8 +56,7 @@ fun HomeTopBar(
                     contentDescription = "Usuario",
                     modifier = Modifier
                         .fillMaxSize()
-                        .clickable { navController.navigate(AppScreens.Profile.name) },
-                    contentScale = ContentScale.FillBounds
+
                 )
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {

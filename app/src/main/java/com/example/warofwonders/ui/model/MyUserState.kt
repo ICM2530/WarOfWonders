@@ -10,5 +10,10 @@ data class MyUserState(
     val lastNameError: String = "",
     val phoneError: String = "",
     val emailError: String = "",
-    val passError: String = ""
+    val passError: String = "",
+
+    val coins: Int = 1000,
+    val level: Int = 1,
+    val xp: Int = 0,
+    val team: String = "Teusaquillo amigos"
 )

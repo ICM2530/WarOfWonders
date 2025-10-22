@@ -12,12 +12,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.screens.inventory.components.ProfileUser
 import com.example.warofwonders.ui.screens.inventory.components.SlotsSection
 
 @Composable
-fun InventoryScreen() {
+fun InventoryScreen(navController: NavHostController) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -33,7 +34,7 @@ fun InventoryScreen() {
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            ProfileUser()
+            ProfileUser(navController = navController)
 
             SlotsSection(title = "CLIMA MEDIO", items = listOf(R.drawable.oso))
 
