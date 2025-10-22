@@ -8,6 +8,7 @@ import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
+import com.example.warofwonders.data.source.hardware.StepDetectorDataSource
 import com.example.warofwonders.data.source.hardware.LocationDataSource
 import com.example.warofwonders.ui.navigation.NavGraph
 import com.google.android.gms.location.LocationServices
@@ -23,6 +24,7 @@ class MainActivity : ComponentActivity() {
         val lightSensorDataSource = LightSensorDataSource(context = this)
         val barometerSensorDataSource = BarometerSensorDataSource(context = this)
         val temperatureSensorDataSource = TemperatureSensorDataSource(context = this)
+        val stepDetectorDataSource = StepDetectorDataSource (context = this)
 
         setContent {
             NavGraph(
@@ -30,7 +32,8 @@ class MainActivity : ComponentActivity() {
                 geoRepository = geoRepository,
                 lightSensorDataSource = lightSensorDataSource,
                 barometerSensorDataSource = barometerSensorDataSource,
-                temperatureSensorDataSource = temperatureSensorDataSource
+                temperatureSensorDataSource = temperatureSensorDataSource,
+                stepDetectorDataSource = stepDetectorDataSource
             )
         }
     }
