@@ -5,7 +5,9 @@ import android.content.ContentResolver
 import android.provider.ContactsContract
 import android.widget.Toast
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,12 +31,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warofwonders.R
+import com.example.warofwonders.ui.components.ImageButton
 import com.example.warofwonders.ui.model.database
 import com.example.warofwonders.ui.model.pathUsers
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -49,96 +55,265 @@ data class Contact (
     val phone: String
 )
 
+
+
+
+@Composable
+fun SectionTitle(text: String) {
+    Text(
+        text = text,
+        color = Color.White,
+        fontSize = 22.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        textAlign = TextAlign.Center
+    )
+}
+
+@Composable
+fun SectionDivider() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth(0.9f)
+            .height(2.dp)
+            .background(Color.White.copy(alpha = 0.5f))
+            .padding(vertical = 8.dp)
+    )
+}
+
+
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun ContactsScreen() {
     val context = LocalContext.current
     val contentResolver = context.contentResolver
     val contactsPermissionState = rememberPermissionState(Manifest.permission.READ_CONTACTS)
-    var matchedContacts by remember { mutableStateOf<List<Pair<String, Contact>>>(emptyList()) }
 
-    Column (
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        when {
-            contactsPermissionState.status.isGranted -> {
-                val contacts = loadContacts(contentResolver)
-                LaunchedEffect(Unit) {
-                    findFriendsInFirebase(contacts) { matchedContacts = it }
-                }
-                DrawContacts(matchedContacts) { uid ->
-                    addFriend(uid, context)
-                }
-            }
+    var allContacts by remember { mutableStateOf<List<Pair<String, Contact>>>(emptyList()) }
+    var friends by remember { mutableStateOf<List<Pair<String, Contact>>>(emptyList()) }
+    var pendingRequests by remember { mutableStateOf<List<Pair<String, Contact>>>(emptyList()) }
 
-            contactsPermissionState.status.shouldShowRationale -> {
-                Text(
-                    "Por favor conceda el permiso para acceder correctamente a los contactos",
-                    modifier = Modifier.padding(30.dp),
-                    textAlign = TextAlign.Center,
-                    fontSize = 20.sp
-                )
-                Button(
-                    onClick = {contactsPermissionState.launchPermissionRequest()},
-                    modifier = Modifier.fillMaxWidth().padding(30.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
-                ) {
-                    Text("Conceder permiso")
-                }
-            }
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Fondo general
+        Image(
+            painter = painterResource(R.drawable.fondocontactos),
+            contentDescription = "Fondo contactos",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.matchParentSize()
+        )
 
-            else -> {
-                Text(
-                    "Por favor conceda permiso para agregar amigos",
-                    modifier = Modifier.padding(30.dp),
-                    textAlign = TextAlign.Center,
-                    fontSize = 20.sp
-                )
-                Button(
-                    onClick = {contactsPermissionState.launchPermissionRequest()},
-                    modifier = Modifier.fillMaxWidth().padding(30.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
-                ) {
-                    Text("Conceder permiso")
-                }
-            }
-        }
-    }
-}
-@Composable
-fun DrawContacts(contacts: List<Pair<String, Contact>>, onAddFriend: (String) -> Unit) {
-    LazyColumn(
-        verticalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        items(contacts) { (uid, contact) ->
-            ElevatedCard(modifier = Modifier.fillMaxWidth().padding(10.dp)) {
-                Row(
-                    horizontalArrangement = Arrangement.Start,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(15.dp)
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.shield),
-                        contentDescription = "Contact",
-                        modifier = Modifier.height(30.dp)
+        Column(
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            when {
+                contactsPermissionState.status.isGranted -> {
+                    val contacts = loadContacts(contentResolver)
+
+                    LaunchedEffect(Unit) {
+                        findFriendsInFirebase(contacts) { matched ->
+                            allContacts = matched
+                            // 🔹 Simulación inicial: ninguno agregado aún
+                            pendingRequests = matched
+                            friends = emptyList()
+                        }
+                    }
+
+                    ContactsSections(
+                        friends = friends,
+                        requests = pendingRequests,
+                        onAddFriend = { uid ->
+                            val contactToAdd = pendingRequests.find { it.first == uid }
+                            if (contactToAdd != null) {
+                                // 🔹 Agregar a la lista de amigos localmente
+                                friends = friends + contactToAdd
+                                pendingRequests = pendingRequests - contactToAdd
+                                addFriend(uid, context)
+                            }
+                        }
                     )
-                    Spacer(modifier = Modifier.width(15.dp))
-                    Text(contact.name)
-                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                contactsPermissionState.status.shouldShowRationale -> {
+                    Text(
+                        "Por favor conceda el permiso para acceder correctamente a los contactos",
+                        modifier = Modifier.padding(30.dp),
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
+                        color = Color.White
+                    )
                     Button(
-                        onClick = { onAddFriend(uid) },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Blue)
+                        onClick = { contactsPermissionState.launchPermissionRequest() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(30.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C3E50))
                     ) {
-                        Text("Agregar")
+                        Text("Conceder permiso")
+                    }
+                }
+
+                else -> {
+                    Text(
+                        "Por favor conceda permiso para agregar amigos",
+                        modifier = Modifier.padding(30.dp),
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
+                        color = Color.White
+                    )
+                    Button(
+                        onClick = { contactsPermissionState.launchPermissionRequest() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(30.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2C3E50))
+                    ) {
+                        Text("Conceder permiso")
                     }
                 }
             }
         }
     }
 }
+
+@Composable
+fun ContactsSections(
+    friends: List<Pair<String, Contact>>,
+    requests: List<Pair<String, Contact>>,
+    onAddFriend: (String) -> Unit
+) {
+    LazyColumn(
+        verticalArrangement = Arrangement.Top,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        // Amigos actuales
+        item {
+            SectionTitle("Amigos actuales")
+        }
+
+        if (friends.isEmpty()) {
+            item {
+                Text(
+                    "Aún no tienes amigos agregados",
+                    color = Color.White,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            items(friends) { (uid, contact) ->
+                DrawContactCard(contact, uid, showAddButton = false, onAddFriend)
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(25.dp))
+            SectionDivider()
+        }
+
+        // Solicitudes de amistad
+        item {
+            SectionTitle("Solicitudes de amistad")
+        }
+
+        if (requests.isEmpty()) {
+            item {
+                Text(
+                    "No tienes solicitudes pendientes",
+                    color = Color.White,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
+        } else {
+            items(requests) { (uid, contact) ->
+                DrawContactCard(contact, uid, showAddButton = true, onAddFriend)
+            }
+        }
+    }
+}
+
+@Composable
+fun DrawContactCard(
+    contact: Contact,
+    uid: String,
+    showAddButton: Boolean,
+    onAddFriend: (String) -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 10.dp, vertical = 6.dp)
+            .height(90.dp)
+    ) {
+
+        Image(
+            painter = painterResource(R.drawable.chatframe),
+            contentDescription = "Fondo contenedor contacto",
+            contentScale = ContentScale.FillBounds,
+            modifier = Modifier
+                .matchParentSize()
+                .padding(0.dp)
+        )
+
+        Row(
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.iconocontacto),
+                contentDescription = "Contacto",
+                modifier = Modifier.height(45.dp)
+            )
+
+            Spacer(modifier = Modifier.width(15.dp))
+
+            Text(
+                text = contact.name,
+                color = Color.White,
+                fontSize = 18.sp
+            )
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            if (showAddButton) {
+                Box(contentAlignment = Alignment.Center) {
+                    ImageButton(
+                        imageRes = R.drawable.button,
+                        contentDescription = "Agregar amigo",
+                        modifier = Modifier
+                            .width(100.dp)
+                            .height(45.dp),
+                        onClick = { onAddFriend(uid) }
+                    )
+                    Text(
+                        text = "Agregar",
+                        style = TextStyle(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Color.White
+                        )
+                    )
+                }
+            }
+        }
+    }
+
+}
+
+
 
 fun loadContacts(contentResolver: ContentResolver): List<Contact> {
     val contacts = mutableListOf<Contact>()
