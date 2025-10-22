@@ -61,7 +61,20 @@ fun NavGraph(
         }
 
         composable(route = AppScreens.Inventory.name) {
-            InventoryScreen(navController = navController)
+            val mapViewModel: MapViewModel = viewModel(
+                factory = GenericViewModelFactory {
+                    MapViewModel(
+                        locationRepository = locationRepository,
+                        geoRepository = geoRepository,
+                        lightSensorDataSource = lightSensorDataSource,
+                        barometerSensorDataSource = barometerSensorDataSource,
+                        temperatureSensorDataSource = temperatureSensorDataSource,
+                        magnetometerDataSource = magnetometerDataSource,
+                        interestPointRepository = interestPointRepository
+                    )
+                }
+            )
+            InventoryScreen(navController = navController, viewModel = mapViewModel)
         }
 
         composable(route = AppScreens.Map.name) {
@@ -71,6 +84,9 @@ fun NavGraph(
                         locationRepository = locationRepository,
                         geoRepository = geoRepository,
                         lightSensorDataSource = lightSensorDataSource,
+                        barometerSensorDataSource = barometerSensorDataSource,
+                        temperatureSensorDataSource = temperatureSensorDataSource,
+                        magnetometerDataSource = magnetometerDataSource,
                         interestPointRepository = interestPointRepository
                     )
                 }
