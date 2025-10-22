@@ -39,6 +39,7 @@ fun NavGraph(
     stepDetectorDataSource: StepDetectorDataSource,
     magnetometerDataSource: MagnetometerDataSource,
     navController: NavHostController = androidx.navigation.compose.rememberNavController()
+
 ) {
     val navController = rememberNavController()
 
@@ -60,7 +61,7 @@ fun NavGraph(
         }
 
         composable(route = AppScreens.Inventory.name) {
-            InventoryScreen(navController = navController)
+            InventoryScreen(navController = navController, viewModel = viewModel)
         }
 
         composable(route = AppScreens.Map.name) {
@@ -69,7 +70,10 @@ fun NavGraph(
                     MapViewModel(
                         locationRepository = locationRepository,
                         geoRepository = geoRepository,
-                        lightSensorDataSource = lightSensorDataSource
+                        lightSensorDataSource = lightSensorDataSource,
+                        barometerSensorDataSource = barometerSensorDataSource,
+                        temperatureSensorDataSource = temperatureSensorDataSource,
+                        magnetometerDataSource = magnetometerDataSource
                     )
                 }
             )
