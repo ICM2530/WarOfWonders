@@ -48,7 +48,7 @@ fun CameraScreen() {
         }
     }
 
-    // Archivo temporal para la cámara
+
     val cameraUri = FileProvider.getUriForFile(
         context,
         "${context.packageName}.file_provider",
@@ -62,7 +62,7 @@ fun CameraScreen() {
         if (it) {
             imageUri = cameraUri
 
-            // ✅ Guardar la foto tomada en la carpeta WarOfWonders
+
             val imageDir = File(
                 context.getExternalFilesDir(Environment.DIRECTORY_PICTURES),
                 "WarOfWonders"
@@ -125,10 +125,7 @@ fun CameraScreen() {
     }
 }
 
-/**
- * Copia una imagen (de cámara o galería) en la carpeta interna del app:
- * /Android/data/com.example.warofwonders/files/Pictures/WarOfWonders/
- */
+
 fun saveCameraImageToGallery(context: Context, uri: Uri, destDir: File) {
     try {
         val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
@@ -143,8 +140,8 @@ fun saveCameraImageToGallery(context: Context, uri: Uri, destDir: File) {
         // 🔄 Escanear para que aparezca inmediatamente si usas un visor externo
         MediaScannerConnection.scanFile(context, arrayOf(newFile.absolutePath), null, null)
 
-        Log.i("ImageApp", "✅ Imagen copiada a: ${newFile.absolutePath}")
+        Log.i("ImageApp", "Imagen copiada a: ${newFile.absolutePath}")
     } catch (e: Exception) {
-        Log.e("ImageApp", "❌ Error al copiar imagen: ${e.message}")
+        Log.e("ImageApp", "Error al copiar imagen: ${e.message}")
     }
 }

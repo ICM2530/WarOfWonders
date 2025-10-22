@@ -66,7 +66,7 @@ fun SignUpScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 80.dp),
-            horizontalAlignment = Alignment.CenterHorizontally // centramos el contenido principal
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Contenedor con scroll
             Column(
