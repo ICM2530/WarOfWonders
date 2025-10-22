@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import com.example.warofwonders.data.repository.GeoRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
+import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.LocationDataSource
 import com.example.warofwonders.ui.navigation.NavGraph
 import com.google.android.gms.location.LocationServices
@@ -19,12 +20,14 @@ class MainActivity : ComponentActivity() {
         val locationRepository = LocationRepository(locationDataSource = locationDataSource)
         val geoRepository = GeoRepository(context = this)
         val lightSensorDataSource = LightSensorDataSource(context = this)
+        val barometerSensorDataSource = BarometerSensorDataSource(context = this)
 
         setContent {
             NavGraph(
                 locationRepository = locationRepository,
                 geoRepository = geoRepository,
-                lightSensorDataSource = lightSensorDataSource
+                lightSensorDataSource = lightSensorDataSource,
+                barometerSensorDataSource = barometerSensorDataSource
             )
         }
     }
