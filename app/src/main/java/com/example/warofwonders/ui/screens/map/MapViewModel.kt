@@ -2,12 +2,12 @@ package com.example.warofwonders.ui.screens.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.repository.GeoRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
+import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +23,8 @@ class MapViewModel(
     private val geoRepository: GeoRepository,
     private val lightSensorDataSource: LightSensorDataSource,
     private val barometerSensorDataSource: BarometerSensorDataSource,
-    private val temperatureSensorDataSource: TemperatureSensorDataSource
+    private val temperatureSensorDataSource: TemperatureSensorDataSource,
+    private val magnetometerDataSource: MagnetometerDataSource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
@@ -187,6 +188,19 @@ class MapViewModel(
         temperatureSensorDataSource.stopListening()
     }
 
+    fun startMagnetometerSensor() {
+        magnetometerDataSource.startListening { magn ->
+            val isMagn = magn > 60
+            if (isMagn != _uiState.value.isMagn) {
+                _uiState.update { it.copy(isMagn = isMagn) }
+            }
+        }
+    }
+
+    fun stopMagnetometerSensor() {
+        magnetometerDataSource.stopListening()
+    }
+
     fun startLightSensor() {
         lightSensorDataSource.startListening { lux ->
             val isDark = lux < 2000f
@@ -203,6 +217,8 @@ class MapViewModel(
     override fun onCleared() {
         stopLightSensor()
         stopBarometerSensor()
+        stopTemperatureSensor()
+        stopMagnetometerSensor()
         stopLocationUpdates()
         super.onCleared()
     }
@@ -229,5 +245,13 @@ class MapViewModel(
 
     fun captureHotCreature() {
         _uiState.value = _uiState.value.copy(hotCreatureCaptured = true, hotCreatureFound = false)
+    }
+
+    fun findArmor(show: Boolean) {
+        _uiState.value = _uiState.value.copy(armorFound = show)
+    }
+
+    fun captureArmor() {
+        _uiState.value = _uiState.value.copy(armorCaptured = true, armorFound = false)
     }
 }

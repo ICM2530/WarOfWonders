@@ -31,13 +31,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
 import com.example.warofwonders.ui.shared.utils.shouldShowPermissionRationale
-import com.example.warofwonders.ui.theme.WarOfWondersTheme
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -50,9 +48,6 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.shared.utils.bitmapDescriptorFromVector
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
-import com.google.android.gms.maps.model.CircleOptions
-import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.Polyline
 
@@ -73,9 +68,11 @@ fun MapScreen(navController: NavController, viewModel: MapViewModel) {
         viewModel.startLightSensor()
         viewModel.startBarometerSensor()
         viewModel.startTemperatureSensor()
+        viewModel.startMagnetometerSensor()
         onDispose { viewModel.stopLightSensor()
                     viewModel.stopBarometerSensor()
-                    viewModel.stopTemperatureSensor()}
+                    viewModel.stopTemperatureSensor()
+                    viewModel.stopMagnetometerSensor()}
     }
 
     MapScreenContent(
@@ -276,6 +273,7 @@ fun MapScreenContent(
                                         Button(
                                             onClick = {
                                                 viewModel.capturePressureCreature()
+                                                viewModel.showPressureCreatureAlert(false)
                                             }
                                         ) {
                                             Text("ATRAPAR")
@@ -336,6 +334,7 @@ fun MapScreenContent(
                                         Button(
                                             onClick = {
                                                 viewModel.captureColdCreature()
+                                                viewModel.showColdCreatureAlert(false)
                                             }
                                         ) {
                                             Text("ATRAPAR")
@@ -396,9 +395,64 @@ fun MapScreenContent(
                                         Button(
                                             onClick = {
                                                 viewModel.captureHotCreature()
+                                                viewModel.showHotCreatureAlert(false)
                                             }
                                         ) {
                                             Text("ATRAPAR")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        else if (uiState.armorFound) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.CenterHorizontally)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Surface(
+                                shadowElevation = 6.dp,
+                                tonalElevation = 2.dp,
+                                color = Color(0xFFc79e63),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "¡HAN APARECIDO UNAS PODEROSAS ARMADURAS!",
+                                        color = Color.Black
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+
+                                        Button(
+                                            onClick = {
+                                                viewModel.captureArmor()
+                                                viewModel.findArmor(false)
+                                            }
+                                        ) {
+                                            Text("Aceptar")
                                         }
                                     }
                                 }
@@ -424,6 +478,12 @@ fun MapScreenContent(
         LaunchedEffect(uiState.isHot) {
             if (uiState.isHot) {
                 viewModel.showHotCreatureAlert(true)
+            }
+        }
+
+        LaunchedEffect(uiState.isMagn) {
+            if (uiState.isMagn) {
+                viewModel.findArmor(true)
             }
         }
 

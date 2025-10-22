@@ -42,10 +42,10 @@ fun InventoryScreen(navController: NavHostController, viewModel: MapViewModel) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ProfileUser(navController = navController)
-                SlotsSection(
-                    title = "CLIMA MEDIO",
-                    items = listOf(R.drawable.oso)
-                )
+            SlotsSection(
+                title = "CLIMA MEDIO",
+                items = listOf(R.drawable.oso)
+            )
 
             if (uiState.coldCreatureCaptured) {
                 SlotsSection(
@@ -68,7 +68,7 @@ fun InventoryScreen(navController: NavHostController, viewModel: MapViewModel) {
                 )
             }
 
-            //if (uiState.hasArmor) {
+            if (uiState.armorCaptured) {
                 SlotsSection(
                     title = "ARMADURAS",
                     items = listOf(R.drawable.aradura1, R.drawable.armadura2)
@@ -76,3 +76,4 @@ fun InventoryScreen(navController: NavHostController, viewModel: MapViewModel) {
             }
         }
     }
+}
