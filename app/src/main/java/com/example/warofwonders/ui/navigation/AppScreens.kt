@@ -13,5 +13,7 @@ enum class AppScreens {
     Inventory,
     Settings,
     Contacts,
-    Camera
+    Camera,
+
+    Gallery
 }

@@ -18,6 +18,7 @@ import com.example.warofwonders.ui.screens.chat.ChatScreen
 import com.example.warofwonders.ui.screens.clan.ClanScreen
 import com.example.warofwonders.ui.screens.combat.CombatScreen
 import com.example.warofwonders.ui.screens.contacts.ContactsScreen
+import com.example.warofwonders.ui.screens.gallery.GalleryScreen
 import com.example.warofwonders.ui.screens.home.HomeScreen
 import com.example.warofwonders.ui.screens.inventory.InventoryScreen
 import com.example.warofwonders.ui.screens.login.LogInScreen
@@ -102,5 +103,10 @@ fun NavGraph(
         composable(route = AppScreens.Camera.name) {
             CameraScreen()
         }
+
+        composable(route = AppScreens.Gallery.name) {
+            GalleryScreen(navController = navController)
+        }
+
     }
 }

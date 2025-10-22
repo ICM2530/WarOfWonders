@@ -209,7 +209,7 @@ fun ProfileUser(
                     contentDescription = "Archivos",
                     modifier = Modifier
                         .size(40.dp)
-                        .clickable { navController.navigate(AppScreens.Contacts.name) },
+                        .clickable { navController.navigate(AppScreens.Gallery.name) },
                     contentScale = ContentScale.Fit
                 )
             }
