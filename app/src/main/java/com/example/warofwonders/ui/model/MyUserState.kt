@@ -15,5 +15,8 @@ data class MyUserState(
     val coins: Int = 1000,
     val level: Int = 1,
     val xp: Int = 0,
-    val team: String = "Teusaquillo amigos"
+    val team: String = "Teusaquillo amigos",
+
+    val profileImageUrl: String = ""
+
 )

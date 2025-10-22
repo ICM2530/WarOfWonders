@@ -4,7 +4,9 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -64,114 +66,123 @@ fun SignUpScreen(navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = 80.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally // centramos el contenido principal
         ) {
-            Image(
-                modifier = Modifier.size(280.dp, 220.dp),
-                painter = painterResource(id = R.drawable.tittle_post),
-                contentDescription = "Title"
-            )
+            // Contenedor con scroll
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth() // <- asegura que ocupe todo el ancho
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.CenterHorizontally // <- centra todos los elementos dentro
+            ) {
+                Image(
+                    modifier = Modifier.size(280.dp, 220.dp),
+                    painter = painterResource(id = R.drawable.tittle_post),
+                    contentDescription = "Title"
+                )
 
-            // --- Nombre ---
-            TextFieldImage(
-                value = state.name,
-                onValueChange = signUpViewModel::updateName,
-                placeholderText = "Nombre",
-                modifier = Modifier.width(260.dp)
-            )
-            AnimatedErrorText(state.nameError)
+                // --- Campos del formulario ---
+                TextFieldImage(
+                    value = state.name,
+                    onValueChange = signUpViewModel::updateName,
+                    placeholderText = "Nombre",
+                    modifier = Modifier.width(260.dp)
+                )
+                AnimatedErrorText(state.nameError)
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // --- Apellido ---
-            TextFieldImage(
-                value = state.lastName,
-                onValueChange = signUpViewModel::updateLastName,
-                placeholderText = "Apellido",
-                modifier = Modifier.width(260.dp)
-            )
-            AnimatedErrorText(state.lastNameError)
+                TextFieldImage(
+                    value = state.lastName,
+                    onValueChange = signUpViewModel::updateLastName,
+                    placeholderText = "Apellido",
+                    modifier = Modifier.width(260.dp)
+                )
+                AnimatedErrorText(state.lastNameError)
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // --- Teléfono ---
-            TextFieldImage(
-                value = state.phone,
-                onValueChange = signUpViewModel::updatePhone,
-                placeholderText = "Teléfono",
-                modifier = Modifier.width(260.dp)
-            )
-            AnimatedErrorText(state.phoneError)
+                TextFieldImage(
+                    value = state.phone,
+                    onValueChange = signUpViewModel::updatePhone,
+                    placeholderText = "Teléfono",
+                    modifier = Modifier.width(260.dp)
+                )
+                AnimatedErrorText(state.phoneError)
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // --- Correo ---
-            TextFieldImage(
-                value = state.email,
-                onValueChange = signUpViewModel::updateEmail,
-                placeholderText = "Correo electrónico",
-                modifier = Modifier.width(260.dp)
-            )
-            AnimatedErrorText(state.emailError)
+                TextFieldImage(
+                    value = state.email,
+                    onValueChange = signUpViewModel::updateEmail,
+                    placeholderText = "Correo electrónico",
+                    modifier = Modifier.width(260.dp)
+                )
+                AnimatedErrorText(state.emailError)
 
-            Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-            // --- Contraseña ---
-            TextFieldImage(
-                value = state.password,
-                onValueChange = signUpViewModel::updatePassword,
-                placeholderText = "Contraseña",
-                isPassword = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.width(260.dp),
+                TextFieldImage(
+                    value = state.password,
+                    onValueChange = signUpViewModel::updatePassword,
+                    placeholderText = "Contraseña",
+                    isPassword = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.width(260.dp)
+                )
+                AnimatedErrorText(state.passError)
 
-            )
-            AnimatedErrorText(confirmPasswordError)
+                Spacer(modifier = Modifier.height(8.dp))
 
-            Spacer(modifier = Modifier.height(8.dp))
+                TextFieldImage(
+                    value = confirmPassword,
+                    onValueChange = {
+                        confirmPassword = it
+                        confirmPasswordError = ""
+                    },
+                    placeholderText = "Confirmar contraseña",
+                    isPassword = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.width(260.dp)
+                )
+                AnimatedErrorText(confirmPasswordError)
 
-        // --- Confirmar Contraseña ---
-            TextFieldImage(
-                value = confirmPassword,
-                onValueChange = {
-                    confirmPassword = it
-                    confirmPasswordError = ""
-                },
-                placeholderText = "Confirmar contraseña",
-                isPassword = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                modifier = Modifier.width(260.dp),
+                Spacer(modifier = Modifier.height(16.dp))
+            }
 
-            )
-
-            AnimatedErrorText(confirmPasswordError)
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-
-            // --- Botón ---
-            ImageButton(
-                imageRes = R.drawable.button_signup,
-                contentDescription = "Registrar",
-                modifier = Modifier.width(140.dp),
-                onClick = {
-                    val valid = validateSignUpForm(signUpViewModel, state)
-                    if (confirmPassword != state.password) {
-                        confirmPasswordError = "Las contraseñas no coinciden"
-                    }
-                    if (valid && confirmPasswordError.isEmpty()) {
-                        usersViewModel.saveUser(state)
-                        clearForm(signUpViewModel)
-                        confirmPassword = ""
-                        Toast.makeText(context, "Usuario registrado correctamente", Toast.LENGTH_SHORT).show()
-                        navController.navigate(AppScreens.Home.name) {
-                            popUpTo(0) { inclusive = true }
+            // --- Botón fijo centrado ---
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 24.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                ImageButton(
+                    imageRes = R.drawable.button_signup,
+                    contentDescription = "Registrar",
+                    modifier = Modifier.width(140.dp),
+                    onClick = {
+                        val valid = validateSignUpForm(signUpViewModel, state)
+                        if (confirmPassword != state.password) {
+                            confirmPasswordError = "Las contraseñas no coinciden"
+                        }
+                        if (valid && confirmPasswordError.isEmpty()) {
+                            usersViewModel.saveUser(state)
+                            clearForm(signUpViewModel)
+                            confirmPassword = ""
+                            Toast.makeText(context, "Usuario registrado correctamente", Toast.LENGTH_SHORT).show()
+                            navController.navigate(AppScreens.Home.name) {
+                                popUpTo(0) { inclusive = true }
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
         }
+
+
     }
 }
 
