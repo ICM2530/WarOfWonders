@@ -1,9 +1,7 @@
 package com.example.warofwonders.ui.screens.settings
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -12,18 +10,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.warofwonders.R
+import com.example.warofwonders.ui.components.ImageButton
 import com.example.warofwonders.ui.model.firebaseAuth
 import com.example.warofwonders.ui.navigation.AppScreens
 
 @Composable
 fun SettingsScreen(navController: NavHostController) {
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        // Fondo (si lo tienes)
         Image(
             painter = painterResource(id = R.drawable.background_image),
             contentDescription = "Background",
@@ -31,102 +31,86 @@ fun SettingsScreen(navController: NavHostController) {
             contentScale = ContentScale.Crop
         )
 
+        // Título
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 16.dp),
+                .padding(top = 24.dp),
             contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource(id = R.drawable.bracket_name),
-                contentDescription = "Settings",
-                modifier = Modifier.size(width = 140.dp, height = 40.dp)
+                painter = painterResource(id = R.drawable.chatframe),
+                contentDescription = "Título Ajustes",
+                modifier = Modifier.size(width = 200.dp, height = 60.dp)
             )
             Text(
                 text = "Ajustes",
                 style = TextStyle(
-                    fontSize = 16.sp,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                     color = Color.Black
                 )
             )
         }
 
+        // Opciones
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+                .padding(horizontal = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            SettingOption(text = "Sonido")
-            SettingOption(text = "Notificaciones")
-            SettingOption(text = "Idioma")
-            SettingOption(text = "Cuenta")
-            IconButton(
-                onClick = {
-                    firebaseAuth.signOut()
-                    navController.navigate(AppScreens.StartUp.name) {
-                        popUpTo(0) { inclusive = true }
+            SettingOption("Sonido")
+            SettingOption("Notificaciones")
+            SettingOption("Idioma")
+            SettingOption("Cuenta")
+
+            // Botón de cerrar sesión
+            Box(contentAlignment = Alignment.Center) {
+                ImageButton(
+                    imageRes = R.drawable.chatframe,
+                    contentDescription = "Cerrar sesión",
+                    modifier = Modifier
+                        .size(width = 220.dp, height = 60.dp),
+                    onClick = {
+                        firebaseAuth.signOut()
+                        navController.navigate(AppScreens.StartUp.name) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
-                }
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.shield),
-                    contentDescription = "Logout Icon",
-                    modifier = Modifier.size(28.dp)
+                )
+                Text(
+                    text = "Cerrar sesión",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black
+                    )
                 )
             }
         }
 
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.closechat),
-                contentDescription = "Cerrar",
-                modifier = Modifier
-                    .size(48.dp)
-                    .clickable(
-                        onClick = { navController.navigate(AppScreens.Home) }
-                    )
-            )
-            IconButton(
-                onClick = {
-                    firebaseAuth.signOut()
-                    navController.navigate(AppScreens.StartUp.name) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.shield),
-                    contentDescription = "Logout Icon",
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-        }
+
     }
 }
 
 @Composable
 fun SettingOption(text: String) {
     Box(
-        modifier = Modifier
-            .size(width = 200.dp, height = 50.dp),
+        modifier = Modifier.size(width = 220.dp, height = 55.dp),
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = painterResource(id = R.drawable.bracket_coin),
-            contentDescription = "Option Background",
+            painter = painterResource(id = R.drawable.chatframe),
+            contentDescription = "Opción",
             modifier = Modifier.fillMaxSize()
         )
         Text(
             text = text,
             style = TextStyle(
-                fontSize = 14.sp,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium,
                 color = Color.Black
             )
         )
