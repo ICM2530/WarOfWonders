@@ -1,0 +1,44 @@
+[33me6a65a1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature[m[33m, [m[1;31morigin/feature[m[33m)[m HEAD@{0}: merge origin/feature: Fast-forward
+[33m780a4f5[m HEAD@{1}: reset: moving to 780a4f5
+[33me6a65a1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature[m[33m, [m[1;31morigin/feature[m[33m)[m HEAD@{2}: rebase (finish): returning to refs/heads/feature
+[33me6a65a1[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfeature[m[33m, [m[1;31morigin/feature[m[33m)[m HEAD@{3}: rebase (continue): Se agrega localización y mapa con fallos
+[33m780a4f5[m HEAD@{4}: pull --rebase origin feature (start): checkout 780a4f5d9298a74dabaa242cc04d0648d860b8fe
+[33mfc59f53[m HEAD@{5}: commit: Se agrega localización y mapa con fallos
+[33mf8e6da3[m[33m ([m[1;31morigin/refactor[m[33m, [m[1;31morigin/bugfix[m[33m, [m[1;32mrefactor[m[33m, [m[1;32mdevelop[m[33m, [m[1;32mbugfix[m[33m)[m HEAD@{6}: merge develop: Fast-forward
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{7}: checkout: moving from bugfix to feature
+[33mf8e6da3[m[33m ([m[1;31morigin/refactor[m[33m, [m[1;31morigin/bugfix[m[33m, [m[1;32mrefactor[m[33m, [m[1;32mdevelop[m[33m, [m[1;32mbugfix[m[33m)[m HEAD@{8}: merge develop: Fast-forward
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{9}: checkout: moving from develop to bugfix
+[33mf8e6da3[m[33m ([m[1;31morigin/refactor[m[33m, [m[1;31morigin/bugfix[m[33m, [m[1;32mrefactor[m[33m, [m[1;32mdevelop[m[33m, [m[1;32mbugfix[m[33m)[m HEAD@{10}: merge refactor: Fast-forward
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{11}: checkout: moving from refactor to develop
+[33mf8e6da3[m[33m ([m[1;31morigin/refactor[m[33m, [m[1;31morigin/bugfix[m[33m, [m[1;32mrefactor[m[33m, [m[1;32mdevelop[m[33m, [m[1;32mbugfix[m[33m)[m HEAD@{12}: commit: Se realizó mejoras en la arquitectura del proyecto.
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{13}: checkout: moving from refactor to refactor
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{14}: checkout: moving from refactor to refactor
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{15}: checkout: moving from feature to refactor
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{16}: checkout: moving from bugfix to feature
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{17}: checkout: moving from develop to bugfix
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{18}: checkout: moving from main to develop
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{19}: checkout: moving from develop to main
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{20}: checkout: moving from main to develop
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{21}: checkout: moving from refactor to main
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{22}: merge develop: Fast-forward
+[33mb480aeb[m HEAD@{23}: checkout: moving from feature to refactor
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{24}: merge develop: Fast-forward
+[33mf078fe5[m HEAD@{25}: checkout: moving from bugfix to feature
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{26}: merge develop: Fast-forward
+[33mb480aeb[m HEAD@{27}: checkout: moving from develop to bugfix
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{28}: merge main: Fast-forward
+[33m67c7ed3[m HEAD@{29}: checkout: moving from main to develop
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{30}: checkout: moving from refactor to main
+[33mb480aeb[m HEAD@{31}: checkout: moving from refactor to refactor
+[33mb480aeb[m HEAD@{32}: checkout: moving from develop to refactor
+[33m67c7ed3[m HEAD@{33}: checkout: moving from feature to develop
+[33mf078fe5[m HEAD@{34}: checkout: moving from develop to feature
+[33m67c7ed3[m HEAD@{35}: checkout: moving from bugfix to develop
+[33mb480aeb[m HEAD@{36}: checkout: moving from develop to bugfix
+[33m67c7ed3[m HEAD@{37}: checkout: moving from develop to develop
+[33m67c7ed3[m HEAD@{38}: checkout: moving from main to develop
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{39}: checkout: moving from main to main
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{40}: checkout: moving from bugfix to main
+[33mb480aeb[m HEAD@{41}: checkout: moving from develop to bugfix
+[33m67c7ed3[m HEAD@{42}: checkout: moving from main to develop
+[33md00457c[m[33m ([m[1;32mmain[m[33m)[m HEAD@{43}: clone: from github.com:ICM2530/WarOfWonders.git

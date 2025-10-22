@@ -35,12 +35,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.warofwonders.R
+import com.example.warofwonders.ui.model.database
+import com.example.warofwonders.ui.model.pathUsers
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.FirebaseDatabase
 
 data class Contact (
     val id: String,
@@ -171,36 +172,43 @@ fun loadContacts(contentResolver: ContentResolver): List<Contact> {
     return contacts
 }
 
-fun findFriendsInFirebase(contacts: List<Contact>, onResult: (List<Pair<String, Contact>>) -> Unit) {
-    val database = FirebaseDatabase.getInstance().getReference("users")
-    database.get().addOnSuccessListener { snapshot ->
+fun findFriendsInFirebase(
+    contacts: List<Contact>,
+    onResult: (List<Pair<String, Contact>>) -> Unit
+) {
+    val usersRef = database.getReference(pathUsers)
+
+    usersRef.get().addOnSuccessListener { snapshot ->
         val firebaseUsers = snapshot.children.mapNotNull { userSnap ->
             val uid = userSnap.key ?: return@mapNotNull null
             val phone = userSnap.child("phone").getValue(String::class.java)
             if (phone != null) uid to phone else null
         }
+
         fun normalize(num: String) = num.filter { it.isDigit() }.takeLast(10)
-        val firebasePhones = firebaseUsers.map { it.first to normalize(it.second) }
+
         val matched = contacts.mapNotNull { contact ->
             val normalizedContact = normalize(contact.phone)
-            val match = firebasePhones.find { it.second == normalizedContact }
+            val match = firebaseUsers.find { normalize(it.second) == normalizedContact }
             match?.let { it.first to contact }
         }
+
         onResult(matched)
     }
 }
 
 fun addFriend(uidFriend: String, context: android.content.Context) {
     val currentUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-    val db = FirebaseDatabase.getInstance().getReference("users")
-    val currentUserRef = db.child(currentUid).child("friends").child(uidFriend)
+    val usersRef = database.getReference(pathUsers)
 
-    currentUserRef.get().addOnSuccessListener { snapshot ->
+    val currentUserFriendsRef = usersRef.child(currentUid).child("friends").child(uidFriend)
+
+    currentUserFriendsRef.get().addOnSuccessListener { snapshot ->
         if (snapshot.exists()) {
             Toast.makeText(context, "Ya agregaste a este amigo", Toast.LENGTH_SHORT).show()
         } else {
-            currentUserRef.setValue(true)
-            db.child(uidFriend).child("friends").child(currentUid).setValue(true)
+            currentUserFriendsRef.setValue(true)
+            usersRef.child(uidFriend).child("friends").child(currentUid).setValue(true)
             Toast.makeText(context, "Amigo agregado", Toast.LENGTH_SHORT).show()
         }
     }

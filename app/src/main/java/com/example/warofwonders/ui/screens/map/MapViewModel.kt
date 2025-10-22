@@ -1,52 +1,174 @@
 package com.example.warofwonders.ui.screens.map
 
-import android.icu.text.StringSearch
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.warofwonders.data.model.LocationData
+import com.example.warofwonders.data.repository.GeoRepository
 import com.example.warofwonders.data.repository.LocationRepository
+import com.example.warofwonders.data.source.hardware.LightSensorDataSource
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.PolyUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 class MapViewModel(
-    private val locationRepository: LocationRepository
-): ViewModel() {
+    private val locationRepository: LocationRepository,
+    private val geoRepository: GeoRepository,
+    private val lightSensorDataSource: LightSensorDataSource
+) : ViewModel() {
+
     private val _uiState = MutableStateFlow(MapUiState())
-    val uiState : StateFlow<MapUiState> = _uiState
+    val uiState: StateFlow<MapUiState> = _uiState
+
+    init {
+        // Marcadores estáticos Bogotá
+        val staticPoints = listOf(
+            LatLng(4.60971, -74.08175), // Candelaria
+            LatLng(4.6736, -74.0565),   // Monserrate
+            LatLng(4.6486, -74.2479),   // Usaquén
+            LatLng(4.6510, -74.0962),   // Parque 93
+            LatLng(4.5852, -74.0995),   // Salitre
+            // Nuevos puntos en Teusaquillo cerca de calle 46 #16-09
+            LatLng(4.6430, -74.0880), // Punto 1
+            LatLng(4.6445, -74.0825), // Punto 2
+            LatLng(4.6395, -74.0850), // Punto 3
+            LatLng(4.6365334, -74.07784), // Punto 4
+            LatLng(4.6363018, -74.07410)  // Punto 5
+        )
+        _uiState.update { it.copy(staticMarkers = staticPoints) }
+    }
+
 
     fun updatePermissionStatus(granted: Boolean) {
-        _uiState.update { state ->
-            state.copy(permissionStatus = granted)
+        _uiState.update { it.copy(permissionStatus = granted) }
+    }
+
+    fun updateSearchQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+    }
+
+    fun toggleLocationUpdates() {
+        val updating = _uiState.value.locationUpdates
+        if (updating) stopLocationUpdates() else startLocationUpdates()
+    }
+
+    private fun startLocationUpdates() {
+        _uiState.update { it.copy(locationUpdates = true, isCameraFollowing = true) }
+        locationRepository.startLocationUpdates { location ->
+            _uiState.update { state ->
+                state.copy(
+                    currentLocation = location,
+                )
+            }
         }
     }
 
-    fun updateSearchQuery(search: String) {
-        _uiState.update { state ->
-            state.copy(searchQuery = search)
-        }
-    }
-
-    private fun updateLocation(data: LocationData) {
-        _uiState.update { state ->
-            state.copy(
-                currentLocation = data
-            )
-        }
-    }
-
-    fun startLocationUpdates() {
-        _uiState.update { state ->
-            state.copy(locationUpdates = true)
-        }
-        locationRepository.startLocationUpdates { newData ->
-            updateLocation(data = newData)
-        }
-    }
-
-    fun stopLocationUpdates() {
+    private fun stopLocationUpdates() {
         locationRepository.stopLocationUpdates()
-        _uiState.update { state ->
-            state.copy(locationUpdates = false)
+        _uiState.update { it.copy(locationUpdates = false, isCameraFollowing = false) }
+    }
+
+    fun searchLocation() {
+        val query = _uiState.value.searchQuery
+        if (query.isBlank()) return
+
+        val origin = LatLng(
+            _uiState.value.currentLocation.latitude,
+            _uiState.value.currentLocation.longitude
+        )
+
+        _uiState.update { it.copy(isSearching = true) }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val result = geoRepository.getLocationFromAddress(query)
+            result?.let { destination ->
+                _uiState.update { state ->
+                    state.copy(
+                        searchMarker = destination,
+                        routePoints = emptyList(),
+                    )
+                }
+
+                if (origin.latitude != 0.0 && origin.longitude != 0.0) {
+                    val route = fetchRoute(origin, destination)
+                    _uiState.update { state -> state.copy(routePoints = route) }
+                }
+            }
+            _uiState.update { it.copy(isSearching = false) }
         }
+    }
+
+    fun onMapLongClick(latLng: LatLng) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { state ->
+                state.copy(
+                    clickMarker = latLng,
+                    routePoints = emptyList()
+                )
+            }
+
+            val origin = LatLng(
+                _uiState.value.currentLocation.latitude,
+                _uiState.value.currentLocation.longitude
+            )
+
+            if (origin.latitude != 0.0 && origin.longitude != 0.0) {
+                val route = fetchRoute(origin, latLng)
+                _uiState.update { state -> state.copy(routePoints = route) }
+            }
+        }
+    }
+
+    private fun fetchRoute(origin: LatLng, destination: LatLng): List<LatLng> {
+        return try {
+            val client = OkHttpClient()
+            val url = "https://router.project-osrm.org/route/v1/driving/" +
+                    "${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}" +
+                    "?overview=full&geometries=polyline"
+            val request = Request.Builder().url(url).build()
+            val response = client.newCall(request).execute()
+            val body = response.body?.string() ?: return emptyList()
+            val json = org.json.JSONObject(body)
+            val routes = json.getJSONArray("routes")
+            if (routes.length() > 0) {
+                val geometry = routes.getJSONObject(0).getString("geometry")
+                PolyUtil.decode(geometry)
+            } else emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    fun clearMarkers() {
+        _uiState.update { it.copy(
+            searchMarker = null,
+            clickMarker = null,
+            routePoints = emptyList(),
+            isCameraFollowing = false
+        ) }
+    }
+
+    fun startLightSensor() {
+        lightSensorDataSource.startListening { lux ->
+            val isDark = lux < 2000f
+            if (isDark != _uiState.value.isDarkMap) {
+                _uiState.update { it.copy(isDarkMap = isDark) }
+            }
+        }
+    }
+
+    fun stopLightSensor() {
+        lightSensorDataSource.stopListening()
+    }
+
+    override fun onCleared() {
+        stopLightSensor()
+        stopLocationUpdates()
+        super.onCleared()
     }
 }

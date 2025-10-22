@@ -13,27 +13,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.navigation.AppScreens
-import com.example.warofwonders.ui.theme.WarOfWondersTheme
 
 @Composable
 fun ChatScreen(navController: NavHostController) {
     val messages = listOf(
         ChatMessage("Jaime", "Líder", "Hola a todos"),
-        ChatMessage("user #11", "miembro", "Saludos"),
-        ChatMessage("pablo", "co-líder", "Bienvenidos"),
-        ChatMessage("Jaime", "Líder", "Cómo están?"),
-        ChatMessage("user #11", "miembro", "¡Listo para jugar!")
+        ChatMessage("Pedro", "Miembro", "Saludos"),
+        ChatMessage("Pablo", "Co-líder", "Bienvenidos"),
+        ChatMessage("Jaime", "Líder", "¿Cómo están?"),
+        ChatMessage("Pedro", "Miembro", "¡Listo para jugar!")
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Fondo
         Image(
             painter = painterResource(id = R.drawable.chatbackground),
             contentDescription = "Chat background",
@@ -58,7 +54,6 @@ fun ChatScreen(navController: NavHostController) {
                     contentScale = ContentScale.FillBounds
                 )
 
-                //la parte de arribita paraa el clan
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
@@ -75,13 +70,13 @@ fun ChatScreen(navController: NavHostController) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                "teusaquillo",
+                                "Teusaquillo",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp,
                                 color = Color.White
                             )
                             Text(
-                                "amigos",
+                                "Amigos",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = Color.White
@@ -126,7 +121,7 @@ fun ChatScreen(navController: NavHostController) {
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.roundedrectangle),
-                        contentDescription = "caja mensaje",
+                        contentDescription = "Caja mensaje",
                         modifier = Modifier.matchParentSize(),
                         contentScale = ContentScale.FillBounds
                     )
@@ -140,13 +135,13 @@ fun ChatScreen(navController: NavHostController) {
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.chatbutton),
-                        contentDescription = "enviar",
+                        contentDescription = "Enviar",
                         modifier = Modifier.matchParentSize(),
                         contentScale = ContentScale.FillBounds
                     )
                     Image(
                         painter = painterResource(id = R.drawable.pointerright),
-                        contentDescription = "enviar icono",
+                        contentDescription = "Enviar ícono",
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -157,7 +152,7 @@ fun ChatScreen(navController: NavHostController) {
 
 @Composable
 fun ChatBubble(message: ChatMessage) {
-    val isRight = message.user == "user #11"
+    val isRight = message.user == "Pedro"
 
     Box(
         modifier = Modifier.fillMaxWidth(),
@@ -165,12 +160,12 @@ fun ChatBubble(message: ChatMessage) {
     ) {
         Box(
             modifier = Modifier
-                .widthIn(min = 200.dp, max = 800.dp)  //esto para el futuro ajj
+                .widthIn(min = 200.dp, max = 800.dp)
                 .wrapContentHeight(),
             contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource( //esto tambn lo pusimos por q la burbuja puede ir a la izq o ala derecha
+                painter = painterResource(
                     if (isRight) R.drawable.chatbubbletextinverted else R.drawable.chatbubbletext
                 ),
                 contentDescription = "burbuja",
@@ -185,7 +180,7 @@ fun ChatBubble(message: ChatMessage) {
                         end = 16.dp,
                         top = 25.dp,
                         bottom = 50.dp
-                    ), //aca una logica si esta a la izq o a la derecha
+                    ),
                 horizontalAlignment = if (isRight) Alignment.End else Alignment.Start
             ) {
                 Text(
@@ -209,12 +204,3 @@ fun ChatBubble(message: ChatMessage) {
         }
     }
 }
-
-@Preview(showBackground = true)
-@Composable
-fun ChatScreenPreview() {
-    WarOfWondersTheme {
-        ChatScreen(navController = rememberNavController())
-    }
-}
-

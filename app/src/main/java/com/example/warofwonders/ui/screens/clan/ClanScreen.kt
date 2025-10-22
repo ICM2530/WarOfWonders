@@ -16,13 +16,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.warofwonders.R
-import com.example.warofwonders.ui.theme.WarOfWondersTheme
 
 data class ClanMember(
     val avatar: Int,
@@ -37,7 +33,7 @@ data class ClanHistory(
 )
 
 @Composable
-fun ClanScreen(navController: NavHostController) {
+fun ClanScreen() {
     val members = listOf(
         ClanMember(R.drawable.profile2, "jaime", "Líder", 20),
         ClanMember(R.drawable.profile_user, "pablo", "co-líder", 17),
@@ -45,8 +41,8 @@ fun ClanScreen(navController: NavHostController) {
     )
 
     val history = listOf(
-        ClanHistory("Batalla vs bogota clan", "victoria"),
-        ClanHistory("Batalla vs los piratas", "derrota")
+        ClanHistory("Batalla vs Bogotá clan", "Victoria"),
+        ClanHistory("Batalla vs Los Piratas", "Derrota")
     )
 
     Column(
@@ -60,7 +56,7 @@ fun ClanScreen(navController: NavHostController) {
 
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "miembros",
+            text = "Miembros",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
@@ -74,7 +70,7 @@ fun ClanScreen(navController: NavHostController) {
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "historial",
+            text = "Historial",
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             color = Color.White
@@ -236,13 +232,5 @@ fun ClanHistoryItem(item: ClanHistory) {
                 color = if (item.result == "victoria") Color.Green else Color.Red
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ClanScreenPreview() {
-    WarOfWondersTheme {
-        ClanScreen(navController = rememberNavController())
     }
 }

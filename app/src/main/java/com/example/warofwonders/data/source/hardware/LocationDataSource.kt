@@ -11,7 +11,7 @@ import com.google.android.gms.location.Priority
 
 @SuppressLint("MissingPermission")
 class LocationDataSource(
-    private val locationClient: FusedLocationProviderClient
+    val locationClient: FusedLocationProviderClient
 ) {
     private var locationCallback: LocationCallback? = null
 
