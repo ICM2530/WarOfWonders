@@ -9,13 +9,17 @@ import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
+import com.example.warofwonders.ui.model.Criatura
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
@@ -32,8 +36,71 @@ class MapViewModel(
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState
 
+    private val firestore = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+
+    private var criaturasDisponibles: List<Criatura> = emptyList()
+
     init {
         loadInterestPoints()
+        loadCreaturesFromFirebase()
+    }
+
+    //cargar las criaturas desde la base de datos
+    private fun loadCreaturesFromFirebase() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val snapshot = firestore.collection("criaturas_disponibles").get().await()
+                criaturasDisponibles = snapshot.documents.mapNotNull { doc ->
+                    doc.toObject(Criatura::class.java)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    //cargar las criaturas segun el tipo
+
+    private fun capturarCriaturaPorTipo(tipo: String) {
+        val lista = criaturasDisponibles.filter { it.tipo.equals(tipo, ignoreCase = true) }
+        if (lista.isEmpty()) return
+
+        val seleccionada = lista.random()
+        guardarCriaturaEnInventario(seleccionada)
+    }
+
+    private fun guardarCriaturaEnInventario(criatura: Criatura) {
+        val userId = auth.currentUser?.uid ?: return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                firestore.collection("usuarios")
+                    .document(userId)
+                    .collection("criaturas")
+                    .document(criatura.id.ifEmpty { System.currentTimeMillis().toString() })
+                    .set(criatura)
+                    .await()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+
+    fun captureColdCreature() {
+        _uiState.value = _uiState.value.copy(coldCreatureCaptured = true, coldCreatureFound = false)
+        capturarCriaturaPorTipo("FRIO")
+    }
+
+    fun captureHotCreature() {
+        _uiState.value = _uiState.value.copy(hotCreatureCaptured = true, hotCreatureFound = false)
+        capturarCriaturaPorTipo("CALOR")
+    }
+
+    fun capturePressureCreature() {
+        _uiState.value = _uiState.value.copy(pressureCreatureCaptured = true, pressureCreatureFound = false)
+        capturarCriaturaPorTipo("PRESION")
     }
 
     private fun loadInterestPoints() {
@@ -222,25 +289,18 @@ class MapViewModel(
         _uiState.value = _uiState.value.copy(pressureCreatureFound = show)
     }
 
-    fun capturePressureCreature() {
-        _uiState.value = _uiState.value.copy(pressureCreatureCaptured = true, pressureCreatureFound = false)
-    }
 
     fun showColdCreatureAlert(show: Boolean) {
         _uiState.value = _uiState.value.copy(coldCreatureFound = show)
     }
 
-    fun captureColdCreature() {
-        _uiState.value = _uiState.value.copy(coldCreatureCaptured = true, coldCreatureFound = false)
-    }
+
 
     fun showHotCreatureAlert(show: Boolean) {
         _uiState.value = _uiState.value.copy(hotCreatureFound = show)
     }
 
-    fun captureHotCreature() {
-        _uiState.value = _uiState.value.copy(hotCreatureCaptured = true, hotCreatureFound = false)
-    }
+
 
     fun findArmor(show: Boolean) {
         _uiState.value = _uiState.value.copy(armorFound = show)
