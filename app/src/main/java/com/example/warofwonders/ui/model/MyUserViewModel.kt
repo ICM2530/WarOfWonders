@@ -64,11 +64,11 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                         "lastName" to user.lastName,
                         "phone" to user.phone,
                         "email" to user.email,
-                        "coins" to user.coins,
-                        "level" to user.level,
-                        "xp" to user.xp,
-                        "team" to user.team,
-                        "profileImageUrl" to user.profileImageUrl
+                        "monedas" to user.monedas,
+                        "nivel" to user.nivel,
+                        "experiencia" to user.experiencia,
+                        "clan" to user.clanId,
+                        "profileImageUrl" to user.imagen
                     )
 
                     myRef.child(uid).setValue(userData)
@@ -136,7 +136,7 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                                 Log.i("FirebaseApp", "Imagen actualizada correctamente para $email")
 
 
-                                _currentUser.value = _currentUser.value?.copy(profileImageUrl = uri.toString())
+                                _currentUser.value = _currentUser.value?.copy(imagen = uri.toString())
                                 _currentUser.value?.let { cacheUserLocally(it) }
 
                                 onSuccess?.invoke()
@@ -160,8 +160,8 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         prefs.edit().apply {
             putString("email", user.email)
             putString("name", user.name)
-            putString("team", user.team)
-            putString("profileImageUrl", user.profileImageUrl)
+            putString("team", user.clanId)
+            putString("profileImageUrl", user.imagen)
             apply()
         }
     }
@@ -173,8 +173,8 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         return MyUserState(
             email = email,
             name = prefs.getString("name", "") ?: "",
-            team = prefs.getString("team", "") ?: "",
-            profileImageUrl = prefs.getString("profileImageUrl", "") ?: ""
+            clanId = prefs.getString("clan", "") ?: "",
+            imagen = prefs.getString("foto de perfil", "") ?: ""
         )
     }
 

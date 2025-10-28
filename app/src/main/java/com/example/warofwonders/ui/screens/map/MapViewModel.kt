@@ -33,7 +33,7 @@ class MapViewModel(
     val uiState: StateFlow<MapUiState> = _uiState
 
     init {
-        loadInterestPoints() // 👈 ahora carga desde el JSON
+        loadInterestPoints()
     }
 
     private fun loadInterestPoints() {
@@ -216,6 +216,7 @@ class MapViewModel(
         stopLocationUpdates()
         super.onCleared()
     }
+
 
     fun showPressureCreatureAlert(show: Boolean) {
         _uiState.value = _uiState.value.copy(pressureCreatureFound = show)

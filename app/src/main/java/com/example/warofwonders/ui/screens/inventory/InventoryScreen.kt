@@ -36,8 +36,8 @@ fun InventoryScreen(navController: NavHostController, viewModel: MapViewModel) {
 
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
+                .fillMaxSize(),
+
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -68,12 +68,10 @@ fun InventoryScreen(navController: NavHostController, viewModel: MapViewModel) {
                 )
             }
 
-            if (uiState.armorCaptured) {
                 SlotsSection(
                     title = "ARMADURAS",
                     items = listOf(R.drawable.aradura1, R.drawable.armadura2)
                 )
-            }
         }
     }
 }

@@ -12,11 +12,19 @@ data class MyUserState(
     val emailError: String = "",
     val passError: String = "",
 
-    val coins: Int = 1000,
-    val level: Int = 1,
-    val xp: Int = 0,
-    val team: String = "Teusaquillo amigos",
+    // Perfil del jugador
+    val id: String = "",
+    val usuario: String = "",
+    val experiencia: Int = 0,
+    val nivel: Int = 0,
+    val monedas: Int = 0,
+    val imagen: String = "",
+    val pais: String = "",
+    val clanId: String? = null,
 
-    val profileImageUrl: String = ""
+    // Inventario
+    val criaturas: List<Criatura> = emptyList(),
+    val recursos: List<Recurso> = emptyList(),
 
 )
+
