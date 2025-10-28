@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-enum class TipoCriatura { FRIO, CALOR, MEDIO, DIA, NOCHE }
+enum class TipoCriatura { FRIO, CALOR, MEDIO, DIA, NOCHE, PESION }
 
 class InventarioViewModel : ViewModel() {
 
@@ -57,7 +57,6 @@ class InventarioViewModel : ViewModel() {
             id = System.currentTimeMillis().toString(),
             nombre = nombre,
             tipo = tipo.name,
-            condiciones = condiciones,
             imagen = imagen
         )
 
