@@ -74,7 +74,7 @@ fun NavGraph(
                     )
                 }
             )
-            InventoryScreen(navController = navController, viewModel = mapViewModel)
+            InventoryScreen(navController = navController)
         }
 
         composable(route = AppScreens.Map.name) {

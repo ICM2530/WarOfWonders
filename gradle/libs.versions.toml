@@ -24,8 +24,9 @@ material3 = "1.4.0"
 playServicesLocation = "21.3.0"
 secretsPlugin = "2.0.1"
 firebaseStorage = "22.0.1"
-firebaseFirestoreKtx = "26.0.2"
-firebaseFirestore = "26.0.2"
+firebaseFirestoreKtx = "25.1.1"
+firebaseFirestore = "25.1.1"
+firebaseFunctions = "22.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -57,6 +58,7 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage", version.ref = "firebaseStorage" }
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 firebase-firestore = { group = "com.google.firebase", name = "firebase-firestore", version.ref = "firebaseFirestore" }
+firebase-functions = { group = "com.google.firebase", name = "firebase-functions", version.ref = "firebaseFunctions" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
