@@ -44,36 +44,25 @@ fun InventoryScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(vertical = 12.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+                .padding(horizontal = 16.dp, vertical = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             ProfileUser(navController = navController)
 
+            // SECCIÓN CRIATURAS
+            SlotsSection(
+                title = "CRIATURAS",
+                items = inventario.criaturas.map { getDrawableId(it.imagen) }
+            )
 
-            if (inventario.criaturas.isNotEmpty()) {
-                SlotsSection(
-                    title = "CRIATURAS",
-                    items = inventario.criaturas.map {
-                        getDrawableId(it.imagen)
-                    }
-                )
-            } else {
-                SlotsSection(title = "CRIATURAS", items = emptyList())
-            }
-
-
-            if (inventario.recursos.isNotEmpty()) {
-                SlotsSection(
-                    title = "RECURSOS",
-                    items = inventario.recursos.map {
-                        getDrawableId(it.imagen)
-                    }
-                )
-            } else {
-                SlotsSection(title = "RECURSOS", items = emptyList())
-            }
+            // SECCIÓN RECURSOS
+            SlotsSection(
+                title = "RECURSOS",
+                items = inventario.recursos.map { getDrawableId(it.imagen) }
+            )
         }
+
     }
 }
 

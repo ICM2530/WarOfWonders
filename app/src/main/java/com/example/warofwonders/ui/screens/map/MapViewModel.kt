@@ -147,6 +147,18 @@ class MapViewModel(
         }
     }
 
+    fun captureMediumCreature() {
+        _uiState.value = _uiState.value.copy(
+            mediumCreatureCaptured = true,
+            mediumCreatureFound = false
+        )
+
+        viewModelScope.launch {
+            detectarCriaturasPorSensor(TipoCriatura.MEDIO, inventarioVM)
+        }
+    }
+
+
     fun capturePressureCreature() {
         _uiState.value = _uiState.value.copy(
             pressureCreatureCaptured = true,
@@ -290,16 +302,28 @@ class MapViewModel(
 
     fun startTemperatureSensor() {
         temperatureSensorDataSource.startListening { cel ->
+
             val isCold = cel < 15
             val isHot = cel > 30
-            if (isCold != _uiState.value.isCold) {
-                _uiState.update { it.copy(isCold = isCold) }
-            }
-            else if (isHot != _uiState.value.isHot) {
-                _uiState.update { it.copy(isHot = isHot) }
+            val isMedium = cel in 15.0..30.0
+
+            val current = _uiState.value
+
+            if (isCold != current.isCold ||
+                isHot != current.isHot ||
+                isMedium != current.isMedium
+            ) {
+                _uiState.update {
+                    it.copy(
+                        isCold = isCold,
+                        isHot = isHot,
+                        isMedium = isMedium
+                    )
+                }
             }
         }
     }
+
 
     fun stopTemperatureSensor() {
         temperatureSensorDataSource.stopListening()
@@ -340,21 +364,24 @@ class MapViewModel(
         super.onCleared()
     }
 
+    //show alert
 
     fun showPressureCreatureAlert(show: Boolean) {
         _uiState.value = _uiState.value.copy(pressureCreatureFound = show)
     }
 
-
     fun showColdCreatureAlert(show: Boolean) {
         _uiState.value = _uiState.value.copy(coldCreatureFound = show)
     }
 
-
-
     fun showHotCreatureAlert(show: Boolean) {
         _uiState.value = _uiState.value.copy(hotCreatureFound = show)
     }
+
+    fun showMediumCreatureAlert(show: Boolean) {
+        _uiState.value = _uiState.value.copy(mediumCreatureFound = show)
+    }
+
 
 
 

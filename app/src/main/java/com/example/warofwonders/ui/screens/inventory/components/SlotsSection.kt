@@ -23,35 +23,49 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun SlotsSection(
     title: String,
-    items: List<Int>
+    items: List<Int>,
+    columns: Int = 3
 ) {
-    Column {
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+
         Text(
             text = title,
             color = Color.White,
             fontSize = 22.sp,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            repeat(3) { index ->
-                Card(
-                    shape = RoundedCornerShape(4.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF965E35) // Color sólido tipo madera
-                    ),
-                    border = BorderStroke(2.dp, Color.DarkGray), // Borde blanco de 2dp
-                    modifier = Modifier
-                        .size(width = 110.dp, height = 80.dp)
-                ) {
-                    if (index < items.size) {
-                        Image(
-                            painter = painterResource(items[index]),
-                            contentDescription = null,
-                            modifier = Modifier.padding(8.dp).fillMaxSize()
-                        )
+        // Calculamos cuántas filas se necesitan
+        val rows = (items.size + columns - 1) / columns
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            repeat(rows) { rowIndex ->
+
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                    repeat(columns) { columnIndex ->
+                        val itemIndex = rowIndex * columns + columnIndex
+
+                        Card(
+                            shape = RoundedCornerShape(4.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = Color(0xFF965E35)
+                            ),
+                            border = BorderStroke(2.dp, Color.DarkGray),
+                            modifier = Modifier.size(width = 110.dp, height = 80.dp)
+                        ) {
+
+                            if (itemIndex < items.size) {
+                                Image(
+                                    painter = painterResource(items[itemIndex]),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .fillMaxSize()
+                                )
+                            }
+                        }
                     }
                 }
             }
