@@ -104,11 +104,8 @@ class MapViewModel(
             return
         }
 
-        inventarioVM.agregarCriatura(
-            nombre = seleccionada.nombre,
-            tipo = tipo,
-            imagen = seleccionada.imagen
-        )
+        inventarioVM.agregarCriatura(seleccionada)
+
 
 
         _uiState.update {

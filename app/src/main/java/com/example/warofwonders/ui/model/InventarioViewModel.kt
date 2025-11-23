@@ -23,6 +23,22 @@ class InventarioViewModel : ViewModel() {
     private val _catalogo = MutableStateFlow<List<Criatura>>(emptyList())
     val catalogo = _catalogo.asStateFlow()
 
+    private val _criaturaSeleccionada = MutableStateFlow<Criatura?>(null)
+    val criaturaSeleccionada = _criaturaSeleccionada.asStateFlow()
+
+    private val _mostrarPopup = MutableStateFlow(false)
+    val mostrarPopup = _mostrarPopup.asStateFlow()
+
+
+    fun seleccionarCriatura(criatura: Criatura) {
+        _criaturaSeleccionada.value = criatura
+        _mostrarPopup.value = true
+    }
+
+    fun cerrarPopup() {
+        _mostrarPopup.value = false
+    }
+
     // Cargar inventario del usuario
     suspend fun cargarInventario() {
         val uid = auth.currentUser?.uid ?: return
@@ -47,19 +63,11 @@ class InventarioViewModel : ViewModel() {
         return _catalogo.value.filter { it.tipo == tipo.name }
     }
 
-    // AGREGAR CRIATURA AL INVENTARIO DEL USUARIO
-    suspend fun agregarCriatura(nombre: String, tipo: TipoCriatura, imagen: String) {
+    suspend fun agregarCriatura(criatura: Criatura) {
         val uid = auth.currentUser?.uid ?: return
 
-        val nuevaCriatura = Criatura(
-            id = System.currentTimeMillis().toString(),
-            nombre = nombre,
-            tipo = tipo.name,
-            salud = 100,
-            dano = 10,
-            velocidad = 5,
-            poder = 20,
-            imagen = imagen
+        val nuevaCriatura = criatura.copy(
+            id = System.currentTimeMillis().toString()
         )
 
         val nuevasCriaturas = _inventario.value.criaturas.toMutableList().apply {
@@ -72,26 +80,13 @@ class InventarioViewModel : ViewModel() {
         usersDb.child(uid).child("criaturas").setValue(nuevasCriaturas)
     }
 
+
     // AGREGAR RECURSO AL INVENTARIO
-    suspend fun agregarRecurso(
-        nombre: String,
-        tipo: String,
-        material: String,
-        imagen: String
-    ) {
+    suspend fun agregarRecurso(recurso: Recurso) {
         val uid = auth.currentUser?.uid ?: return
 
-        val nuevoRecurso = Recurso(
-            id = System.currentTimeMillis().toString(),
-            nombre = nombre,
-            tipo = tipo,
-            material = material,
-            imagen = imagen,
-            rareza = "común",
-            protección = 10,
-            daño = 5,
-            velocidad = 3,
-            precio = 50
+        val nuevoRecurso = recurso.copy(
+            id = System.currentTimeMillis().toString()
         )
 
         val nuevosRecursos = _inventario.value.recursos.toMutableList().apply {
@@ -104,5 +99,6 @@ class InventarioViewModel : ViewModel() {
         usersDb.child(uid).child("recursos").setValue(nuevosRecursos)
     }
 
+    //inventarioVM.agregarRecurso(recursoSeleccionado)
 
 }

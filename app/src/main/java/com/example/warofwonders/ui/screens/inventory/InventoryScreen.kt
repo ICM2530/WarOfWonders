@@ -16,8 +16,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.model.InventarioViewModel
+import com.example.warofwonders.ui.screens.inventory.components.PopupDeCriatura
 import com.example.warofwonders.ui.screens.inventory.components.ProfileUser
 import com.example.warofwonders.ui.screens.inventory.components.SlotsSection
+import com.example.warofwonders.ui.screens.inventory.components.SlotsSectionCriaturas
 
 @Composable
 fun InventoryScreen(
@@ -26,6 +28,8 @@ fun InventoryScreen(
 ) {
     val inventario by inventarioVM.inventario.collectAsState()
 
+    val criaturaSeleccionada by inventarioVM.criaturaSeleccionada.collectAsState()
+    val mostrarPopup by inventarioVM.mostrarPopup.collectAsState()
 
     LaunchedEffect(Unit) {
         inventarioVM.cargarInventario()
@@ -51,10 +55,14 @@ fun InventoryScreen(
             ProfileUser(navController = navController)
 
             // SECCIÓN CRIATURAS
-            SlotsSection(
+            SlotsSectionCriaturas(
                 title = "CRIATURAS",
-                items = inventario.criaturas.map { getDrawableId(it.imagen) }
+                criaturas = inventario.criaturas,
+                onClickCriatura = { criatura ->
+                    inventarioVM.seleccionarCriatura(criatura)
+                }
             )
+
 
             // SECCIÓN RECURSOS
             SlotsSection(
@@ -62,6 +70,15 @@ fun InventoryScreen(
                 items = inventario.recursos.map { getDrawableId(it.imagen) }
             )
         }
+
+
+        if (mostrarPopup && criaturaSeleccionada != null) {
+            PopupDeCriatura(
+                criatura = criaturaSeleccionada!!,
+                onClose = { inventarioVM.cerrarPopup() }
+            )
+        }
+
 
     }
 }
