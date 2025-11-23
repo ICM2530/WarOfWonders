@@ -83,6 +83,7 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.firebase.functions)
     implementation(libs.firebase.firestore)
+    implementation(libs.androidx.foundation)
 
 
     testImplementation(libs.junit)

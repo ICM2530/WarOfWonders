@@ -412,27 +412,6 @@ fun MapScreenContent(
                                         color = Color.Black
                                     )
 
-                                    uiState.criaturaDetectada?.let { criatura ->
-
-                                        val context = LocalContext.current
-
-                                        val resId = context.resources.getIdentifier(
-                                            criatura.imagen,
-                                            "drawable",
-                                            context.packageName
-                                        )
-
-                                        if (resId != 0) {
-                                            Image(
-                                                painter = painterResource(resId),
-                                                contentDescription = criatura.nombre,
-                                                modifier = Modifier
-                                                    .padding(top = 12.dp)
-                                                    .size(140.dp)
-                                            )
-                                        }
-                                    }
-
 
                                     Row(
                                         modifier = Modifier.padding(top = 8.dp),
@@ -524,6 +503,128 @@ fun MapScreenContent(
             }
         }
 
+        else if (uiState.hotCreatureFound) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.CenterHorizontally)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Surface(
+                                shadowElevation = 6.dp,
+                                tonalElevation = 2.dp,
+                                color = Color(0xFFc79e63),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "¡HA APARECIDO UNA CRIATURA BIEN ARDIENTE!",
+                                        color = Color.Black
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                viewModel.showHotCreatureAlert(false)
+                                            }
+                                        ) {
+                                            Text("DEJAR IR")
+                                        }
+
+                                        Button(
+                                            onClick = {
+                                                viewModel.captureHotCreature()
+                                                viewModel.showHotCreatureAlert(false)
+                                            }
+                                        ) {
+                                            Text("ATRAPAR")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        else if (uiState.mediumCreatureFound) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .align(Alignment.CenterHorizontally)
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Surface(
+                                shadowElevation = 6.dp,
+                                tonalElevation = 2.dp,
+                                color = Color(0xFFc79e63),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "¡HA APARECIDO UNA CRIATURA DE CLIMA MEDIO!",
+                                        color = Color.Black
+                                    )
+
+                                    Row(
+                                        modifier = Modifier.padding(top = 8.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Button(
+                                            onClick = {
+                                                viewModel.showMediumCreatureAlert(false)
+                                            }
+                                        ) {
+                                            Text("DEJAR IR")
+                                        }
+
+                                        Button(
+                                            onClick = {
+                                                viewModel.captureMediumCreature()
+                                                viewModel.showMediumCreatureAlert(false)
+                                            }
+                                        ) {
+                                            Text("ATRAPAR")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         else if (uiState.armorFound) {
             Box(
                 modifier = Modifier
@@ -599,6 +700,12 @@ fun MapScreenContent(
         LaunchedEffect(uiState.isMagn) {
             if (uiState.isMagn) {
                 viewModel.findArmor(true)
+            }
+        }
+
+        LaunchedEffect(uiState.isMedium) {
+            if (uiState.isMedium) {
+                viewModel.showMediumCreatureAlert(true)
             }
         }
 

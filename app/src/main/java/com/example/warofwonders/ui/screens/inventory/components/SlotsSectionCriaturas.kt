@@ -2,6 +2,7 @@ package com.example.warofwonders.ui.screens.inventory.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,12 +20,15 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.warofwonders.ui.model.Criatura
+import com.example.warofwonders.ui.screens.inventory.getDrawableId
 
 @Composable
-fun SlotsSection(
+fun SlotsSectionCriaturas(
     title: String,
-    items: List<Int>,
-    columns: Int = 3
+    criaturas: List<Criatura>,
+    columns: Int = 3,
+    onClickCriatura: (Criatura) -> Unit
 ) {
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
 
@@ -36,8 +40,7 @@ fun SlotsSection(
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
-        // Calculamos cuántas filas se necesitan
-        val rows = (items.size + columns - 1) / columns
+        val rows = (criaturas.size + columns - 1) / columns
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
             repeat(rows) { rowIndex ->
@@ -45,26 +48,39 @@ fun SlotsSection(
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
 
                     repeat(columns) { columnIndex ->
-                        val itemIndex = rowIndex * columns + columnIndex
+                        val index = rowIndex * columns + columnIndex
 
-                        Card(
-                            shape = RoundedCornerShape(4.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF965E35)
-                            ),
-                            border = BorderStroke(2.dp, Color.DarkGray),
-                            modifier = Modifier.size(width = 110.dp, height = 80.dp)
-                        ) {
+                        if (index < criaturas.size) {
+                            val criatura = criaturas[index]
+                            val drawableId = getDrawableId(criatura.imagen)
 
-                            if (itemIndex < items.size) {
+                            Card(
+                                shape = RoundedCornerShape(4.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFF965E35)
+                                ),
+                                border = BorderStroke(2.dp, Color.DarkGray),
+                                modifier = Modifier
+                                    .size(110.dp, 80.dp)
+                                    .clickable {
+                                        onClickCriatura(criatura)
+                                    }
+                            ) {
                                 Image(
-                                    painter = painterResource(items[itemIndex]),
-                                    contentDescription = null,
+                                    painter = painterResource(drawableId),
+                                    contentDescription = criatura.nombre,
                                     modifier = Modifier
                                         .padding(8.dp)
                                         .fillMaxSize()
                                 )
                             }
+                        } else {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xFF965E35)
+                                ),
+                                modifier = Modifier.size(110.dp, 80.dp)
+                            ) {}
                         }
                     }
                 }
