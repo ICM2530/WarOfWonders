@@ -2,6 +2,7 @@ package com.example.warofwonders.ui.screens.map
 
 import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.model.PuntoInteres
+import com.example.warofwonders.ui.model.Criatura
 import com.google.android.gms.maps.model.LatLng
 
 data class MapUiState(
@@ -27,5 +28,7 @@ data class MapUiState(
     val isCameraFollowing: Boolean = false,
     val searchQuery: String = "",
     val isSearching: Boolean = false,
+    val alreadyOwnedCreature: Boolean = false,
+    val criaturaDetectada: Criatura? = null,
     val routePoints: List<LatLng> = emptyList()
 )

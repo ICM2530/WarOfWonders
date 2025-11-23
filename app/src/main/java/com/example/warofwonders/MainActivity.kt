@@ -14,6 +14,7 @@ import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
 import com.example.warofwonders.data.source.hardware.LocationDataSource
 import com.example.warofwonders.ui.navigation.NavGraph
 import com.google.android.gms.location.LocationServices
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,5 +43,53 @@ class MainActivity : ComponentActivity() {
                 interestPointRepository = interestPointRepository
             )
         }
+
     }
+
+    fun precargarCriaturas() {
+        val db = FirebaseFirestore.getInstance()
+        val criaturas = listOf(
+            mapOf(
+                "id" to "pinguino",
+                "nombre" to "pinguino",
+                "tipo" to "FRIO",
+                "salud" to 100,
+                "dano" to 10,
+                "velocidad" to 50,
+                "poder" to 10,
+                "imagen" to "pinguino"
+            ),
+            mapOf(
+                "id" to "fenix",
+                "nombre" to "fenix",
+                "tipo" to "CALOR",
+                "salud" to 100,
+                "dano" to 50,
+                "velocidad" to 20,
+                "poder" to 80,
+                "imagen" to "fenix"
+            ),
+            mapOf(
+                "id" to "golempiedra",
+                "nombre" to "golem de piedra",
+                "tipo" to "PRESION",
+                "salud" to 100,
+                "dano" to 10,
+                "velocidad" to 10,
+                "poder" to 10,
+                "imagen" to "golempiedra"
+            )
+        )
+
+        criaturas.forEach { criatura ->
+            db.collection("criaturas_disponibles")
+                .document(criatura["id"] as String)
+                .set(criatura)
+        }
+    }
+
+
+
+
+
 }

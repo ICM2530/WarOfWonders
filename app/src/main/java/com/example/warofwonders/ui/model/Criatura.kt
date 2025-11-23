@@ -6,7 +6,7 @@ data class Criatura(
     val nombre: String = "",
     val tipo: String = "",
     val salud: Int = 100,
-    val daño: Int = 0,
+    val dano: Int = 0,
     val velocidad: Int = 0,
     val poder: Int = 0,
     val imagen: String = ""

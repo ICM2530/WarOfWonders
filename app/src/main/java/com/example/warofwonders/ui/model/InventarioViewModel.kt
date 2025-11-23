@@ -11,26 +11,43 @@ enum class TipoCriatura { FRIO, CALOR, MEDIO, NOCHE, DIA, PRESION }
 
 class InventarioViewModel : ViewModel() {
 
-    private val db = FirebaseDatabase.getInstance().getReference("users")
+    private val usersDb = FirebaseDatabase.getInstance().getReference("users")
+    private val catalogoDb = FirebaseDatabase.getInstance().getReference("criaturas_disponibles")
     private val auth = FirebaseAuth.getInstance()
 
     // Estado del usuario con inventario
     private val _inventario = MutableStateFlow(MyUserState())
     val inventario = _inventario.asStateFlow()
 
-    // Cargar inventario desde Firebase
+    // Estado del catálogo global
+    private val _catalogo = MutableStateFlow<List<Criatura>>(emptyList())
+    val catalogo = _catalogo.asStateFlow()
+
+    // Cargar inventario del usuario
     suspend fun cargarInventario() {
         val uid = auth.currentUser?.uid ?: return
-        val snapshot = db.child(uid).get().await()
+        val snapshot = usersDb.child(uid).get().await()
         val user = snapshot.getValue(MyUserState::class.java)
         user?.let {
             _inventario.value = it
         }
     }
 
+    // Cargar catálogo global de criaturas (CRIATURAS SALVAJES)
+    suspend fun cargarCatalogoGlobal() {
+        val snapshot = catalogoDb.get().await()
+        val lista = snapshot.children.mapNotNull { it.getValue(Criatura::class.java) }
+        _catalogo.value = lista
+    }
 
-    //AGREGAR CRIATURA
+    // Obtener criaturas según el sensor
+    suspend fun obtenerCriaturasPorTipo(tipo: TipoCriatura): List<Criatura> {
+        if (_catalogo.value.isEmpty()) cargarCatalogoGlobal()
 
+        return _catalogo.value.filter { it.tipo == tipo.name }
+    }
+
+    // AGREGAR CRIATURA AL INVENTARIO DEL USUARIO
     suspend fun agregarCriatura(nombre: String, tipo: TipoCriatura, imagen: String) {
         val uid = auth.currentUser?.uid ?: return
 
@@ -39,7 +56,7 @@ class InventarioViewModel : ViewModel() {
             nombre = nombre,
             tipo = tipo.name,
             salud = 100,
-            daño = 10,
+            dano = 10,
             velocidad = 5,
             poder = 20,
             imagen = imagen
@@ -52,11 +69,10 @@ class InventarioViewModel : ViewModel() {
         val actualizado = _inventario.value.copy(criaturas = nuevasCriaturas)
         _inventario.value = actualizado
 
-        db.child(uid).child("criaturas").setValue(nuevasCriaturas)
+        usersDb.child(uid).child("criaturas").setValue(nuevasCriaturas)
     }
 
-    //AGREGAR RECURSO
-
+    // AGREGAR RECURSO AL INVENTARIO
     suspend fun agregarRecurso(
         nombre: String,
         tipo: String,
@@ -85,6 +101,8 @@ class InventarioViewModel : ViewModel() {
         val actualizado = _inventario.value.copy(recursos = nuevosRecursos)
         _inventario.value = actualizado
 
-        db.child(uid).child("recursos").setValue(nuevosRecursos)
+        usersDb.child(uid).child("recursos").setValue(nuevosRecursos)
     }
+
+
 }

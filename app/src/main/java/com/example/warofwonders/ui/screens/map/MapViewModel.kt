@@ -10,8 +10,11 @@ import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
 import com.example.warofwonders.ui.model.Criatura
+import com.example.warofwonders.ui.model.InventarioViewModel
+import com.example.warofwonders.ui.model.TipoCriatura
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.firestore.FirebaseFirestore
 
 import com.google.maps.android.PolyUtil
@@ -31,78 +34,130 @@ class MapViewModel(
     private val temperatureSensorDataSource: TemperatureSensorDataSource,
     private val magnetometerDataSource: MagnetometerDataSource,
     private val lightSensorDataSource: LightSensorDataSource,
-    private val interestPointRepository: InterestPointRepository
+    private val interestPointRepository: InterestPointRepository,
+    private val inventarioVM: InventarioViewModel
+
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState
 
-    private val firestore = FirebaseFirestore.getInstance()
+
+
+
     private val auth = FirebaseAuth.getInstance()
 
+    private val realtimeDB = FirebaseDatabase.getInstance().reference
     private var criaturasDisponibles: List<Criatura> = emptyList()
 
     init {
         loadInterestPoints()
-        loadCreaturesFromFirebase()
+        loadCreaturesFromFirebaseRealtime()
+
+        viewModelScope.launch {
+            inventarioVM.cargarInventario()
+        }
     }
 
-    //cargar las criaturas desde la base de datos
-    private fun loadCreaturesFromFirebase() {
+    //cargar las criaturas desde la base de datos pero realtime ahora
+    private fun loadCreaturesFromFirebaseRealtime() {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val snapshot = firestore.collection("criaturas_disponibles").get().await()
-                criaturasDisponibles = snapshot.documents.mapNotNull { doc ->
-                    doc.toObject(Criatura::class.java)
+            realtimeDB.child("criaturas_disponibles").get().addOnSuccessListener { snapshot ->
+                val lista = mutableListOf<Criatura>()
+                snapshot.children.forEach { child ->
+                    val criatura = child.getValue(Criatura::class.java)
+                    if (criatura != null) lista.add(criatura)
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
+                criaturasDisponibles = lista
             }
         }
     }
 
-    //cargar las criaturas segun el tipo
+    //cargar las criaturas segun el sensor
 
-    private fun capturarCriaturaPorTipo(tipo: String) {
-        val lista = criaturasDisponibles.filter { it.tipo.equals(tipo, ignoreCase = true) }
-        if (lista.isEmpty()) return
+    suspend fun detectarCriaturasPorSensor(tipo: TipoCriatura, inventarioVM: InventarioViewModel) {
+        val ref = realtimeDB.child("criaturas_disponibles")
 
-        val seleccionada = lista.random()
-        guardarCriaturaEnInventario(seleccionada)
-    }
+        val snapshot = ref.get().await()
+        val lista = snapshot.children.mapNotNull { it.getValue(Criatura::class.java) }
 
-    private fun guardarCriaturaEnInventario(criatura: Criatura) {
-        val userId = auth.currentUser?.uid ?: return
+        val filtradas = lista.filter { it.tipo.equals(tipo.name, ignoreCase = true) }
 
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                firestore.collection("usuarios")
-                    .document(userId)
-                    .collection("criaturas")
-                    .document(criatura.id.ifEmpty { System.currentTimeMillis().toString() })
-                    .set(criatura)
-                    .await()
-            } catch (e: Exception) {
-                e.printStackTrace()
+        if (filtradas.isEmpty()) return
+
+        val inventarioActual = inventarioVM.inventario.value.criaturas
+
+        // escogemos una criatura del tipo SIEMPRE
+        val seleccionada = filtradas.random()
+
+        // Verificar si ya existe en el inventario
+        val yaExiste = inventarioActual.any { it.nombre == seleccionada.nombre }
+
+        if (yaExiste) {
+            // Mostrar la misma criatura repetida
+            _uiState.update {
+                it.copy(
+                    alreadyOwnedCreature = true,
+                    criaturaDetectada = seleccionada
+                )
             }
+            return
+        }
+
+        inventarioVM.agregarCriatura(
+            nombre = seleccionada.nombre,
+            tipo = tipo,
+            imagen = seleccionada.imagen
+        )
+
+
+        _uiState.update {
+            it.copy(
+                criaturaDetectada = seleccionada
+            )
         }
     }
+
+
+
+
+
 
 
     fun captureColdCreature() {
-        _uiState.value = _uiState.value.copy(coldCreatureCaptured = true, coldCreatureFound = false)
-        capturarCriaturaPorTipo("FRIO")
+        _uiState.value = _uiState.value.copy(
+            coldCreatureCaptured = true,
+            coldCreatureFound = false
+        )
+
+        viewModelScope.launch {
+            detectarCriaturasPorSensor(TipoCriatura.FRIO, inventarioVM)
+        }
     }
 
+
     fun captureHotCreature() {
-        _uiState.value = _uiState.value.copy(hotCreatureCaptured = true, hotCreatureFound = false)
-        capturarCriaturaPorTipo("CALOR")
+        _uiState.value = _uiState.value.copy(
+            hotCreatureCaptured = true,
+            hotCreatureFound = false
+        )
+
+        viewModelScope.launch {
+            detectarCriaturasPorSensor(TipoCriatura.CALOR, inventarioVM)
+        }
     }
 
     fun capturePressureCreature() {
-        _uiState.value = _uiState.value.copy(pressureCreatureCaptured = true, pressureCreatureFound = false)
-        capturarCriaturaPorTipo("PRESION")
+        _uiState.value = _uiState.value.copy(
+            pressureCreatureCaptured = true,
+            pressureCreatureFound = false
+        )
+
+        viewModelScope.launch {
+            detectarCriaturasPorSensor(TipoCriatura.PRESION, inventarioVM)
+        }
     }
+
 
     private fun loadInterestPoints() {
         viewModelScope.launch(Dispatchers.IO) {
@@ -310,4 +365,14 @@ class MapViewModel(
     fun captureArmor() {
         _uiState.value = _uiState.value.copy(armorCaptured = true, armorFound = false)
     }
+
+    fun resetAlreadyOwned() {
+        _uiState.update {
+            it.copy(
+                alreadyOwnedCreature = false,
+                criaturaDetectada = null
+            )
+        }
+    }
+
 }

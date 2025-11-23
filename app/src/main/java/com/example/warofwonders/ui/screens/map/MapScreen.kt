@@ -3,17 +3,24 @@ package com.example.warofwonders.ui.screens.map
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -32,8 +39,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
 import com.example.warofwonders.ui.shared.utils.shouldShowPermissionRationale
@@ -71,9 +80,9 @@ fun MapScreen(navController: NavController, viewModel: MapViewModel) {
         viewModel.startTemperatureSensor()
         viewModel.startMagnetometerSensor()
         onDispose { viewModel.stopLightSensor()
-                    viewModel.stopBarometerSensor()
-                    viewModel.stopTemperatureSensor()
-                    viewModel.stopMagnetometerSensor()}
+            viewModel.stopBarometerSensor()
+            viewModel.stopTemperatureSensor()
+            viewModel.stopMagnetometerSensor()}
     }
 
     MapScreenContent(
@@ -120,7 +129,7 @@ val teusaquilloRectanglePoints = listOf(
     LatLng(4.6325, -74.0760)  // Suroeste
 )
 
-// 🔺 Triángulo en Chapinero (zona más al oriente)
+
 val chapineroTrianglePoints = listOf(
     LatLng(4.6520, -74.0645), // Norte (Zona G)
     LatLng(4.6425, -74.0605), // Este (Chapinero Alto)
@@ -239,6 +248,77 @@ fun MapScreenContent(
             onSearchSubmit = onSearchSubmit
         )
 
+
+        if (uiState.alreadyOwnedCreature) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFFc79e63),
+                    tonalElevation = 4.dp,
+                    shadowElevation = 8.dp,
+                    modifier = Modifier
+                        .widthIn(min = 260.dp, max = 320.dp)
+                        .wrapContentHeight()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+
+                        Text(
+                            text = "¡YA TIENES ESTA CRIATURA!",
+                            color = Color.Black
+                        )
+
+                        Text(
+                            text = "Esta criatura ya pertenece a tu inventario.",
+                            color = Color.Black,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+
+
+                        uiState.criaturaDetectada?.let { criatura ->
+
+                            val context = LocalContext.current
+
+                            val resId = context.resources.getIdentifier(
+                                criatura.imagen,
+                                "drawable",
+                                context.packageName
+                            )
+
+                            if (resId != 0) {   // si existe en drawable
+                                Image(
+                                    painter = painterResource(resId),
+                                    contentDescription = criatura.nombre,
+                                    modifier = Modifier
+                                        .padding(top = 12.dp)
+                                        .size(140.dp)
+                                )
+                            }
+                        }
+
+                        Button(
+                            modifier = Modifier.padding(top = 16.dp),
+                            onClick = { viewModel.resetAlreadyOwned() }
+                        ) {
+                            Text("Aceptar")
+                        }
+                    }
+                }
+            }
+        }
+
+
+
+
+
+
         if (uiState.pressureCreatureFound) {
             Box(
                 modifier = Modifier
@@ -331,6 +411,28 @@ fun MapScreenContent(
                                         text = "¡HA APARECIDO UNA CRIATURA BIEN COOL!",
                                         color = Color.Black
                                     )
+
+                                    uiState.criaturaDetectada?.let { criatura ->
+
+                                        val context = LocalContext.current
+
+                                        val resId = context.resources.getIdentifier(
+                                            criatura.imagen,
+                                            "drawable",
+                                            context.packageName
+                                        )
+
+                                        if (resId != 0) {
+                                            Image(
+                                                painter = painterResource(resId),
+                                                contentDescription = criatura.nombre,
+                                                modifier = Modifier
+                                                    .padding(top = 12.dp)
+                                                    .size(140.dp)
+                                            )
+                                        }
+                                    }
+
 
                                     Row(
                                         modifier = Modifier.padding(top = 8.dp),
@@ -513,19 +615,9 @@ fun MapScreenContent(
             )
         }
     }
+
+
 }
 
-/**@Preview(showBackground = true)
-@Composable
-fun MapScreenContentPreview() {
-    WarOfWondersTheme {
-        MapScreenContent(
-            uiState = MapUiState(),
-            onLocationButtonClick = { },
-            onSearchQueryChange = { },
-            onSearchSubmit = { },
-            onMapClick = { },
-            onMapLongClick = {}
-        )
-    }
-}*/
+
+

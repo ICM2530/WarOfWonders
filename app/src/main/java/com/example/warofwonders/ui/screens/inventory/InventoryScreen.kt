@@ -26,7 +26,7 @@ fun InventoryScreen(
 ) {
     val inventario by inventarioVM.inventario.collectAsState()
 
-    // 🔹 Cargar inventario una sola vez al entrar
+
     LaunchedEffect(Unit) {
         inventarioVM.cargarInventario()
     }
@@ -50,7 +50,7 @@ fun InventoryScreen(
         ) {
             ProfileUser(navController = navController)
 
-            // 🐉 Mostrar criaturas del usuario
+
             if (inventario.criaturas.isNotEmpty()) {
                 SlotsSection(
                     title = "CRIATURAS",
@@ -62,7 +62,7 @@ fun InventoryScreen(
                 SlotsSection(title = "CRIATURAS", items = emptyList())
             }
 
-            // ⚒️ Mostrar recursos del usuario
+
             if (inventario.recursos.isNotEmpty()) {
                 SlotsSection(
                     title = "RECURSOS",
@@ -77,10 +77,7 @@ fun InventoryScreen(
     }
 }
 
-/**
- * Convierte el nombre de la imagen (guardado en Firebase)
- * a su ID del drawable local.
- */
+
 @Composable
 fun getDrawableId(nombre: String): Int {
     val context = androidx.compose.ui.platform.LocalContext.current
