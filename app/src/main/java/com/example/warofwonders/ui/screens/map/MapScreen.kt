@@ -412,27 +412,6 @@ fun MapScreenContent(
                                         color = Color.Black
                                     )
 
-                                    uiState.criaturaDetectada?.let { criatura ->
-
-                                        val context = LocalContext.current
-
-                                        val resId = context.resources.getIdentifier(
-                                            criatura.imagen,
-                                            "drawable",
-                                            context.packageName
-                                        )
-
-                                        if (resId != 0) {
-                                            Image(
-                                                painter = painterResource(resId),
-                                                contentDescription = criatura.nombre,
-                                                modifier = Modifier
-                                                    .padding(top = 12.dp)
-                                                    .size(140.dp)
-                                            )
-                                        }
-                                    }
-
 
                                     Row(
                                         modifier = Modifier.padding(top = 8.dp),
