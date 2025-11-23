@@ -192,16 +192,16 @@ fun MapScreenContent(
             uiState.searchMarker?.let { marker ->
                 Marker(
                     state = MarkerState(marker),
-                    title = "Búsqueda",
-                    snippet = "Marcador buscado",
+                    title = uiState.searchQuery,
+                    snippet = uiState.searchMarker.toString(),
                 )
             }
 
             uiState.clickMarker?.let { marker ->
                 Marker(
                     state = MarkerState(marker),
-                    title = "Click Largo",
-                    snippet = "Marcador agregado",
+                    title = "Marcador",
+                    snippet = uiState.clickMarker.toString(),
                 )
             }
 
