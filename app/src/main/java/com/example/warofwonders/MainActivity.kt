@@ -87,9 +87,4 @@ class MainActivity : ComponentActivity() {
                 .set(criatura)
         }
     }
-
-
-
-
-
 }
