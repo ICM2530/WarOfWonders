@@ -44,7 +44,7 @@ fun CameraScreen() {
             )
             if (!imageDir.exists()) imageDir.mkdirs()
             saveCameraImageToGallery(context, it, imageDir)
-            Log.i("ImageApp", "🖼️ Imagen de galería guardada en WarOfWonders")
+            Log.i("ImageApp", "Imagen de galería guardada en WarOfWonders")
         }
     }
 
@@ -137,7 +137,7 @@ fun saveCameraImageToGallery(context: Context, uri: Uri, destDir: File) {
         inputStream?.close()
         outputStream.close()
 
-        // 🔄 Escanear para que aparezca inmediatamente si usas un visor externo
+
         MediaScannerConnection.scanFile(context, arrayOf(newFile.absolutePath), null, null)
 
         Log.i("ImageApp", "Imagen copiada a: ${newFile.absolutePath}")

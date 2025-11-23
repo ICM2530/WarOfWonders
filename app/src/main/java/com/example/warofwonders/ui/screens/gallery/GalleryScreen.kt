@@ -44,7 +44,9 @@ fun GalleryScreen(navController: NavHostController) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF9ACD32)), // Verde retro
+            .background(Color(0xFF9ACD32))
+            .padding(top = 48.dp),
+
         contentAlignment = Alignment.TopCenter
     ) {
         Column(

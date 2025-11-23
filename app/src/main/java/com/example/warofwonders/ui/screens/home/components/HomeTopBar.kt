@@ -41,7 +41,8 @@ fun HomeTopBar(
     ) {
         // --- Fila superior: perfil + iconos ---
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth()
+                .padding(top = 48.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -114,6 +115,7 @@ fun HomeTopBar(
 
         Row(
             modifier = Modifier
+                .padding(top = 48.dp)
                 .fillMaxWidth()
                 .height(100.dp),
             horizontalArrangement = Arrangement.SpaceBetween,

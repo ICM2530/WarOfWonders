@@ -14,6 +14,7 @@ import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.StepDetectorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
+import com.example.warofwonders.ui.model.InventarioViewModel
 import com.example.warofwonders.ui.screens.camera.CameraScreen
 import com.example.warofwonders.ui.screens.chat.ChatScreen
 import com.example.warofwonders.ui.screens.clan.ClanScreen
@@ -70,11 +71,13 @@ fun NavGraph(
                         barometerSensorDataSource = barometerSensorDataSource,
                         temperatureSensorDataSource = temperatureSensorDataSource,
                         magnetometerDataSource = magnetometerDataSource,
-                        interestPointRepository = interestPointRepository
+                        interestPointRepository = interestPointRepository,
+                        inventarioVM = InventarioViewModel()
+
                     )
                 }
             )
-            InventoryScreen(navController = navController, viewModel = mapViewModel)
+            InventoryScreen(navController = navController)
         }
 
         composable(route = AppScreens.Map.name) {
@@ -87,7 +90,9 @@ fun NavGraph(
                         barometerSensorDataSource = barometerSensorDataSource,
                         temperatureSensorDataSource = temperatureSensorDataSource,
                         magnetometerDataSource = magnetometerDataSource,
-                        interestPointRepository = interestPointRepository
+                        interestPointRepository = interestPointRepository,
+                        inventarioVM = InventarioViewModel()
+
                     )
                 }
             )

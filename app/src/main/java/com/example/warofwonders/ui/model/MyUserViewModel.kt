@@ -1,5 +1,6 @@
 package com.example.warofwonders.ui.model
 
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.net.Uri
@@ -18,13 +19,12 @@ const val pathUsers = "users/"
 class MyUserViewModel(application: Application) : AndroidViewModel(application) {
 
     private val myRef = database.getReference(pathUsers)
+    @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
 
-    // Todos los usuarios (lista completa)
     private val _users = MutableStateFlow(listOf<MyUserState>())
     val users = _users.asStateFlow()
 
-    // Usuario actual (el logueado)
     private val _currentUser = MutableStateFlow<MyUserState?>(null)
     val currentUser = _currentUser.asStateFlow()
 
@@ -45,24 +45,47 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         }
     )
 
+    fun registerUserWithFirebase(
+        user: MyUserState,
+        onSuccess: () -> Unit,
+        onError: (Exception) -> Unit
+    ) {
+        val auth = FirebaseAuth.getInstance()
+        val email = user.email.trim()
+        val password = user.password.trim()
+
+        auth.createUserWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
+
+                    val userData = mapOf(
+                        "name" to user.name,
+                        "lastName" to user.lastName,
+                        "phone" to user.phone,
+                        "email" to user.email,
+                        "monedas" to user.monedas,
+                        "nivel" to user.nivel,
+                        "experiencia" to user.experiencia,
+                        "clan" to user.clanId,
+                        "profileImageUrl" to user.imagen
+                    )
+
+                    myRef.child(uid).setValue(userData)
+                        .addOnSuccessListener {
+                            cacheUserLocally(user)
+                            onSuccess()
+                        }
+                        .addOnFailureListener { e -> onError(e) }
+                } else {
+                    onError(task.exception ?: Exception("Error al crear usuario"))
+                }
+            }
+    }
+
     fun saveUser(user: MyUserState) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
-        val cleanUser = mapOf(
-            "id" to uid,
-            "name" to user.name,
-            "lastName" to user.lastName,
-            "phone" to user.phone,
-            "email" to user.email,
-            "password" to user.password,
-            "coins" to user.coins,
-            "level" to user.level,
-            "xp" to user.xp,
-            "team" to user.team,
-            "profileImageUrl" to user.profileImageUrl
-        )
-
-        myRef.child(uid).setValue(cleanUser)
+        myRef.child(uid).setValue(user)
         cacheUserLocally(user)
     }
 
@@ -113,7 +136,7 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                                 Log.i("FirebaseApp", "Imagen actualizada correctamente para $email")
 
 
-                                _currentUser.value = _currentUser.value?.copy(profileImageUrl = uri.toString())
+                                _currentUser.value = _currentUser.value?.copy(imagen = uri.toString())
                                 _currentUser.value?.let { cacheUserLocally(it) }
 
                                 onSuccess?.invoke()
@@ -137,8 +160,8 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         prefs.edit().apply {
             putString("email", user.email)
             putString("name", user.name)
-            putString("team", user.team)
-            putString("profileImageUrl", user.profileImageUrl)
+            putString("team", user.clanId)
+            putString("profileImageUrl", user.imagen)
             apply()
         }
     }
@@ -150,8 +173,8 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         return MyUserState(
             email = email,
             name = prefs.getString("name", "") ?: "",
-            team = prefs.getString("team", "") ?: "",
-            profileImageUrl = prefs.getString("profileImageUrl", "") ?: ""
+            clanId = prefs.getString("clan", "") ?: "",
+            imagen = prefs.getString("foto de perfil", "") ?: ""
         )
     }
 
