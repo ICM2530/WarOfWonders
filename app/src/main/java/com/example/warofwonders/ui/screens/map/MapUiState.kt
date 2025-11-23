@@ -28,4 +28,8 @@ data class MapUiState(
     val searchQuery: String = "",
     val isSearching: Boolean = false,
     val routePoints: List<LatLng> = emptyList()
+    ,
+    // Campos de encuentro: cuando se den, la interfaz deberia navegar a la pantalla de combate con estas IDs
+    val encounterAttackerId: String? = null,
+    val encounterDefenderId: String? = null
 )

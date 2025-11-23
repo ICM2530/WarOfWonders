@@ -7,6 +7,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -14,11 +16,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.warofwonders.R
 import androidx.compose.ui.graphics.Color
+import com.example.warofwonders.ui.model.CombatViewModel
 
 @Composable
-fun CombatScreen() {
+fun CombatScreen(navController: NavController, attackerId: String?, defenderId: String?, combatViewModel: CombatViewModel = viewModel()) {
+    val uiState by combatViewModel.uiState.collectAsState()
+    val attacker = uiState.attacker
+    val defender = uiState.defender
+    val result = uiState.result
+
+    // Cuando este composable se muestre con IDs de atacante/defensor, preguntarle al ViewModel que cargue e inicie el combate
+    androidx.compose.runtime.LaunchedEffect(attackerId, defenderId) {
+        if (attackerId != null && defenderId != null) {
+            combatViewModel.startCombatByIds(attackerId, defenderId)
+        }
+    }
 
     Box(Modifier.fillMaxSize()) {
         Image(
@@ -46,58 +62,75 @@ fun CombatScreen() {
                     contentScale = ContentScale.Crop
                 )
 
-               //info de jigador 11 que es el principal en el ejemplo del mockup
+                // info del atacante
                 Column(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(start = 10.dp, top = 8.dp),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    TopNameLine(title = "User #11", subtitle = "teusaquillo amigos")
+                    TopNameLine(
+                        title = attacker?.name ?: "User #11",
+                        subtitle = attacker?.clan ?: "teusaquillo amigos"
+                    )
                     HealthBar()
                 }
 
-                //el jugador pero del rino (rl nombre)
-                //se supone que el subtitulo es el clan
+                // info del defensor
                 Column(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(end = 10.dp, top = 8.dp),
                     horizontalAlignment = Alignment.End
                 ) {
-                    TopNameLine(title = "User #18", subtitle = "los piratas")
+                    TopNameLine(
+                        title = defender?.name ?: "User #18",
+                        subtitle = defender?.clan ?: "los piratas"
+                    )
                     HealthBar()
                 }
 
+                // Resultado de combate o accion
+                if (result != null) {
+                    CombatResultDisplay(result = result, combatViewModel = combatViewModel, navController = navController)
+                } else {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .align(Alignment.Center)
+                            .padding(horizontal = 24.dp)
+                            .padding(top = 170.dp),
 
-                Row( //en esta row van los dos animales con su nombre ynivel
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.Center)
-                        .padding(horizontal = 24.dp)
-                        .padding(top = 170.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Animal atacante
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "${attacker?.name ?: "bear"} lvl${attacker?.level ?: 1}",
+                                color = Color.White,
+                                fontSize = 12.sp
+                            )
+                            Image(
+                                painter = painterResource(id = R.drawable.oso),
+                                contentDescription = "Oso",
+                                modifier = Modifier.size(130.dp)
+                            )
+                        }
 
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    //imagen del oso
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("bear lvl1", color = Color.White, fontSize = 12.sp)
-                        Image(
-                            painter = painterResource(id = R.drawable.oso),
-                            contentDescription = "Oso",
-                            modifier = Modifier.size(130.dp)
-                        )
-                    }
-
-                    //imagen del rino
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("rino lvl2", color = Color.White, fontSize = 12.sp)
-                        Image(
-                            painter = painterResource(id = R.drawable.rino),
-                            contentDescription = "Rino",
-                            modifier = Modifier.size(130.dp)
-                        )
+                        // Animal defensor
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "${defender?.name ?: "rino"} lvl${defender?.level ?: 2}",
+                                color = Color.White,
+                                fontSize = 12.sp
+                            )
+                            Image(
+                                painter = painterResource(id = R.drawable.rino),
+                                contentDescription = "Rino",
+                                modifier = Modifier.size(130.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -118,7 +151,7 @@ fun CombatScreen() {
                     verticalAlignment = Alignment.Top
                 ) {
 
-                    Image( //imagen del inventario
+                    Image(
                         painter = painterResource(id = R.drawable.inventario),
                         contentDescription = "Inventario",
                         modifier = Modifier
@@ -128,7 +161,6 @@ fun CombatScreen() {
                     )
 
                     Spacer(Modifier.width(10.dp))
-
 
                     Column(
                         modifier = Modifier.width(110.dp),
@@ -157,23 +189,86 @@ fun CombatScreen() {
                     }
                 }
 
-
                 Spacer(Modifier.height(12.dp))
-                Button(
-                    onClick = { /* TODO: acción PLAY */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.play),
-                        contentDescription = "PLAY",
-                        modifier = Modifier.size(width = 200.dp, height = 90.dp)
-                        .clickable(
-                            onClick = {  }
+                
+                if (result == null && !uiState.isLoading) {
+                    if (attackerId == null && defenderId == null) {
+                        Text("No hay nadie a quien enfrentar!...", color = Color.White)
+                    }
+                    else{
+                        Button(
+                            onClick = {
+                                val atk = attacker
+                                val def = defender
+                                if (atk != null && def != null) {
+                                    combatViewModel.startCombat(atk, def)
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                            contentPadding = PaddingValues(0.dp)
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.play),
+                                contentDescription = "PLAY",
+                                modifier = Modifier
+                                    .size(width = 200.dp, height = 90.dp)
+                                    .clickable { }
                             )
-                    )
+                        }
+                    }
+                } else if (uiState.isLoading) {
+                    Text("Combate en progreso...", color = Color.White)
                 }
+                
                 Spacer(Modifier.height(6.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun CombatResultDisplay(result: com.example.warofwonders.data.model.CombatResult, combatViewModel: CombatViewModel, navController: NavController) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(32.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                "Resultado de batalla",
+                color = Color.White,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "${result.winnerId} gana!",
+                color = Color.Yellow,
+                fontSize = 18.sp
+            )
+            Text(
+                "Recursos transferidos: ${result.resourcesTransferred}",
+                color = Color.White,
+                fontSize = 14.sp
+            )
+            Text(
+                "Rondas: ${result.rounds}",
+                color = Color.White,
+                fontSize = 14.sp
+            )
+            Spacer(Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    combatViewModel.resetCombat()
+                    navController.popBackStack()
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50))
+            ) {
+                Text("Volver al mapa", color = Color.White)
             }
         }
     }

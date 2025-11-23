@@ -37,6 +37,7 @@ import androidx.navigation.NavController
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
 import com.example.warofwonders.ui.shared.utils.shouldShowPermissionRationale
+import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -110,6 +111,16 @@ fun MapScreen(navController: NavController, viewModel: MapViewModel) {
             },
             onCancel = { showRationale = false }
         )
+    }
+
+    // Navegar a la pantalla de combate cuando un encuentro se de en el estado de MapViewModel
+    LaunchedEffect(uiState.encounterAttackerId, uiState.encounterDefenderId) {
+        val a = uiState.encounterAttackerId
+        val d = uiState.encounterDefenderId
+        if (!a.isNullOrBlank() && !d.isNullOrBlank()) {
+            navController.navigate(AppScreens.Combat.name + "/${a}/${d}")
+            viewModel.clearEncounter()
+        }
     }
 }
 
