@@ -457,9 +457,10 @@ class MapViewModel(
 
         val inventarioActual = inventarioVM.inventario.value.recursos
 
-        // si es armadura y ya la tiene no se puede lanzar
+        // filtra recursos que no sean armadura ya existente ni criaturas
         val recursosFiltrados = recursosDisponibles.filter { recurso ->
-            recurso.tipo != "armadura" || inventarioActual.none { it.nombre == recurso.nombre }
+            (recurso.tipo != "armadura" || inventarioActual.none { it.nombre == recurso.nombre }) &&
+                    recurso.tipo != "criatura"
         }
 
         if (recursosFiltrados.isEmpty()) return

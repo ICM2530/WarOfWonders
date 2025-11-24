@@ -1,6 +1,7 @@
 package com.example.warofwonders.ui.screens.home.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -22,6 +23,7 @@ import com.example.warofwonders.R
 import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
+
 
 @Composable
 fun HomeTopBar(navController: NavHostController) {
@@ -50,148 +52,150 @@ fun HomeTopBar(navController: NavHostController) {
         }
     }
 
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(12.dp)
-    ) {
-        // Columna principal: Perfil + info
-        Column(
-            modifier = Modifier.align(Alignment.CenterStart)
-        ) {
-            Row(
+            .statusBarsPadding()
+            .padding(start = 12.dp, top = 5.dp, end = 12.dp, bottom = 8.dp),
+
                 verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Imagen de perfil con contorno
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable { navController.navigate(AppScreens.Camera.name) },
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clickable { navController.navigate(AppScreens.Camera.name) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    val painter = if (profileImageUrl.isNullOrBlank()) {
-                        painterResource(id = R.drawable.profile_user)
-                    } else {
-                        rememberAsyncImagePainter(profileImageUrl)
-                    }
-                    Image(
-                        painter = painter,
-                        contentDescription = "Imagen de perfil",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
+                val painter = if (profileImageUrl.isNullOrBlank()) {
+                    painterResource(id = R.drawable.profile_user)
+                } else {
+                    rememberAsyncImagePainter(profileImageUrl)
                 }
+                Image(
+                    painter = painter,
+                    contentDescription = "Imagen de perfil",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .border(2.dp, color = Color(0xFFA17745), CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Nombre y equipo
+                Text(
+                    text = userName,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Text(
+                    text = team,
+                    color = Color.White,
+                    fontSize = 12.sp,
+                    maxLines = 1
+                )
+
 
                 Column(
-                    modifier = Modifier.padding(start = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp) // separa XP y coins
                 ) {
-                    Column {
-                        Text(
-                            text = userName,
-                            color = Color.White,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = team,
-                            color = Color.White,
-                            fontSize = 14.sp,
-                            fontStyle = FontStyle.Italic
-                        )
-                    }
-
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    // XP
+                    Box(
+                        contentAlignment = Alignment.Center, // centra el texto sobre la imagen
+                        modifier = Modifier
+                            .width(60.dp)
+                            .height(20.dp)
+                    ) {
                         Image(
                             painter = painterResource(id = R.drawable.xp_bar),
-                            contentDescription = "Barra de experiencia",
-                            modifier = Modifier
-                                .height(28.dp)
-                                .width(80.dp),
+                            contentDescription = "Barra de XP",
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.FillBounds
                         )
                         Text(
                             text = xp.toString(),
-                            modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .padding(start = 40.dp),
-                            fontSize = 13.sp,
                             color = Color.White,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
-                    Box(modifier = Modifier.fillMaxWidth()) {
+                    // Coins
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .width(60.dp)
+                            .height(20.dp)
+                    ) {
                         Image(
                             painter = painterResource(id = R.drawable.bracket_coin),
                             contentDescription = "Monedas",
-                            modifier = Modifier
-                                .height(28.dp)
-                                .width(80.dp),
+                            modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.FillBounds
                         )
                         Text(
                             text = coins.toString(),
-                            modifier = Modifier
-                                .align(Alignment.CenterStart)
-                                .padding(start = 40.dp),
-                            fontSize = 13.sp,
                             color = Color.White,
+                            fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
+
             }
         }
 
-
         Column(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(top = 16.dp, end = 16.dp), // margen desde la esquina
-            verticalArrangement = Arrangement.spacedBy(12.dp) // espacio entre filas
+            horizontalAlignment = Alignment.End,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp) // espacio entre iconos
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Image(
                     painter = painterResource(R.drawable.shop),
                     contentDescription = "Tienda",
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(40.dp)
                         .clickable { navController.navigate(AppScreens.Shop.name) }
                 )
                 Image(
                     painter = painterResource(R.drawable.iconcontactos),
                     contentDescription = "Contactos",
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(40.dp)
                         .clickable { navController.navigate(AppScreens.Contacts.name) }
                 )
             }
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Image(
                     painter = painterResource(R.drawable.configbutton),
                     contentDescription = "Configuración",
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(40.dp)
                         .clickable { navController.navigate(AppScreens.Settings.name) }
                 )
                 Image(
                     painter = painterResource(R.drawable.bell_icon),
                     contentDescription = "Notificaciones",
                     modifier = Modifier
-                        .size(50.dp)
+                        .size(40.dp)
                         .clickable { }
                 )
             }
         }
-
-
-
     }
 }
+
