@@ -29,6 +29,12 @@ class InventarioViewModel : ViewModel() {
     private val _mostrarPopup = MutableStateFlow(false)
     val mostrarPopup = _mostrarPopup.asStateFlow()
 
+    private val _mostrarPopupRecursos = MutableStateFlow(false)
+    val mostrarPopupRecursos = _mostrarPopupRecursos.asStateFlow()
+
+    private val _saludFlotante = MutableStateFlow<Int?>(null)
+    val saludFlotante = _saludFlotante.asStateFlow()
+
 
     fun seleccionarCriatura(criatura: Criatura) {
         _criaturaSeleccionada.value = criatura
@@ -106,7 +112,122 @@ class InventarioViewModel : ViewModel() {
         return _inventario.value.recursos.any { it.nombre == nombreRecurso }
     }
 
+    fun asignarRecursoACriatura(criaturaId: String, recurso: Recurso) {
+        val usuario = _inventario.value
+        val criaturas = usuario.criaturas.toMutableList()
+        val recursos = usuario.recursos.toMutableList()
+
+        val index = criaturas.indexOfFirst { it.id == criaturaId }
+        if (index == -1) return
+
+        val criatura = criaturas[index]
+        var nuevaSalud = criatura.salud
+        val recursosCriatura = criatura.recursos.toMutableList()
+
+        when (recurso.tipo.lowercase()) {
+
+            "armadura" -> {
+                if (recursosCriatura.any { it.id == recurso.id }) return
+
+                nuevaSalud += recurso.proteccion
+                _saludFlotante.value = recurso.proteccion
+
+                recursosCriatura.add(recurso)
 
 
+                recursos.removeIf { it.id == recurso.id }
+            }
+
+            "pocion" -> {
+                nuevaSalud += recurso.proteccion
+                _saludFlotante.value = recurso.proteccion
+
+                recursos.removeIf { it.id == recurso.id }
+            }
+        }
+
+        criaturas[index] = criatura.copy(
+            salud = nuevaSalud,
+            recursos = recursosCriatura
+        )
+
+        val actualizado = usuario.copy(
+            criaturas = criaturas,
+            recursos = recursos
+        )
+        _inventario.value = actualizado
+
+        val uid = auth.currentUser?.uid ?: return
+        usersDb.child(uid).child("criaturas").setValue(criaturas)
+
+        usersDb.child(uid).child("recursos").setValue(recursos)
+
+        refrescarCriaturaSeleccionada()
+
+    }
+
+
+    fun quitarArmadura(criaturaId: String, recurso: Recurso) {
+        val usuario = _inventario.value
+        val criaturas = usuario.criaturas.toMutableList()
+        val recursos = usuario.recursos.toMutableList()
+
+        val index = criaturas.indexOfFirst { it.id == criaturaId }
+        if (index == -1) return
+
+        val criatura = criaturas[index]
+        var nuevaSalud = criatura.salud
+        val recursosCriatura = criatura.recursos.toMutableList()
+
+        recursosCriatura.removeIf { it.id == recurso.id }
+
+        nuevaSalud -= recurso.proteccion
+
+
+        if (recursos.none { it.id == recurso.id }) {
+            recursos.add(recurso)
+        }
+
+        criaturas[index] = criatura.copy(
+            salud = nuevaSalud,
+            recursos = recursosCriatura
+        )
+
+        val actualizado = usuario.copy(
+            criaturas = criaturas,
+            recursos = recursos
+        )
+        _inventario.value = actualizado
+
+        val uid = auth.currentUser?.uid ?: return
+        usersDb.child(uid).child("criaturas").setValue(criaturas)
+        usersDb.child(uid).child("recursos").setValue(recursos)
+
+
+        refrescarCriaturaSeleccionada()
+
+    }
+
+
+
+
+    fun abrirPopupRecursos() {
+        _mostrarPopupRecursos.value = true
+    }
+
+    fun cerrarPopupRecursos() {
+        _mostrarPopupRecursos.value = false
+    }
+
+    fun limpiarFlotante() {
+        _saludFlotante.value = null
+    }
+
+
+    fun refrescarCriaturaSeleccionada() {
+        val actual = _criaturaSeleccionada.value ?: return
+        val nueva = _inventario.value.criaturas.firstOrNull { it.id == actual.id }
+        _criaturaSeleccionada.value = nueva
+    }
 
 }

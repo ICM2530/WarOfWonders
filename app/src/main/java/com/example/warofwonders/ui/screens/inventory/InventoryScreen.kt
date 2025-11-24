@@ -1,14 +1,21 @@
 package com.example.warofwonders.ui.screens.inventory
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -17,6 +24,7 @@ import androidx.navigation.NavHostController
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.model.InventarioViewModel
 import com.example.warofwonders.ui.screens.inventory.components.PopupDeCriatura
+import com.example.warofwonders.ui.screens.inventory.components.PopupRecursos
 import com.example.warofwonders.ui.screens.inventory.components.ProfileUser
 import com.example.warofwonders.ui.screens.inventory.components.SlotsSection
 import com.example.warofwonders.ui.screens.inventory.components.SlotsSectionCriaturas
@@ -27,9 +35,10 @@ fun InventoryScreen(
     inventarioVM: InventarioViewModel = viewModel()
 ) {
     val inventario by inventarioVM.inventario.collectAsState()
-
     val criaturaSeleccionada by inventarioVM.criaturaSeleccionada.collectAsState()
     val mostrarPopup by inventarioVM.mostrarPopup.collectAsState()
+    val mostrarPopupRecursos by inventarioVM.mostrarPopupRecursos.collectAsState()
+    val saludFlotante by inventarioVM.saludFlotante.collectAsState()
 
     LaunchedEffect(Unit) {
         inventarioVM.cargarInventario()
@@ -54,7 +63,7 @@ fun InventoryScreen(
         ) {
             ProfileUser(navController = navController)
 
-            // SECCIÓN CRIATURAS
+            // CRIATURAS
             SlotsSectionCriaturas(
                 title = "CRIATURAS",
                 criaturas = inventario.criaturas,
@@ -63,26 +72,89 @@ fun InventoryScreen(
                 }
             )
 
-
-            // SECCIÓN RECURSOS
+            // RECURSOS
             SlotsSection(
                 title = "RECURSOS",
                 items = inventario.recursos.map { getDrawableId(it.imagen) }
             )
         }
 
-
-        if (mostrarPopup && criaturaSeleccionada != null) {
-            PopupDeCriatura(
-                criatura = criaturaSeleccionada!!,
-                onClose = { inventarioVM.cerrarPopup() }
-            )
+        // POPUP DE CRIATURA (ARREGLADO + ANIMADO + FONDO OSCURO)
+        AnimatedVisibility(
+            visible = mostrarPopup && criaturaSeleccionada != null,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xAA000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                PopupDeCriatura(
+                    criatura = criaturaSeleccionada!!,
+                    onAbrirPopupRecursos = { inventarioVM.abrirPopupRecursos() },
+                    onClose = { inventarioVM.cerrarPopup() },
+                    onDesequipar = { recurso ->
+                        inventarioVM.quitarArmadura(criaturaSeleccionada!!.id, recurso)
+                    }
+                )
+            }
         }
 
+        // POPUP DE RECURSOS (ARREGLADO + ANIMADO + FONDO OSCURO)
+        AnimatedVisibility(
+            visible = mostrarPopupRecursos,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color(0xAA000000)),
+                contentAlignment = Alignment.Center
+            ) {
+                PopupRecursos(
+                    recursos = inventario.recursos,
+                    recursosEquipados = criaturaSeleccionada!!.recursos,
+                    saludActual = criaturaSeleccionada!!.salud,
+                    saludFlotante = saludFlotante ?: 0,
+                    onSelect = { recurso ->
+                        inventarioVM.asignarRecursoACriatura(criaturaSeleccionada!!.id, recurso)
+                        inventarioVM.refrescarCriaturaSeleccionada()
+                    },
+                    onUnselect = { recurso ->
+                        inventarioVM.quitarArmadura(criaturaSeleccionada!!.id, recurso)
+                        inventarioVM.refrescarCriaturaSeleccionada()
+                    },
+                    onClose = { inventarioVM.cerrarPopupRecursos() }
+                )
 
+
+            }
+        }
+
+        // SALUD FLOTANTE
+        if (saludFlotante != null) {
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn() + slideInVertically { it / 2 },
+                exit = fadeOut()
+            ) {
+                Text(
+                    text = "+${saludFlotante}",
+                    color = Color.Green,
+                    modifier = Modifier.align(Alignment.TopCenter)
+                )
+            }
+
+            LaunchedEffect(saludFlotante) {
+                kotlinx.coroutines.delay(800)
+                inventarioVM.limpiarFlotante()
+            }
+        }
     }
 }
-
 
 @Composable
 fun getDrawableId(nombre: String): Int {

@@ -68,7 +68,7 @@ fun SlotsSectionTienda(
 
                                 Spacer(modifier = Modifier.height(6.dp))
 
-                                // PRECIO CENTRADO
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.Center,
@@ -93,7 +93,7 @@ fun SlotsSectionTienda(
                                     onClick = { onComprar(recurso) },
                                     modifier = Modifier.height(32.dp),
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF8A5A33),  // CAMBIA ESTE COLOR
+                                        containerColor = Color(0xFF8A5A33),
                                         contentColor = Color.White
                                     )
                                 ) {

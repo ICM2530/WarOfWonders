@@ -119,8 +119,6 @@ fun SignUpScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
 
-                Text("seleccione una imagen", fontSize = 18.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(5.dp))
 
                 Box(
                     modifier = Modifier
