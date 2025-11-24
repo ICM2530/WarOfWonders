@@ -72,15 +72,16 @@ fun InventoryScreen(
                 }
             )
 
-            // RECURSOS
             SlotsSection(
                 title = "RECURSOS",
-                items = inventario.recursos.map { it.imagen }
+                items = inventario.recursos
             )
+
+
 
         }
 
-        // POPUP DE CRIATURA (ARREGLADO + ANIMADO + FONDO OSCURO)
+
         AnimatedVisibility(
             visible = mostrarPopup && criaturaSeleccionada != null,
             enter = fadeIn(),
