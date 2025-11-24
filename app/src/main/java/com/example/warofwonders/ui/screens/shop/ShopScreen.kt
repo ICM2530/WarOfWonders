@@ -103,7 +103,21 @@ fun ShopScreen(
 
             val armaduras = recursos.filter { it.tipo == "armadura" }
             if (armaduras.isNotEmpty()) {
-                Text("ARMADURAS", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .background(color = Color(0xFF4F2B12), shape = RoundedCornerShape(6.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "ARMADURAS",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
+                }
+
                 SlotsSectionTienda(
                     recursos = armaduras,
                     onComprar = { recurso ->
@@ -114,7 +128,20 @@ fun ShopScreen(
 
             val criaturas = recursos.filter { it.tipo == "criatura" }
             if (criaturas.isNotEmpty()) {
-                Text("CRIATURAS EXOTICAS", color = Color.White, style = MaterialTheme.typography.titleMedium)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .background(color = Color(0xFF4F2B12), shape = RoundedCornerShape(6.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "CRIATURAS EXOTICASxc",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
+                }
                 SlotsSectionTienda(
                     recursos = criaturas,
                     onComprar = { recurso ->
