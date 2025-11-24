@@ -51,6 +51,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
@@ -282,6 +283,7 @@ fun MapScreenContent(
         )
     }
 
+
     if (uiState.alreadyOwnedCreature) {
         Box(
             modifier = Modifier
@@ -317,23 +319,14 @@ fun MapScreenContent(
 
                     uiState.criaturaDetectada?.let { criatura ->
 
-                        val context = LocalContext.current
-
-                        val resId = context.resources.getIdentifier(
-                            criatura.imagen,
-                            "drawable",
-                            context.packageName
+                        AsyncImage(
+                            model = criatura.imagen,
+                            contentDescription = criatura.nombre,
+                            modifier = Modifier
+                                .padding(top = 12.dp)
+                                .size(140.dp), 
+                            contentScale = ContentScale.Fit
                         )
-
-                        if (resId != 0) {   // si existe en drawable
-                            Image(
-                                painter = painterResource(resId),
-                                contentDescription = criatura.nombre,
-                                modifier = Modifier
-                                    .padding(top = 12.dp)
-                                    .size(140.dp)
-                            )
-                        }
                     }
 
                     Button(
@@ -346,6 +339,7 @@ fun MapScreenContent(
             }
         }
     }
+
 
     when {
         uiState.pressureCreatureFound -> CreatureAlert(

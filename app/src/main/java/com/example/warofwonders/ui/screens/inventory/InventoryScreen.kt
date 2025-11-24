@@ -75,8 +75,9 @@ fun InventoryScreen(
             // RECURSOS
             SlotsSection(
                 title = "RECURSOS",
-                items = inventario.recursos.map { getDrawableId(it.imagen) }
+                items = inventario.recursos.map { it.imagen }
             )
+
         }
 
         // POPUP DE CRIATURA (ARREGLADO + ANIMADO + FONDO OSCURO)

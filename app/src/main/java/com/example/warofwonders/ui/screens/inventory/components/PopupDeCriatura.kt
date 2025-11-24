@@ -15,8 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.warofwonders.ui.model.Criatura
 import com.example.warofwonders.ui.model.Recurso
 import com.example.warofwonders.ui.screens.inventory.getDrawableId
@@ -49,13 +51,16 @@ fun PopupDeCriatura(
 
                 Text(criatura.nombre)
 
-                Image(
-                    painter = painterResource(getDrawableId(criatura.imagen)),
+                AsyncImage(
+                    model = criatura.imagen,
                     contentDescription = criatura.nombre,
                     modifier = Modifier
-                        .padding(12.dp)
-                        .size(120.dp)
+                        .padding(8.dp)
+                        .size(150.dp),
+                    contentScale = ContentScale.Fit
                 )
+
+
 
                 Text("Salud: ${criatura.salud}")
                 Text("Daño: ${criatura.dano}")

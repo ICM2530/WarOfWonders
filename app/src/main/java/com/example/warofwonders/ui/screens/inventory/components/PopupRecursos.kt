@@ -15,8 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.warofwonders.ui.model.Recurso
 import com.example.warofwonders.ui.screens.inventory.getDrawableId
 
@@ -55,10 +57,12 @@ fun PopupRecursos(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
 
-                    Image(
-                        painter = painterResource(getDrawableId(recurso.imagen)),
+
+                    AsyncImage(
+                        model = recurso.imagen,
                         contentDescription = recurso.nombre,
-                        modifier = Modifier.size(50.dp)
+                        modifier = Modifier.size(50.dp),
+                        contentScale = ContentScale.Fit
                     )
 
                     Column(modifier = Modifier.padding(start = 8.dp)) {

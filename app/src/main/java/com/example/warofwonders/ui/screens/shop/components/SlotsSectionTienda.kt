@@ -9,9 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.warofwonders.ui.model.Recurso
 import com.example.warofwonders.ui.screens.inventory.getDrawableId
 
@@ -38,7 +40,7 @@ fun SlotsSectionTienda(
 
                     if (index < recursos.size) {
                         val recurso = recursos[index]
-                        val drawableId = getDrawableId(recurso.imagen)
+
 
                         Card(
                             modifier = Modifier.size(130.dp, 170.dp),
@@ -54,10 +56,13 @@ fun SlotsSectionTienda(
                                     .padding(8.dp)
                             ) {
 
-                                Image(
-                                    painter = painterResource(drawableId),
+                                AsyncImage(
+                                    model = recurso.imagen,
                                     contentDescription = recurso.nombre,
-                                    modifier = Modifier.size(64.dp)
+                                    modifier = Modifier.size(64.dp),
+                                    contentScale = ContentScale.Fit,
+                                    placeholder = painterResource(R.drawable.ic_menu_gallery), // opcional
+                                    error = painterResource(R.drawable.ic_menu_close_clear_cancel) // opcional
                                 )
 
                                 Text(
@@ -88,7 +93,7 @@ fun SlotsSectionTienda(
 
                                 Spacer(modifier = Modifier.height(8.dp))
 
-                                // BOTÓN PERSONALIZADO
+
                                 Button(
                                     onClick = { onComprar(recurso) },
                                     modifier = Modifier.height(32.dp),
