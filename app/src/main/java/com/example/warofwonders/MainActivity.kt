@@ -13,8 +13,10 @@ import com.example.warofwonders.data.source.hardware.StepDetectorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
 import com.example.warofwonders.data.source.hardware.LocationDataSource
 import com.example.warofwonders.ui.navigation.NavGraph
+import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,9 +29,16 @@ class MainActivity : ComponentActivity() {
         val lightSensorDataSource = LightSensorDataSource(context = this)
         val barometerSensorDataSource = BarometerSensorDataSource(context = this)
         val temperatureSensorDataSource = TemperatureSensorDataSource(context = this)
-        val stepDetectorDataSource = StepDetectorDataSource (context = this)
-        val magnetometerDataSource = MagnetometerDataSource (context = this)
+        val stepDetectorDataSource = StepDetectorDataSource(context = this)
+        val magnetometerDataSource = MagnetometerDataSource(context = this)
         val interestPointRepository = InterestPointRepository(context = this)
+
+        val isUserLoggedIn = FirebaseAuth.getInstance().currentUser != null
+        val startDestination = if (isUserLoggedIn) {
+            AppScreens.Home.name
+        } else {
+            AppScreens.StartUp.name
+        }
 
         setContent {
             NavGraph(
@@ -40,10 +49,10 @@ class MainActivity : ComponentActivity() {
                 temperatureSensorDataSource = temperatureSensorDataSource,
                 stepDetectorDataSource = stepDetectorDataSource,
                 magnetometerDataSource = magnetometerDataSource,
-                interestPointRepository = interestPointRepository
+                interestPointRepository = interestPointRepository,
+                startDestination = startDestination
             )
         }
-
     }
 
     fun precargarCriaturas() {
@@ -87,9 +96,4 @@ class MainActivity : ComponentActivity() {
                 .set(criatura)
         }
     }
-
-
-
-
-
 }

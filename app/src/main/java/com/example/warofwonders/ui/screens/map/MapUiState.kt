@@ -6,7 +6,7 @@ import com.example.warofwonders.ui.model.Criatura
 import com.google.android.gms.maps.model.LatLng
 
 data class MapUiState(
-    val currentLocation: LocationData = LocationData(),
+    val currentLocation: LocationData = LocationData(latitude = 4.627747211702569, longitude = -74.0642053698486),
     val staticMarkers: List<PuntoInteres> = emptyList(),
     val searchMarker: LatLng? = null, // Marcador de búsqueda
     val clickMarker: LatLng? = null,  // Marcador de click largo

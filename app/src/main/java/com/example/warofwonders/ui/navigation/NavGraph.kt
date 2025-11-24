@@ -2,7 +2,6 @@ package com.example.warofwonders.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -41,11 +40,12 @@ fun NavGraph(
     temperatureSensorDataSource: TemperatureSensorDataSource,
     stepDetectorDataSource: StepDetectorDataSource,
     magnetometerDataSource: MagnetometerDataSource,
-    interestPointRepository: InterestPointRepository
+    interestPointRepository: InterestPointRepository,
+    startDestination: String
 ) {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = AppScreens.StartUp.name) {
+    NavHost(navController = navController, startDestination = startDestination) {
         composable(route = AppScreens.StartUp.name) {
             StartUpScreen(navController = navController)
         }
@@ -74,7 +74,6 @@ fun NavGraph(
                         magnetometerDataSource = magnetometerDataSource,
                         interestPointRepository = interestPointRepository,
                         inventarioVM = InventarioViewModel()
-
                     )
                 }
             )
@@ -93,7 +92,6 @@ fun NavGraph(
                         magnetometerDataSource = magnetometerDataSource,
                         interestPointRepository = interestPointRepository,
                         inventarioVM = InventarioViewModel()
-
                     )
                 }
             )
@@ -110,7 +108,6 @@ fun NavGraph(
         composable(route = AppScreens.Chat.name) {
             ChatScreen(navController = navController)
         }
-
 
         composable(route = AppScreens.Settings.name) {
             SettingsScreen(navController = navController)
@@ -131,10 +128,13 @@ fun NavGraph(
         composable(route = AppScreens.Gallery.name) {
             GalleryScreen(navController = navController)
         }
+<<<<<<< HEAD
 
 
 
 
 
+=======
+>>>>>>> 39c0cbe4f0e0f8f525c1b029565243c064127b2f
     }
 }
