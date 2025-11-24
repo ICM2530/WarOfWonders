@@ -26,7 +26,7 @@ import com.example.warofwonders.ui.components.ImageButton
 import com.example.warofwonders.ui.navigation.AppScreens
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController,) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -45,6 +45,7 @@ fun HomeScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             HomeTopBar(
+
                 navController = navController
             )
 

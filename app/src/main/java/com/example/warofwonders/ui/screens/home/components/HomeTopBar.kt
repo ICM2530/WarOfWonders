@@ -158,7 +158,8 @@ fun HomeTopBar(
                     modifier = Modifier
                         .size(48.dp)
                         .clickable {
-                            navController.navigate(AppScreens.Contacts.name)
+                            navController.navigate(AppScreens.Shop.name)
+
                         }
                 )
 

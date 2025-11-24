@@ -14,13 +14,13 @@ data class MyUserState(
 
     // Perfil del jugador
     val id: String = "",
-    val usuario: String = "",
-    val experiencia: Int = 0,
-    val nivel: Int = 0,
-    val monedas: Int = 0,
-    val imagen: String = "",
-    val pais: String = "",
-    val clanId: String? = null,
+    val coins: Int = 0,
+    val level: Int = 0,
+    val xp: Int = 0,
+    val team: String = "",
+    val profileImageUrl: String = "",
+
+    val friends: Map<String, Boolean> = emptyMap(),
 
     // Inventario
     val criaturas: List<Criatura> = emptyList(),

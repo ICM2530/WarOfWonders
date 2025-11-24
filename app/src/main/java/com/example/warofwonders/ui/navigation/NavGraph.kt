@@ -29,6 +29,7 @@ import com.example.warofwonders.ui.screens.startup.StartUpScreen
 import com.example.warofwonders.ui.screens.map.MapScreen
 import com.example.warofwonders.ui.screens.map.MapViewModel
 import com.example.warofwonders.ui.screens.settings.SettingsScreen
+
 import com.example.warofwonders.ui.shared.GenericViewModelFactory
 
 @Composable
@@ -130,6 +131,10 @@ fun NavGraph(
         composable(route = AppScreens.Gallery.name) {
             GalleryScreen(navController = navController)
         }
+
+
+
+
 
     }
 }
