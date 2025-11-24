@@ -19,7 +19,10 @@ import com.example.warofwonders.ui.model.InventarioViewModel
 import com.example.warofwonders.ui.model.TipoCriatura
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -58,20 +61,25 @@ class MapViewModel(
         loadInterestPoints()
         loadCreaturesFromFirebaseRealtime()
 
+        observarClanesRealtime()
+
         viewModelScope.launch {
             inventarioVM.cargarInventario()
-            val list = cargarClanes()
-            _uiState.update { it.copy(clans = list) }
         }
     }
 
     // Nuevo de Clanes
-    suspend fun cargarClanes(): List<ClanData> {
-        val snapshot = clanesDb.get().await()
+    private fun observarClanesRealtime() {
+        clanesDb.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val lista = snapshot.children.mapNotNull { it.getValue(ClanData::class.java) }
 
-        return snapshot.children.mapNotNull {
-            it.getValue(ClanData::class.java)
-        }
+                _uiState.update { it.copy(clans = lista) }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+            }
+        })
     }
 
     // Cosas de Mapas

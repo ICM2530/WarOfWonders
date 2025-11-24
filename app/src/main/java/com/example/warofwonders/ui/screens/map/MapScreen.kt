@@ -227,13 +227,20 @@ fun MapScreenContent(
                 )
             }
 
-            uiState.clans.forEach { clan ->
+            val clanColors = listOf(
+                Color(0xFFe57373), // rojo
+                Color(0xFF64b5f6), // azul
+                Color(0xFF81c784), // verde
+            )
+
+            uiState.clans.forEachIndexed { index, clan ->
                 val points = clan.zona.map { LatLng(it.latitude, it.longitude) }
+                val color = clanColors[index % clanColors.size]
 
                 Polygon(
                     points = points,
-                    fillColor = Color.Red.copy(alpha = 0.15f),
-                    strokeColor = Color.Red,
+                    fillColor = color.copy(alpha = 0.15f),
+                    strokeColor = color,
                     strokeWidth = 3f,
                     clickable = true,
                     onClick = {
