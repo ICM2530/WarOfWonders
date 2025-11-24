@@ -67,6 +67,7 @@ import com.example.warofwonders.ui.shared.utils.bitmapDescriptorFromVector
 import com.example.warofwonders.ui.shared.utils.distanceBetween
 import com.example.warofwonders.ui.shared.utils.isPermissionGranted
 import com.example.warofwonders.ui.theme.Cyan
+import com.example.warofwonders.ui.theme.White
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberUpdatedMarkerState
@@ -226,19 +227,20 @@ fun MapScreenContent(
                 )
             }
 
-            Polygon(
-                points = teusaquilloRectanglePoints,
-                fillColor = Gray.copy(alpha = 0.3f),
-                strokeColor = Gray.copy(alpha = 0.5f),
-                strokeWidth = 2f
-            )
+            uiState.clans.forEach { clan ->
+                val points = clan.zona.map { LatLng(it.latitude, it.longitude) }
 
-            Polygon(
-                points = chapineroTrianglePoints,
-                fillColor = Color.Blue.copy(alpha = 0.2f),
-                strokeColor = Color.Blue.copy(alpha = 0.6f),
-                strokeWidth = 3f
-            )
+                Polygon(
+                    points = points,
+                    fillColor = Color.Red.copy(alpha = 0.15f),
+                    strokeColor = Color.Red,
+                    strokeWidth = 3f,
+                    clickable = true,
+                    onClick = {
+                        Toast.makeText(context, clan.nombre, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
         }
 
         Column(
@@ -250,19 +252,21 @@ fun MapScreenContent(
                     if (uiState.permissionStatus) onClickLocationUpdates()
                     else onRequestPermission()
                 },
-                modifier = Modifier.size(54.dp),
+                modifier = Modifier.size(62.dp),
                 icon = Icons.Default.MyLocation,
                 contentDescription = "Start Updating Location",
-                contentColor = if (uiState.isUpdatingLocation) Cyan else Gray,
+                contentColor = if (uiState.isUpdatingLocation) Cyan else White,
+                backgroundImage = painterResource(id = R.drawable.chatbutton)
             )
         }
 
         TextFieldSearch(
             place = uiState.placeQuery,
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 34.dp, vertical = 24.dp),
             placeholderText = "Search",
             onPlaceChange = { onPlaceTextFieldChange(it) },
-            onSearchAction = { onSearchPlace(it) }
+            onSearchAction = { onSearchPlace(it) },
+            backgroundImage = painterResource(id = R.drawable.textfield_image)
         )
     }
 
@@ -408,17 +412,3 @@ fun MapScreenContent(
         }
     }
 }
-
-val teusaquilloRectanglePoints = listOf(
-    LatLng(4.6395, -74.0760), // Noroeste
-    LatLng(4.6395, -74.0695), // Noreste (se amplía hacia el este)
-    LatLng(4.6325, -74.0695), // Sureste (un poco más al sur)
-    LatLng(4.6325, -74.0760)  // Suroeste
-)
-
-
-val chapineroTrianglePoints = listOf(
-    LatLng(4.6520, -74.0645), // Norte (Zona G)
-    LatLng(4.6425, -74.0605), // Este (Chapinero Alto)
-    LatLng(4.6460, -74.0715)  // Oeste (cerca Rosales)
-)

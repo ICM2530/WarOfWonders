@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.taller2.data.repository.GeoCoderRepository
 import com.android.taller2.data.repository.RouteRepository
 import com.example.warofwonders.R
+import com.example.warofwonders.data.model.ClanData
 import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.model.MarkerData
 import com.example.warofwonders.data.repository.InterestPointRepository
@@ -20,16 +21,12 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
-import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import kotlin.compareTo
 
 class MapViewModel(
     private val locationRepository: LocationRepository,
@@ -46,6 +43,7 @@ class MapViewModel(
     val uiState: StateFlow<MapUiState> = _uiState
 
     private val auth = FirebaseAuth.getInstance()
+    private val clanesDb = FirebaseDatabase.getInstance().getReference("clanes")
 
     private val realtimeDB = FirebaseDatabase.getInstance().reference
     private var criaturasDisponibles: List<Criatura> = emptyList()
@@ -62,8 +60,21 @@ class MapViewModel(
 
         viewModelScope.launch {
             inventarioVM.cargarInventario()
+            val list = cargarClanes()
+            _uiState.update { it.copy(clans = list) }
         }
     }
+
+    // Nuevo de Clanes
+    suspend fun cargarClanes(): List<ClanData> {
+        val snapshot = clanesDb.get().await()
+
+        return snapshot.children.mapNotNull {
+            it.getValue(ClanData::class.java)
+        }
+    }
+
+    // Cosas de Mapas
 
     fun toggleLocationUpdates() {
         val updating = !_uiState.value.isUpdatingLocation
