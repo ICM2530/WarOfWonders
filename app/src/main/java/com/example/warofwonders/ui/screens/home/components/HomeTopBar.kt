@@ -24,9 +24,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 
 @Composable
-fun HomeTopBar(
-    navController: NavHostController
-) {
+fun HomeTopBar(navController: NavHostController) {
     var userName by remember { mutableStateOf("Jugador") }
     var team by remember { mutableStateOf("Sin equipo") }
     var coins by remember { mutableIntStateOf(0) }
@@ -38,16 +36,13 @@ fun HomeTopBar(
     LaunchedEffect(uid) {
         uid ?: return@LaunchedEffect
         val ref = FirebaseDatabase.getInstance().reference.child("users").child(uid)
-
         ref.get().addOnSuccessListener { snap ->
-            userName =
-                snap.child("name").getValue(String::class.java)
-                    ?: snap.child("userName").getValue(String::class.java)
-                            ?: snap.child("firstName").getValue(String::class.java)
-                            ?: snap.child("lastName").getValue(String::class.java)
-                            ?: snap.child("email").getValue(String::class.java)?.substringBefore("@")
-                            ?: "Jugador"
-
+            userName = snap.child("name").getValue(String::class.java)
+                ?: snap.child("userName").getValue(String::class.java)
+                        ?: snap.child("firstName").getValue(String::class.java)
+                        ?: snap.child("lastName").getValue(String::class.java)
+                        ?: snap.child("email").getValue(String::class.java)?.substringBefore("@")
+                        ?: "Jugador"
             team = snap.child("team").getValue(String::class.java) ?: "Sin equipo"
             coins = (snap.child("coins").getValue(Long::class.java) ?: 0).toInt()
             xp = (snap.child("xp").getValue(Long::class.java) ?: 0).toInt()
@@ -55,38 +50,31 @@ fun HomeTopBar(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 12.dp, top = 8.dp, end = 12.dp)
+            .padding(12.dp)
     ) {
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
+        // Columna principal: Perfil + info
+        Column(
+            modifier = Modifier.align(Alignment.CenterStart)
         ) {
-
-            Box(
-                modifier = Modifier
-                    .width(80.dp)
-                    .height(180.dp)
-                    .padding(end = 8.dp)
-                    .clickable { navController.navigate(AppScreens.Camera.name) },
-                contentAlignment = Alignment.Center
+            Row(
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                if (profileImageUrl.isNullOrBlank()) {
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clickable { navController.navigate(AppScreens.Camera.name) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    val painter = if (profileImageUrl.isNullOrBlank()) {
+                        painterResource(id = R.drawable.profile_user)
+                    } else {
+                        rememberAsyncImagePainter(profileImageUrl)
+                    }
                     Image(
-                        painter = painterResource(id = R.drawable.profile_user),
-                        contentDescription = "Imagen de perfil",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Image(
-                        painter = rememberAsyncImagePainter(profileImageUrl),
+                        painter = painter,
                         contentDescription = "Imagen de perfil",
                         modifier = Modifier
                             .fillMaxSize()
@@ -94,112 +82,120 @@ fun HomeTopBar(
                         contentScale = ContentScale.Crop
                     )
                 }
-            }
 
-            Column(
-                modifier = Modifier
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Column {
-                    Text(
-                        text = userName,
-                        color = Color.White,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = team,
-                        color = Color.White,
-                        fontSize = 14.sp,
-                        fontStyle = FontStyle.Italic
-                    )
-                }
+                Column(
+                    modifier = Modifier.padding(start = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = userName,
+                            color = Color.White,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = team,
+                            color = Color.White,
+                            fontSize = 14.sp,
+                            fontStyle = FontStyle.Italic
+                        )
+                    }
 
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Image(
-                        painter = painterResource(id = R.drawable.xp_bar),
-                        contentDescription = "Barra de experiencia",
-                        modifier = Modifier
-                            .height(28.dp)
-                            .fillMaxWidth(0.85f),
-                        contentScale = ContentScale.FillBounds
-                    )
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Image(
+                            painter = painterResource(id = R.drawable.xp_bar),
+                            contentDescription = "Barra de experiencia",
+                            modifier = Modifier
+                                .height(28.dp)
+                                .width(80.dp),
+                            contentScale = ContentScale.FillBounds
+                        )
+                        Text(
+                            text = xp.toString(),
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .padding(start = 40.dp),
+                            fontSize = 13.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
 
-                    Text(
-                        text = xp.toString(),
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .padding(start = 60.dp),
-                        fontSize = 13.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-
-                Box(modifier = Modifier.fillMaxWidth()) {
-                    Image(
-                        painter = painterResource(id = R.drawable.bracket_coin),
-                        contentDescription = "Barra de monedas",
-                        modifier = Modifier
-                            .height(28.dp)
-                            .fillMaxWidth(0.85f),
-                        contentScale = ContentScale.FillBounds
-                    )
-
-                    Text(
-                        text = coins.toString(),
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .padding(start = 60.dp),
-                        fontSize = 13.sp,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Image(
+                            painter = painterResource(id = R.drawable.bracket_coin),
+                            contentDescription = "Monedas",
+                            modifier = Modifier
+                                .height(28.dp)
+                                .width(80.dp),
+                            contentScale = ContentScale.FillBounds
+                        )
+                        Text(
+                            text = coins.toString(),
+                            modifier = Modifier
+                                .align(Alignment.CenterStart)
+                                .padding(start = 40.dp),
+                            fontSize = 13.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
 
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.align(Alignment.TopEnd),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Image(
-                painter = painterResource(R.drawable.bell_icon),
-                contentDescription = "Notificaciones",
-                modifier = Modifier
-                    .size(34.dp)
-                    .clickable { }
-            )
 
-            Image(
-                painter = painterResource(R.drawable.iconcontactos),
-                contentDescription = "Contactos",
-                modifier = Modifier
-                    .size(34.dp)
-                    .clickable { navController.navigate(AppScreens.Contacts.name) }
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val iconSize = 50.dp
+                Image(
+                    painter = painterResource(R.drawable.shop),
+                    contentDescription = "Tienda",
+                    modifier = Modifier
+                        .size(iconSize)
+                        .clickable { navController.navigate(AppScreens.Shop.name) }
+                )
+                Image(
+                    painter = painterResource(R.drawable.iconcontactos),
+                    contentDescription = "Contactos",
+                    modifier = Modifier
+                        .size(iconSize)
+                        .clickable { navController.navigate(AppScreens.Contacts.name) }
+                )
+                Image(
+                    painter = painterResource(R.drawable.configbutton),
+                    contentDescription = "Configuración",
+                    modifier = Modifier
+                        .size(iconSize)
+                        .clickable { navController.navigate(AppScreens.Settings.name) }
+                )
+            }
 
-            Image(
-                painter = painterResource(R.drawable.configbutton),
-                contentDescription = "Configuración",
-                modifier = Modifier
-                    .size(34.dp)
-                    .clickable { navController.navigate(AppScreens.Settings.name) }
-            )
 
-            Image(
-                painter = painterResource(R.drawable.shop),
-                contentDescription = "Tienda",
-                modifier = Modifier
-                    .size(34.dp)
-                    .clickable { navController.navigate(AppScreens.Shop.name) }
-            )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                val iconSize = 50.dp
+                Image(
+                    painter = painterResource(R.drawable.bell_icon),
+                    contentDescription = "Notificaciones",
+                    modifier = Modifier
+                        .size(iconSize)
+                        .clickable { }
+                )
+            }
         }
+
+
+
     }
 }
