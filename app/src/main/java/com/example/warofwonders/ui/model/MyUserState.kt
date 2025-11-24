@@ -14,7 +14,7 @@ data class MyUserState(
 
     // Perfil del jugador
     val id: String = "",
-    val coins: Int = 0,
+    var coins: Int = 0,
     val level: Int = 0,
     val xp: Int = 0,
     val team: String = "",
@@ -26,5 +26,5 @@ data class MyUserState(
     val criaturas: List<Criatura> = emptyList(),
     val recursos: List<Recurso> = emptyList(),
 
-)
+    )
 

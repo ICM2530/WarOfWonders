@@ -101,4 +101,12 @@ class InventarioViewModel : ViewModel() {
 
     //inventarioVM.agregarRecurso(recursoSeleccionado)
 
+
+    fun tieneRecurso(nombreRecurso: String): Boolean {
+        return _inventario.value.recursos.any { it.nombre == nombreRecurso }
+    }
+
+
+
+
 }

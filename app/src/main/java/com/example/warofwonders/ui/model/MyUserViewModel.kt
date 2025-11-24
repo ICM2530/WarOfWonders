@@ -206,4 +206,16 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         super.onCleared()
         myRef.removeEventListener(vel)
     }
+
+    fun loadUser(uid: String) {
+        FirebaseDatabase.getInstance().reference
+            .child("users")
+            .child(uid)
+            .get()
+            .addOnSuccessListener { snap ->
+                val user = snap.getValue(MyUserState::class.java)
+                _currentUser.value = user
+            }
+    }
+
 }
