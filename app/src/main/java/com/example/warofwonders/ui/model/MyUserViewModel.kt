@@ -19,6 +19,7 @@ const val pathUsers = "users/"
 class MyUserViewModel(application: Application) : AndroidViewModel(application) {
 
     private val myRef = database.getReference(pathUsers)
+
     @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
 
@@ -45,13 +46,6 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         }
     )
 
-    /**
-     * Registro de usuario:
-     *  - Crea usuario en FirebaseAuth.
-     *  - Si hay foto, la sube a Storage (profile_images/uid.jpg).
-     *  - Guarda en Realtime DB con campos:
-     *      name, lastName, phone, email, coins, level, xp, team, profileImageUrl, active.
-     */
     fun registerUserWithFirebase(
         state: MyUserState,
         profileImageUri: Uri?,
@@ -77,17 +71,17 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                         "lastName" to state.lastName,
                         "phone" to state.phone,
                         "email" to state.email,
-                        "coins" to state.monedas,        // mapea a coins en DB
-                        "level" to state.nivel,
-                        "xp" to state.experiencia,
-                        "team" to state.clanId,
+                        "coins" to state.coins,
+                        "level" to state.level,
+                        "xp" to state.xp,
+                        "team" to state.team,
                         "profileImageUrl" to profileUrl,
-                        "active" to true                  // usuario recién creado está activo
+                        "active" to true
                     )
 
                     myRef.child(uid).setValue(userData)
                         .addOnSuccessListener {
-                            val cached = state.copy(imagen = profileUrl)
+                            val cached = state.copy(profileImageUrl = profileUrl)
                             cacheUserLocally(cached)
                             _currentUser.value = cached
                             onSuccess()
@@ -106,14 +100,18 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                         }
                         .addOnFailureListener { e ->
                             Log.e("FirebaseApp", "Error al subir imagen de registro: ${e.message}")
-                            // aun así guardamos el usuario, pero sin foto
                             saveUser("")
                         }
                 } else {
-                    // sin foto
                     saveUser("")
                 }
             }
+    }
+
+    fun saveUser(user: MyUserState) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        myRef.child(uid).setValue(user)
+        cacheUserLocally(user)
     }
 
     fun loadCurrentUser() {
@@ -141,10 +139,6 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
             })
     }
 
-    /**
-     * Actualiza la foto de perfil de un usuario ya registrado.
-     * Sube la imagen a Storage (profile_images/uid.jpg) y actualiza profileImageUrl.
-     */
     fun updateProfileImage(
         email: String,
         imageUri: Uri,
@@ -167,7 +161,8 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                                 myRef.child(key).child("profileImageUrl").setValue(uri.toString())
                                 Log.i("FirebaseApp", "Imagen actualizada correctamente para $email")
 
-                                _currentUser.value = _currentUser.value?.copy(imagen = uri.toString())
+                                _currentUser.value =
+                                    _currentUser.value?.copy(profileImageUrl = uri.toString())
                                 _currentUser.value?.let { cacheUserLocally(it) }
 
                                 onSuccess?.invoke()
@@ -190,8 +185,8 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         prefs.edit().apply {
             putString("email", user.email)
             putString("name", user.name)
-            putString("team", user.clanId)
-            putString("profileImageUrl", user.imagen)
+            putString("team", user.team)
+            putString("profileImageUrl", user.profileImageUrl)
             apply()
         }
     }
@@ -202,8 +197,8 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         return MyUserState(
             email = email,
             name = prefs.getString("name", "") ?: "",
-            clanId = prefs.getString("team", "") ?: "",
-            imagen = prefs.getString("profileImageUrl", "") ?: ""
+            team = prefs.getString("team", "") ?: "",
+            profileImageUrl = prefs.getString("profileImageUrl", "") ?: ""
         )
     }
 
