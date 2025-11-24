@@ -121,7 +121,7 @@ fun NavGraph(
         }
 
         composable(route = AppScreens.Camera.name) {
-            CameraScreen()
+            CameraScreen(navController = navController)
         }
 
         composable(route = AppScreens.Gallery.name) {

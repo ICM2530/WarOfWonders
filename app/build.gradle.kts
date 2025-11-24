@@ -84,6 +84,8 @@ dependencies {
     implementation(libs.firebase.functions)
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.foundation)
+    implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.compose.runtime)
 
 
     testImplementation(libs.junit)

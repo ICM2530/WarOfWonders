@@ -30,6 +30,7 @@ import com.example.warofwonders.ui.components.TextFieldImage
 import com.example.warofwonders.ui.model.UserAuthViewModel
 import com.example.warofwonders.ui.model.firebaseAuth
 import com.example.warofwonders.ui.navigation.AppScreens
+import com.google.firebase.database.FirebaseDatabase
 
 @Composable
 fun LogInScreen(navController: NavHostController) {
@@ -37,7 +38,6 @@ fun LogInScreen(navController: NavHostController) {
     val context = LocalContext.current
     val user by model.user.collectAsState()
 
-    // Si ya hay usuario logueado, saltar al Home
     LaunchedEffect(Unit) {
         firebaseAuth.currentUser?.let {
             navController.navigate(AppScreens.Home.name) {
@@ -49,7 +49,6 @@ fun LogInScreen(navController: NavHostController) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Fondo
         Image(
             modifier = Modifier.fillMaxSize(),
             painter = painterResource(id = R.drawable.background_image),
@@ -69,14 +68,12 @@ fun LogInScreen(navController: NavHostController) {
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo o título
                 Image(
                     modifier = Modifier.size(280.dp),
                     painter = painterResource(id = R.drawable.tittle_post),
                     contentDescription = "Title"
                 )
 
-                // --- Correo ---
                 TextFieldImage(
                     value = user.email,
                     onValueChange = { model.updateEmailClass(it) },
@@ -86,7 +83,6 @@ fun LogInScreen(navController: NavHostController) {
                 )
                 AnimatedErrorText(user.emailError)
 
-                // --- Contraseña ---
                 TextFieldImage(
                     value = user.password,
                     onValueChange = { model.updatePassClass(it) },
@@ -97,7 +93,6 @@ fun LogInScreen(navController: NavHostController) {
                 )
                 AnimatedErrorText(user.passError)
 
-                // --- Botón de inicio de sesión ---
                 ImageButton(
                     imageRes = R.drawable.button_login,
                     contentDescription = "LogIn",
@@ -130,7 +125,6 @@ fun AnimatedErrorText(error: String) {
     }
 }
 
-// --- Validaciones y login  ---
 fun login(
     model: UserAuthViewModel,
     email: String,
@@ -141,6 +135,16 @@ fun login(
     if (validateForm(model, email, password)) {
         firebaseAuth.signInWithEmailAndPassword(email, password).addOnCompleteListener {
             if (it.isSuccessful) {
+
+                val uid = firebaseAuth.currentUser?.uid
+                if (uid != null) {
+                    FirebaseDatabase.getInstance().reference
+                        .child("users")
+                        .child(uid)
+                        .child("active")
+                        .setValue(true)
+                }
+
                 navController.navigate(AppScreens.Home.name) {
                     popUpTo(AppScreens.LogIn.name) { inclusive = true }
                 }
