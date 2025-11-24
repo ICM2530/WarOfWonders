@@ -106,6 +106,9 @@ fun PopupDeCriatura(
                 ) {
                     Text("Cerrar")
                 }
+
+
+
             }
         }
     }

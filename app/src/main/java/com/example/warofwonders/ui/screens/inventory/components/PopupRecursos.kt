@@ -25,6 +25,7 @@ import com.example.warofwonders.ui.screens.inventory.getDrawableId
 @Composable
 fun PopupRecursos(
     recursos: List<Recurso>,
+    mensajeError: String,
     recursosEquipados: List<Recurso>,
     saludActual: Int,
     saludFlotante: Int,
@@ -106,6 +107,14 @@ fun PopupRecursos(
                     contentColor = Color.White
                 )
                 ) { Text("Cerrar") }
+
+            if (mensajeError.isNotEmpty()) {
+                Text(
+                    text = mensajeError,
+                    color = Color.Red,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
         }
     }
 }

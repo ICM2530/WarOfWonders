@@ -1,11 +1,17 @@
 package com.example.warofwonders.ui.model
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import androidx.compose.runtime.State
+
+
 
 enum class TipoCriatura { FRIO, CALOR, MEDIO, NOCHE, DIA, PRESION }
 
@@ -34,6 +40,15 @@ class InventarioViewModel : ViewModel() {
 
     private val _saludFlotante = MutableStateFlow<Int?>(null)
     val saludFlotante = _saludFlotante.asStateFlow()
+
+    private val _mensajeError = mutableStateOf("")
+
+    val mensajeError: State<String> get() = _mensajeError
+
+
+
+
+
 
 
     fun seleccionarCriatura(criatura: Criatura) {
@@ -133,13 +148,17 @@ class InventarioViewModel : ViewModel() {
                 _saludFlotante.value = recurso.proteccion
 
                 recursosCriatura.add(recurso)
-
-
                 recursos.removeIf { it.id == recurso.id }
             }
 
             "pocion" -> {
+                if (criatura.salud >= 100) {
+                    _mensajeError.value = "¡Tu salud está al máximo!" // Nuevo: mensaje de error
+                    return
+                }
+
                 nuevaSalud += recurso.proteccion
+                if (nuevaSalud > 100) nuevaSalud = 100 // No superar 100
                 _saludFlotante.value = recurso.proteccion
 
                 recursos.removeIf { it.id == recurso.id }
@@ -159,12 +178,11 @@ class InventarioViewModel : ViewModel() {
 
         val uid = auth.currentUser?.uid ?: return
         usersDb.child(uid).child("criaturas").setValue(criaturas)
-
         usersDb.child(uid).child("recursos").setValue(recursos)
 
         refrescarCriaturaSeleccionada()
-
     }
+
 
 
     fun quitarArmadura(criaturaId: String, recurso: Recurso) {
@@ -228,6 +246,18 @@ class InventarioViewModel : ViewModel() {
         val actual = _criaturaSeleccionada.value ?: return
         val nueva = _inventario.value.criaturas.firstOrNull { it.id == actual.id }
         _criaturaSeleccionada.value = nueva
+    }
+
+    fun mostrarMensajeError(mensaje: String) {
+        _mensajeError.value = mensaje
+        viewModelScope.launch {
+            kotlinx.coroutines.delay(3000)
+            _mensajeError.value = ""
+        }
+    }
+
+    fun limpiarMensajeError() {
+        _mensajeError.value = ""
     }
 
 }

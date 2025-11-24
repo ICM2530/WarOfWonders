@@ -40,6 +40,10 @@ fun InventoryScreen(
     val mostrarPopupRecursos by inventarioVM.mostrarPopupRecursos.collectAsState()
     val saludFlotante by inventarioVM.saludFlotante.collectAsState()
 
+
+
+
+
     LaunchedEffect(Unit) {
         inventarioVM.cargarInventario()
     }
@@ -104,7 +108,7 @@ fun InventoryScreen(
             }
         }
 
-        // POPUP DE RECURSOS (ARREGLADO + ANIMADO + FONDO OSCURO)
+
         AnimatedVisibility(
             visible = mostrarPopupRecursos,
             enter = fadeIn(),
@@ -118,6 +122,7 @@ fun InventoryScreen(
             ) {
                 PopupRecursos(
                     recursos = inventario.recursos,
+                    mensajeError = inventarioVM.mensajeError.value,
                     recursosEquipados = criaturaSeleccionada!!.recursos,
                     saludActual = criaturaSeleccionada!!.salud,
                     saludFlotante = saludFlotante ?: 0,
