@@ -128,13 +128,6 @@ fun NavGraph(
         composable(route = AppScreens.Gallery.name) {
             GalleryScreen(navController = navController)
         }
-<<<<<<< HEAD
 
-
-
-
-
-=======
->>>>>>> 39c0cbe4f0e0f8f525c1b029565243c064127b2f
     }
 }
