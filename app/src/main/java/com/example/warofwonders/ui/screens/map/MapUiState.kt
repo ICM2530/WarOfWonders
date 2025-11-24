@@ -2,10 +2,11 @@ package com.example.warofwonders.ui.screens.map
 
 import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.model.PuntoInteres
+import com.example.warofwonders.ui.model.Criatura
 import com.google.android.gms.maps.model.LatLng
 
 data class MapUiState(
-    val currentLocation: LocationData = LocationData(),
+    val currentLocation: LocationData = LocationData(latitude = 4.627747211702569, longitude = -74.0642053698486),
     val staticMarkers: List<PuntoInteres> = emptyList(),
     val searchMarker: LatLng? = null, // Marcador de búsqueda
     val clickMarker: LatLng? = null,  // Marcador de click largo
@@ -13,7 +14,10 @@ data class MapUiState(
     val isHigh: Boolean = false,
     val isCold: Boolean = false,
     val isHot: Boolean = false,
+    val isMedium: Boolean = false,
     val isMagn: Boolean = false,
+    val mediumCreatureFound: Boolean = false,
+    val mediumCreatureCaptured: Boolean = false,
     val pressureCreatureFound: Boolean = false,
     val pressureCreatureCaptured: Boolean = false,
     val coldCreatureFound: Boolean = false,
@@ -27,6 +31,8 @@ data class MapUiState(
     val isCameraFollowing: Boolean = false,
     val searchQuery: String = "",
     val isSearching: Boolean = false,
+    val alreadyOwnedCreature: Boolean = false,
+    val criaturaDetectada: Criatura? = null,
     val routePoints: List<LatLng> = emptyList()
     ,
     // Campos de encuentro: cuando se den, la interfaz deberia navegar a la pantalla de combate con estas IDs
