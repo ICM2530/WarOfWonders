@@ -8,6 +8,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -23,9 +25,11 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.components.ImageButton
 import com.example.warofwonders.ui.components.TextFieldImage
@@ -46,12 +50,11 @@ fun SignUpScreen(navController: NavController) {
     var confirmPasswordError by remember { mutableStateOf("") }
 
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
+    var profileImageUrl by remember { mutableStateOf<String?>(null) } // Si ya existe
 
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
-    ) { uri ->
-        if (uri != null) profileImageUri = uri
-    }
+    ) { uri -> if (uri != null) profileImageUri = uri }
 
     val cameraImageUri = remember {
         FileProvider.getUriForFile(
@@ -63,11 +66,9 @@ fun SignUpScreen(navController: NavController) {
 
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success) {
-            profileImageUri = cameraImageUri
-        }
-    }
+    ) { success -> if (success) profileImageUri = cameraImageUri }
+
+    var showMenu by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -94,7 +95,7 @@ fun SignUpScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 80.dp),
+                .padding(top = 40.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Column(
@@ -105,6 +106,10 @@ fun SignUpScreen(navController: NavController) {
                 verticalArrangement = Arrangement.Top,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+
                 Image(
                     modifier = Modifier.size(280.dp, 220.dp),
                     painter = painterResource(id = R.drawable.tittle_post),
@@ -112,7 +117,61 @@ fun SignUpScreen(navController: NavController) {
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
+                // Imagen de perfil centrada arriba
 
+                Text("seleccione una imagen", fontSize = 18.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(5.dp))
+
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .clickable { showMenu = true },
+                    contentAlignment = Alignment.Center
+                ) {
+                    val painter = if (profileImageUri != null) {
+                        rememberAsyncImagePainter(profileImageUri)
+                    } else if (profileImageUrl.isNullOrBlank()) {
+                        painterResource(id = R.drawable.profile_user)
+                    } else {
+                        rememberAsyncImagePainter(profileImageUrl)
+                    }
+                    Image(
+                        painter = painter,
+                        contentDescription = "Imagen de perfil",
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    // DropdownMenu para elegir Galería o Cámara
+                    androidx.compose.material3.DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text("Galería") },
+                            onClick = {
+                                galleryLauncher.launch("image/*")
+                                showMenu = false
+                            }
+                        )
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text("Cámara") },
+                            onClick = {
+                                cameraLauncher.launch(cameraImageUri)
+                                showMenu = false
+                            }
+                        )
+                    }
+                }
+
+
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Campos del formulario
                 TextFieldImage(
                     value = state.name,
                     onValueChange = signUpViewModel::updateName,
@@ -179,74 +238,9 @@ fun SignUpScreen(navController: NavController) {
                 AnimatedErrorText(confirmPasswordError)
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 40.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "Selecciona una imagen de perfil (opcional)",
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            ImageButton(
-                                imageRes = R.drawable.button,
-                                contentDescription = "Elegir de galería",
-                                modifier = Modifier
-                                    .width(120.dp)
-                                    .height(45.dp),
-                                onClick = { galleryLauncher.launch("image/*") }
-                            )
-                            Text(
-                                text = "Galería",
-                                color = Color.White,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-
-                        Box(contentAlignment = Alignment.Center) {
-                            ImageButton(
-                                imageRes = R.drawable.button,
-                                contentDescription = "Tomar foto",
-                                modifier = Modifier
-                                    .width(120.dp)
-                                    .height(45.dp),
-                                onClick = { cameraLauncher.launch(cameraImageUri) }
-                            )
-                            Text(
-                                text = "Cámara",
-                                color = Color.White,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = if (profileImageUri != null)
-                            "Imagen de perfil seleccionada correctamente"
-                        else
-                            "Aún no has seleccionado imagen de perfil",
-                        color = if (profileImageUri != null) Color(0xFFB2FF59) else Color.White,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Botón de registro
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -294,6 +288,7 @@ fun SignUpScreen(navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun AnimatedErrorText(error: String) {

@@ -147,31 +147,29 @@ fun HomeTopBar(navController: NavHostController) {
 
 
         Column(
-            modifier = Modifier.align(Alignment.TopEnd),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp), // margen desde la esquina
+            verticalArrangement = Arrangement.spacedBy(12.dp) // espacio entre filas
         ) {
-            val iconSize = 50.dp
-
-
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp) // espacio entre iconos
             ) {
                 Image(
                     painter = painterResource(R.drawable.shop),
                     contentDescription = "Tienda",
                     modifier = Modifier
-                        .size(iconSize)
+                        .size(50.dp) // tamaño fijo en dp
                         .clickable { navController.navigate(AppScreens.Shop.name) }
                 )
                 Image(
                     painter = painterResource(R.drawable.iconcontactos),
                     contentDescription = "Contactos",
                     modifier = Modifier
-                        .size(iconSize)
+                        .size(50.dp)
                         .clickable { navController.navigate(AppScreens.Contacts.name) }
                 )
             }
-
 
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -180,17 +178,20 @@ fun HomeTopBar(navController: NavHostController) {
                     painter = painterResource(R.drawable.configbutton),
                     contentDescription = "Configuración",
                     modifier = Modifier
-                        .size(iconSize)
+                        .size(50.dp)
                         .clickable { navController.navigate(AppScreens.Settings.name) }
                 )
                 Image(
                     painter = painterResource(R.drawable.bell_icon),
                     contentDescription = "Notificaciones",
                     modifier = Modifier
-                        .size(iconSize)
+                        .size(50.dp)
                         .clickable { }
                 )
             }
         }
+
+
+
     }
 }
