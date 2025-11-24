@@ -20,6 +20,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.model.Recurso
 import com.example.warofwonders.ui.screens.inventory.getDrawableId
@@ -119,60 +120,74 @@ fun SlotsSectionTienda(
         }
     }
 
-    recursoSeleccionado?.let { recurso ->
 
-        Box(
-            modifier = Modifier
-                .fillMaxSize(),
-
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xD7B68047),
-                shadowElevation = 8.dp,
+    if (recursoSeleccionado != null) {
+        Dialog(onDismissRequest = { recursoSeleccionado = null }) {
+            Box(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .wrapContentHeight()
-                    .widthIn(min = 260.dp, max = 320.dp)
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(20.dp)
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .wrapContentHeight(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF3E2723))
                 ) {
-                    Text(
-                        text = recurso.nombre,
-                        color = Color.White,
-                        fontSize = 20.sp
-                    )
 
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    AsyncImage(
-                        model = recurso.imagen,
-                        contentDescription = recurso.nombre,
-                        modifier = Modifier.size(120.dp),
-                        contentScale = ContentScale.Fit
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text("Protección: ${recurso.proteccion}", color = Color.White)
-                    Text("Precio: ${recurso.precio}", color = Color.Yellow)
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { recursoSeleccionado = null },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF342711),
-                            contentColor = Color.White
-                        )
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Text("Cerrar")
+                        AsyncImage(
+                            model = recursoSeleccionado?.imagen,
+                            contentDescription = recursoSeleccionado?.nombre,
+                            modifier = Modifier.size(100.dp),
+                            contentScale = ContentScale.Fit
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = recursoSeleccionado?.nombre ?: "",
+                            color = Color.White,
+                            fontSize = 18.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Precio: ${recursoSeleccionado?.precio}",
+                            color = Color.Yellow,
+                            fontSize = 16.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = { onComprar(recursoSeleccionado!!) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF8A5A33),
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Text("Comprar")
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        TextButton(onClick = { recursoSeleccionado = null }) {
+                            Text("Cerrar", color = Color.White)
+                        }
                     }
                 }
             }
         }
     }
+
+
 }

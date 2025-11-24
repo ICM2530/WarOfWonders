@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -21,6 +22,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +36,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.model.Recurso
 
@@ -89,57 +92,59 @@ fun SlotsSection(
         }
     }
 
-    // --- POPUP DEL RECURSO ---
-    recursoSeleccionado?.let { recurso ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize(),
 
-            contentAlignment = Alignment.Center
-        ) {
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xD7B68047), // fondo del popup
-                shadowElevation = 8.dp,
-                modifier = Modifier
-                    .padding(16.dp)
-                    .wrapContentHeight()
-                    .widthIn(min = 260.dp, max = 320.dp)
+    if (recursoSeleccionado != null) {
+        Dialog(onDismissRequest = { recursoSeleccionado = null }) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center // centra el Card
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(20.dp)
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .wrapContentHeight(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF3E2723))
                 ) {
-                    Text(
-                        text = recurso.nombre,
-                        color = Color.White,
-                        fontSize = 20.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    AsyncImage(
-                        model = recurso.imagen,
-                        contentDescription = recurso.nombre,
-                        modifier = Modifier.size(120.dp),
-                        contentScale = ContentScale.Fit
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text("Protección: ${recurso.proteccion}", color = Color.White)
-                    Text("Precio: ${recurso.precio}", color = Color.Yellow)
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = { recursoSeleccionado = null },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF342711),
-                            contentColor = Color.White
-                        )
+                    Column(
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Text("Cerrar")
+                        AsyncImage(
+                            model = recursoSeleccionado?.imagen,
+                            contentDescription = recursoSeleccionado?.nombre,
+                            modifier = Modifier.size(100.dp),
+                            contentScale = ContentScale.Fit
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = recursoSeleccionado?.nombre ?: "",
+                            color = Color.White,
+                            fontSize = 18.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = "Proteccion: ${recursoSeleccionado?.proteccion ?: 1}",
+                            color = Color.Yellow,
+                            fontSize = 16.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        TextButton(onClick = { recursoSeleccionado = null }) {
+                            Text("Cerrar", color = Color.White)
+                        }
                     }
                 }
             }
