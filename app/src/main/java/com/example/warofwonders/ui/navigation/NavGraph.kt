@@ -8,7 +8,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.warofwonders.data.repository.GeoRepository
+import com.android.taller2.data.repository.GeoCoderRepository
+import com.android.taller2.data.repository.RouteRepository
 import com.example.warofwonders.data.repository.InterestPointRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
@@ -42,7 +43,8 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun NavGraph(
     locationRepository: LocationRepository,
-    geoRepository: GeoRepository,
+    geoCoderRepository: GeoCoderRepository,
+    routeRepository: RouteRepository,
     lightSensorDataSource: LightSensorDataSource,
     barometerSensorDataSource: BarometerSensorDataSource,
     temperatureSensorDataSource: TemperatureSensorDataSource,
@@ -77,7 +79,8 @@ fun NavGraph(
                 factory = GenericViewModelFactory {
                     MapViewModel(
                         locationRepository = locationRepository,
-                        geoRepository = geoRepository,
+                        geoCoderRepository = geoCoderRepository,
+                        routeRepository = routeRepository,
                         lightSensorDataSource = lightSensorDataSource,
                         barometerSensorDataSource = barometerSensorDataSource,
                         temperatureSensorDataSource = temperatureSensorDataSource,
@@ -95,7 +98,8 @@ fun NavGraph(
                 factory = GenericViewModelFactory {
                     MapViewModel(
                         locationRepository = locationRepository,
-                        geoRepository = geoRepository,
+                        geoCoderRepository = geoCoderRepository,
+                        routeRepository = routeRepository,
                         lightSensorDataSource = lightSensorDataSource,
                         barometerSensorDataSource = barometerSensorDataSource,
                         temperatureSensorDataSource = temperatureSensorDataSource,
@@ -106,7 +110,6 @@ fun NavGraph(
                 }
             )
             MapScreen(
-                navController = navController,
                 viewModel = mapViewModel
             )
         }
@@ -157,15 +160,5 @@ fun NavGraph(
                 inventarioVM = inventarioVM
             )
         }
-
-
-
-
-
-
-
-
-
-
     }
 }

@@ -1,6 +1,8 @@
 package com.example.warofwonders.ui.screens.map
 
 import android.Manifest
+import android.app.Activity
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOff
@@ -41,6 +44,7 @@ import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.warofwonders.ui.components.AlertDialogPopup
@@ -57,15 +61,27 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.warofwonders.R
+import com.example.warofwonders.ui.screens.map.components.CreatureAlert
+import com.example.warofwonders.ui.screens.map.components.FloatingButton
 import com.example.warofwonders.ui.shared.utils.bitmapDescriptorFromVector
+import com.example.warofwonders.ui.shared.utils.distanceBetween
+import com.example.warofwonders.ui.shared.utils.isPermissionGranted
+import com.example.warofwonders.ui.theme.Cyan
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.Polyline
+import com.google.maps.android.compose.rememberUpdatedMarkerState
 
 @Composable
-fun MapScreen(navController: NavController, viewModel: MapViewModel) {
+fun MapScreen(
+    viewModel: MapViewModel
+) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    var showRationale by remember { mutableStateOf(false) }
+    val locationPermission = Manifest.permission.ACCESS_FINE_LOCATION
+
+    LaunchedEffect(Unit) {
+        viewModel.updatePermissionStatus(isPermissionGranted(context, locationPermission))
+    }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -73,6 +89,8 @@ fun MapScreen(navController: NavController, viewModel: MapViewModel) {
         viewModel.updatePermissionStatus(granted)
         if (granted) viewModel.toggleLocationUpdates()
     }
+
+    var showRationale by remember { mutableStateOf(false) }
 
     DisposableEffect(Unit) {
         viewModel.startLightSensor()
@@ -87,38 +105,307 @@ fun MapScreen(navController: NavController, viewModel: MapViewModel) {
 
     MapScreenContent(
         uiState = uiState,
-        onLocationButtonClick = {
+        onPlaceTextFieldChange = { newText -> viewModel.updatePlaceQuery(newText) },
+        onSearchPlace = { newQuery -> viewModel.searchPlaceQuery(newQuery) },
+        onRequestPermission = {
+            if (shouldShowRequestPermissionRationale(context as Activity, locationPermission)) {
+                showRationale = true
+            } else {
+                permissionLauncher.launch(locationPermission)
+            }
+        },
+        onClickLocationUpdates = {
             if (uiState.permissionStatus) {
                 viewModel.toggleLocationUpdates()
             } else {
-                if (shouldShowPermissionRationale(
-                        context,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    )
-                ) {
-                    showRationale = true
-                } else {
-                    permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                }
+                permissionLauncher.launch(locationPermission)
             }
         },
-        onSearchQueryChange = { viewModel.updateSearchQuery(it) },
-        onSearchSubmit = { viewModel.searchLocation() },
-        onMapClick = { viewModel.clearMarkers() },
-        onMapLongClick = { viewModel.onMapLongClick(it) },
+        onMapClick = { viewModel.clearMap() },
+        onMapLongClick = { pos -> viewModel.addTargetMarker(pos) },
         viewModel = viewModel
     )
 
     if (showRationale) {
         AlertDialogPopup(
             title = "Permission Required",
-            message = "This app requires access to your location.",
+            message = "This app needs your location permission to work properly.",
             onAccept = {
                 showRationale = false
-                permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                permissionLauncher.launch(locationPermission)
             },
             onCancel = { showRationale = false }
         )
+    }
+}
+
+@Composable
+fun MapScreenContent(
+    uiState: MapUiState,
+    onPlaceTextFieldChange: (String) -> Unit,
+    onSearchPlace: (String) -> Unit,
+    onRequestPermission: () -> Unit,
+    onClickLocationUpdates: () -> Unit,
+    onMapClick: () -> Unit,
+    onMapLongClick: (LatLng) -> Unit,
+    viewModel: MapViewModel
+) {
+    val context = LocalContext.current
+    val location = LatLng(uiState.currentLocation.latitude, uiState.currentLocation.longitude)
+
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(location, uiState.cameraZoom)
+    }
+
+    var uiSettings by remember {
+        mutableStateOf(
+            MapUiSettings(
+                compassEnabled = true,
+                mapToolbarEnabled = false,
+                zoomControlsEnabled = false,
+            )
+        )
+    }
+
+    LaunchedEffect(uiState.cameraTarget) {
+        uiState.cameraTarget?.let { target ->
+            cameraPositionState.animate(
+                update = CameraUpdateFactory.newLatLngZoom(target, uiState.cameraZoom),
+                durationMs = 1000
+            )
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        GoogleMap(
+            modifier = Modifier.fillMaxSize(),
+            cameraPositionState = cameraPositionState,
+            uiSettings = uiSettings,
+            properties = MapProperties(
+                mapStyleOptions = MapStyleOptions.loadRawResourceStyle(context, uiState.mapStyleRes)
+            ),
+            onMapClick = { onMapClick() },
+            onMapLongClick = { pos -> onMapLongClick(pos) }
+        ) {
+            Marker(
+                state = rememberUpdatedMarkerState(position = location),
+                icon = bitmapDescriptorFromVector(
+                    context,
+                    if (uiState.isUpdatingLocation) R.drawable.twotone_circle_blue
+                    else R.drawable.twotone_circle_gray
+                )
+            )
+
+            uiState.targetMarker?.let { marker ->
+                Marker(
+                    state = rememberUpdatedMarkerState(position = marker.position),
+                    title = marker.title,
+                    snippet = marker.snippet
+                )
+
+                val d = distanceBetween(
+                    uiState.currentLocation.latitude,
+                    uiState.currentLocation.longitude,
+                    marker.position.latitude,
+                    marker.position.longitude
+                )
+                Toast.makeText(
+                    context,
+                    if (d >= 1000) "Distancia: %.1f km".format(d / 1000) else "Distancia: %.0f m".format(
+                        d
+                    ),
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
+            if (uiState.routePoints.isNotEmpty()) {
+                Polyline(
+                    points = uiState.routePoints,
+                    color = Cyan,
+                    width = 8f
+                )
+            }
+
+            Polygon(
+                points = teusaquilloRectanglePoints,
+                fillColor = Gray.copy(alpha = 0.3f),
+                strokeColor = Gray.copy(alpha = 0.5f),
+                strokeWidth = 2f
+            )
+
+            Polygon(
+                points = chapineroTrianglePoints,
+                fillColor = Color.Blue.copy(alpha = 0.2f),
+                strokeColor = Color.Blue.copy(alpha = 0.6f),
+                strokeWidth = 3f
+            )
+        }
+
+        Column(
+            modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp).wrapContentSize(),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            FloatingButton(
+                onClick = {
+                    if (uiState.permissionStatus) onClickLocationUpdates()
+                    else onRequestPermission()
+                },
+                modifier = Modifier.size(54.dp),
+                icon = Icons.Default.MyLocation,
+                contentDescription = "Start Updating Location",
+                contentColor = if (uiState.isUpdatingLocation) Cyan else Gray,
+            )
+        }
+
+        TextFieldSearch(
+            place = uiState.placeQuery,
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            placeholderText = "Search",
+            onPlaceChange = { onPlaceTextFieldChange(it) },
+            onSearchAction = { onSearchPlace(it) }
+        )
+    }
+
+    if (uiState.alreadyOwnedCreature) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(32.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFc79e63),
+                tonalElevation = 4.dp,
+                shadowElevation = 8.dp,
+                modifier = Modifier
+                    .widthIn(min = 260.dp, max = 320.dp)
+                    .wrapContentHeight()
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    Text(
+                        text = "¡YA TIENES ESTA CRIATURA!",
+                        color = Color.Black
+                    )
+
+                    Text(
+                        text = "Esta criatura ya pertenece a tu inventario.",
+                        color = Color.Black,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
+
+
+                    uiState.criaturaDetectada?.let { criatura ->
+
+                        val context = LocalContext.current
+
+                        val resId = context.resources.getIdentifier(
+                            criatura.imagen,
+                            "drawable",
+                            context.packageName
+                        )
+
+                        if (resId != 0) {   // si existe en drawable
+                            Image(
+                                painter = painterResource(resId),
+                                contentDescription = criatura.nombre,
+                                modifier = Modifier
+                                    .padding(top = 12.dp)
+                                    .size(140.dp)
+                            )
+                        }
+                    }
+
+                    Button(
+                        modifier = Modifier.padding(top = 16.dp),
+                        onClick = { viewModel.resetAlreadyOwned() }
+                    ) {
+                        Text("Aceptar")
+                    }
+                }
+            }
+        }
+    }
+
+    when {
+        uiState.pressureCreatureFound -> CreatureAlert(
+            message = "¡HA APARECIDO UNA CRIATURA DE PRESION ALTA!",
+            onDismiss = { viewModel.showPressureCreatureAlert(false) },
+            onAccept = {
+                viewModel.capturePressureCreature()
+                viewModel.showPressureCreatureAlert(false)
+            }
+        )
+
+        uiState.coldCreatureFound -> CreatureAlert(
+            message = "¡HA APARECIDO UNA CRIATURA BIEN COOL!",
+            onDismiss = { viewModel.showColdCreatureAlert(false) },
+            onAccept = {
+                viewModel.captureColdCreature()
+                viewModel.showColdCreatureAlert(false)
+            }
+        )
+
+        uiState.hotCreatureFound -> CreatureAlert(
+            message = "¡HA APARECIDO UNA CRIATURA BIEN ARDIENTE!",
+            onDismiss = { viewModel.showHotCreatureAlert(false) },
+            onAccept = {
+                viewModel.captureHotCreature()
+                viewModel.showHotCreatureAlert(false)
+            }
+        )
+
+        uiState.mediumCreatureFound -> CreatureAlert(
+            message = "¡HA APARECIDO UNA CRIATURA DE CLIMA MEDIO!",
+            onDismiss = { viewModel.showMediumCreatureAlert(false) },
+            onAccept = {
+                viewModel.captureMediumCreature()
+                viewModel.showMediumCreatureAlert(false)
+            }
+        )
+
+        uiState.armorFound -> CreatureAlert(
+            message = "¡HAN APARECIDO UNAS PODEROSAS ARMADURAS!",
+            onDismiss = { viewModel.findArmor(false) },
+            onAccept = {
+                viewModel.captureArmor()
+                viewModel.findArmor(false)
+            }
+        )
+    }
+
+    LaunchedEffect(uiState.isHigh) {
+        if (uiState.isHigh) {
+            viewModel.showPressureCreatureAlert(true)
+        }
+    }
+
+    LaunchedEffect(uiState.isCold) {
+        if (uiState.isCold) {
+            viewModel.showColdCreatureAlert(true)
+        }
+    }
+
+    LaunchedEffect(uiState.isHot) {
+        if (uiState.isHot) {
+            viewModel.showHotCreatureAlert(true)
+        }
+    }
+
+    LaunchedEffect(uiState.isMagn) {
+        if (uiState.isMagn) {
+            viewModel.findArmor(true)
+        }
+    }
+
+    LaunchedEffect(uiState.isMedium) {
+        if (uiState.isMedium) {
+            viewModel.showMediumCreatureAlert(true)
+        }
     }
 }
 
@@ -135,596 +422,3 @@ val chapineroTrianglePoints = listOf(
     LatLng(4.6425, -74.0605), // Este (Chapinero Alto)
     LatLng(4.6460, -74.0715)  // Oeste (cerca Rosales)
 )
-@Composable
-fun MapScreenContent(
-    uiState: MapUiState,
-    onLocationButtonClick: () -> Unit,
-    onSearchQueryChange: (String) -> Unit,
-    onSearchSubmit: () -> Unit,
-    onMapClick: () -> Unit,
-    onMapLongClick: (LatLng) -> Unit,
-    viewModel: MapViewModel
-) {
-    val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(
-            LatLng(uiState.currentLocation.latitude, uiState.currentLocation.longitude),
-            17f
-        )
-    }
-
-    LaunchedEffect(uiState.currentLocation) {
-        if (uiState.isCameraFollowing) {
-            cameraPositionState.animate(
-                CameraUpdateFactory.newCameraPosition(
-                    CameraPosition.fromLatLngZoom(
-                        LatLng(
-                            uiState.currentLocation.latitude,
-                            uiState.currentLocation.longitude
-                        ),
-                        17f
-                    )
-                )
-            )
-        }
-    }
-
-    val mapProperties = MapProperties(
-        isMyLocationEnabled = uiState.permissionStatus && uiState.locationUpdates,
-        mapStyleOptions = if (uiState.isDarkMap)
-            MapStyleOptions.loadRawResourceStyle(LocalContext.current, R.raw.map_dark)
-        else
-            MapStyleOptions.loadRawResourceStyle(LocalContext.current, R.raw.map_light)
-    )
-
-    Box(Modifier.fillMaxSize()) {
-        GoogleMap(
-            modifier = Modifier.fillMaxSize(),
-            cameraPositionState = cameraPositionState,
-            properties = mapProperties,
-            uiSettings = MapUiSettings(
-                zoomControlsEnabled = false,
-                compassEnabled = true
-            ),
-            onMapClick = { onMapClick() },
-            onMapLongClick = { onMapLongClick(it) }
-        ) {
-            // Marcadores
-            uiState.staticMarkers.forEach { punto ->
-                Marker(
-                    state = MarkerState(LatLng(punto.lat, punto.lng)),
-                    title = punto.nombre,
-                    snippet = "Zona: ${punto.zona} | Clima: ${punto.clima}",
-                    icon = bitmapDescriptorFromVector(context = LocalContext.current, R.drawable.castillo)
-                )
-            }
-
-            uiState.searchMarker?.let { marker ->
-                Marker(
-                    state = MarkerState(marker),
-                    title = uiState.searchQuery,
-                    snippet = uiState.searchMarker.toString(),
-                )
-            }
-
-            uiState.clickMarker?.let { marker ->
-                Marker(
-                    state = MarkerState(marker),
-                    title = "Marcador",
-                    snippet = uiState.clickMarker.toString(),
-                )
-            }
-
-            // Ruta
-            if (uiState.routePoints.isNotEmpty()) {
-                Polyline(
-                    points = uiState.routePoints,
-                    color = if (uiState.isDarkMap) Color.Cyan
-                    else Color.Blue,
-                    width = 6f
-                )
-            }
-
-            Polygon(
-                points = teusaquilloRectanglePoints,
-                fillColor = Gray.copy(alpha = 0.3f),
-                strokeColor = Gray.copy(alpha = 0.5f),
-                strokeWidth = 2f
-            )
-            Polygon(
-                points = chapineroTrianglePoints,
-                fillColor = Color.Blue.copy(alpha = 0.2f),
-                strokeColor = Color.Blue.copy(alpha = 0.6f),
-                strokeWidth = 3f
-            )
-        }
-
-        TextFieldSearch(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            place = uiState.searchQuery,
-            placeholderText = "Buscar lugar...",
-            onPlaceChange = onSearchQueryChange,
-            onSearchSubmit = onSearchSubmit
-        )
-
-
-        if (uiState.alreadyOwnedCreature) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFc79e63),
-                    tonalElevation = 4.dp,
-                    shadowElevation = 8.dp,
-                    modifier = Modifier
-                        .widthIn(min = 260.dp, max = 320.dp)
-                        .wrapContentHeight()
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-
-                        Text(
-                            text = "¡YA TIENES ESTA CRIATURA!",
-                            color = Color.Black
-                        )
-
-                        Text(
-                            text = "Esta criatura ya pertenece a tu inventario.",
-                            color = Color.Black,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-
-
-                        uiState.criaturaDetectada?.let { criatura ->
-
-                            val context = LocalContext.current
-
-                            val resId = context.resources.getIdentifier(
-                                criatura.imagen,
-                                "drawable",
-                                context.packageName
-                            )
-
-                            if (resId != 0) {   // si existe en drawable
-                                Image(
-                                    painter = painterResource(resId),
-                                    contentDescription = criatura.nombre,
-                                    modifier = Modifier
-                                        .padding(top = 12.dp)
-                                        .size(140.dp)
-                                )
-                            }
-                        }
-
-                        Button(
-                            modifier = Modifier.padding(top = 16.dp),
-                            onClick = { viewModel.resetAlreadyOwned() }
-                        ) {
-                            Text("Aceptar")
-                        }
-                    }
-                }
-            }
-        }
-
-
-
-
-
-
-        if (uiState.pressureCreatureFound) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally)
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Surface(
-                                shadowElevation = 6.dp,
-                                tonalElevation = 2.dp,
-                                color = Color(0xFFc79e63),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "¡HA APARECIDO UNA CRIATURA DE PRESION ALTA!",
-                                        color = Color.Black
-                                    )
-
-                                    Row(
-                                        modifier = Modifier.padding(top = 8.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Button(
-                                            onClick = {
-                                                viewModel.showPressureCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("DEJAR IR")
-                                        }
-
-                                        Button(
-                                            onClick = {
-                                                viewModel.capturePressureCreature()
-                                                viewModel.showPressureCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("ATRAPAR")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        else if (uiState.coldCreatureFound) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally)
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Surface(
-                                shadowElevation = 6.dp,
-                                tonalElevation = 2.dp,
-                                color = Color(0xFFc79e63),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "¡HA APARECIDO UNA CRIATURA BIEN COOL!",
-                                        color = Color.Black
-                                    )
-
-
-                                    Row(
-                                        modifier = Modifier.padding(top = 8.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Button(
-                                            onClick = {
-                                                viewModel.showColdCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("DEJAR IR")
-                                        }
-
-                                        Button(
-                                            onClick = {
-                                                viewModel.captureColdCreature()
-                                                viewModel.showColdCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("ATRAPAR")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        else if (uiState.hotCreatureFound) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally)
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Surface(
-                                shadowElevation = 6.dp,
-                                tonalElevation = 2.dp,
-                                color = Color(0xFFc79e63),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "¡HA APARECIDO UNA CRIATURA BIEN ARDIENTE!",
-                                        color = Color.Black
-                                    )
-
-                                    Row(
-                                        modifier = Modifier.padding(top = 8.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Button(
-                                            onClick = {
-                                                viewModel.showHotCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("DEJAR IR")
-                                        }
-
-                                        Button(
-                                            onClick = {
-                                                viewModel.captureHotCreature()
-                                                viewModel.showHotCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("ATRAPAR")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        else if (uiState.hotCreatureFound) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally)
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Surface(
-                                shadowElevation = 6.dp,
-                                tonalElevation = 2.dp,
-                                color = Color(0xFFc79e63),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "¡HA APARECIDO UNA CRIATURA BIEN ARDIENTE!",
-                                        color = Color.Black
-                                    )
-
-                                    Row(
-                                        modifier = Modifier.padding(top = 8.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Button(
-                                            onClick = {
-                                                viewModel.showHotCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("DEJAR IR")
-                                        }
-
-                                        Button(
-                                            onClick = {
-                                                viewModel.captureHotCreature()
-                                                viewModel.showHotCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("ATRAPAR")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        else if (uiState.mediumCreatureFound) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally)
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Surface(
-                                shadowElevation = 6.dp,
-                                tonalElevation = 2.dp,
-                                color = Color(0xFFc79e63),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "¡HA APARECIDO UNA CRIATURA DE CLIMA MEDIO!",
-                                        color = Color.Black
-                                    )
-
-                                    Row(
-                                        modifier = Modifier.padding(top = 8.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Button(
-                                            onClick = {
-                                                viewModel.showMediumCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("DEJAR IR")
-                                        }
-
-                                        Button(
-                                            onClick = {
-                                                viewModel.captureMediumCreature()
-                                                viewModel.showMediumCreatureAlert(false)
-                                            }
-                                        ) {
-                                            Text("ATRAPAR")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        else if (uiState.armorFound) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .align(Alignment.CenterHorizontally)
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Surface(
-                                shadowElevation = 6.dp,
-                                tonalElevation = 2.dp,
-                                color = Color(0xFFc79e63),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally
-                                ) {
-                                    Text(
-                                        text = "¡HAN APARECIDO UNAS PODEROSAS ARMADURAS!",
-                                        color = Color.Black
-                                    )
-
-                                    Row(
-                                        modifier = Modifier.padding(top = 8.dp),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-
-                                        Button(
-                                            onClick = {
-                                                viewModel.captureArmor()
-                                                viewModel.findArmor(false)
-                                            }
-                                        ) {
-                                            Text("Aceptar")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        LaunchedEffect(uiState.isHigh) {
-            if (uiState.isHigh) {
-                viewModel.showPressureCreatureAlert(true)
-            }
-        }
-
-        LaunchedEffect(uiState.isCold) {
-            if (uiState.isCold) {
-                viewModel.showColdCreatureAlert(true)
-            }
-        }
-
-        LaunchedEffect(uiState.isHot) {
-            if (uiState.isHot) {
-                viewModel.showHotCreatureAlert(true)
-            }
-        }
-
-        LaunchedEffect(uiState.isMagn) {
-            if (uiState.isMagn) {
-                viewModel.findArmor(true)
-            }
-        }
-
-        LaunchedEffect(uiState.isMedium) {
-            if (uiState.isMedium) {
-                viewModel.showMediumCreatureAlert(true)
-            }
-        }
-
-        FloatingActionButton(
-            onClick = onLocationButtonClick,
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(16.dp)
-        ) {
-            Icon(
-                imageVector = if (uiState.locationUpdates)
-                    Icons.Default.LocationOff else Icons.Default.MyLocation,
-                contentDescription = "Toggle Location Updates"
-            )
-        }
-    }
-
-
-}
-
-
-

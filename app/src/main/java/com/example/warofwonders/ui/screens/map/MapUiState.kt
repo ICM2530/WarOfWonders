@@ -1,15 +1,28 @@
 package com.example.warofwonders.ui.screens.map
 
+import com.example.warofwonders.R
+import com.example.warofwonders.data.model.InterestPoint
 import com.example.warofwonders.data.model.LocationData
-import com.example.warofwonders.data.model.PuntoInteres
+import com.example.warofwonders.data.model.MarkerData
 import com.example.warofwonders.ui.model.Criatura
 import com.google.android.gms.maps.model.LatLng
 
 data class MapUiState(
-    val currentLocation: LocationData = LocationData(latitude = 4.627747211702569, longitude = -74.0642053698486),
-    val staticMarkers: List<PuntoInteres> = emptyList(),
-    val searchMarker: LatLng? = null, // Marcador de búsqueda
-    val clickMarker: LatLng? = null,  // Marcador de click largo
+    val currentLocation: LocationData = LocationData(),
+    val isUpdatingLocation: Boolean = false,
+    val cameraTarget: LatLng? = null,
+    val cameraZoom: Float = 12f,
+    val placeQuery: String = "",
+    val mapStyleRes: Int = R.raw.map_light,
+    val targetMarker: MarkerData? = null,
+    val routePoints: List<LatLng> = emptyList(),
+
+    val permissionStatus: Boolean = false,
+    val locationUpdates: Boolean = false,
+    val distanceToTarget: Double = 0.0,
+    val staticMarkers: List<InterestPoint> = emptyList(),
+    val savedLocations: List<LocationData> = emptyList(),
+
     val isDarkMap: Boolean = false,
     val isHigh: Boolean = false,
     val isCold: Boolean = false,
@@ -26,12 +39,9 @@ data class MapUiState(
     val hotCreatureCaptured: Boolean = false,
     val armorFound: Boolean = false,
     val armorCaptured: Boolean = false,
-    val locationUpdates: Boolean = false,
-    val permissionStatus: Boolean = false,
     val isCameraFollowing: Boolean = false,
     val searchQuery: String = "",
     val isSearching: Boolean = false,
     val alreadyOwnedCreature: Boolean = false,
-    val criaturaDetectada: Criatura? = null,
-    val routePoints: List<LatLng> = emptyList()
+    val criaturaDetectada: Criatura? = null
 )

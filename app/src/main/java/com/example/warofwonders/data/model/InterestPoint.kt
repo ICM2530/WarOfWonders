@@ -1,12 +1,11 @@
 package com.example.warofwonders.data.model
 
-import org.json.JSONArray
 import org.json.JSONObject
 
 data class Recurso(val nombre: String, val cantidad: Int)
 data class Clan(val nombre: String, val poder: Int)
 
-data class PuntoInteres(
+data class InterestPoint(
     val id: Int,
     val nombre: String,
     val lat: Double,
@@ -49,7 +48,7 @@ data class PuntoInteres(
     }
 
     companion object {
-        fun fromJSON(obj: JSONObject): PuntoInteres {
+        fun fromJSON(obj: JSONObject): InterestPoint {
             val recursosArray = obj.optJSONArray("recursos") ?: org.json.JSONArray()
             val recursos = mutableListOf<Recurso>()
             for (i in 0 until recursosArray.length()) {
@@ -64,7 +63,7 @@ data class PuntoInteres(
                 clanes.add(Clan(c.getString("nombre"), c.getInt("poder")))
             }
 
-            return PuntoInteres(
+            return InterestPoint(
                 id = obj.getInt("id"),
                 nombre = obj.getString("nombre"),
                 lat = obj.getDouble("lat"),

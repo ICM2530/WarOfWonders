@@ -19,15 +19,15 @@ import androidx.compose.ui.text.input.ImeAction
 
 @Composable
 fun TextFieldSearch(
-    modifier: Modifier = Modifier,
     place: String,
-    placeholderText: String = "Search",
+    modifier: Modifier = Modifier,
+    placeholderText: String,
     onPlaceChange: (String) -> Unit,
-    onSearchSubmit: () -> Unit
+    onSearchAction: (String) -> Unit
 ) {
     TextField(
-        modifier = modifier,
         value = place,
+        modifier = modifier,
         onValueChange = onPlaceChange,
         placeholder = {
             if (place.isEmpty()) {
@@ -40,7 +40,7 @@ fun TextFieldSearch(
         },
         leadingIcon = {
             Icon(
-                imageVector = Icons.Filled.Search,
+                imageVector = Icons.Default.Search,
                 contentDescription = "Search",
                 tint = Color.Gray
             )
@@ -58,7 +58,9 @@ fun TextFieldSearch(
             imeAction = ImeAction.Search
         ),
         keyboardActions = KeyboardActions(
-            onSearch = { onSearchSubmit() }
+            onSearch = {
+                onSearchAction(place)
+            }
         )
     )
 }
