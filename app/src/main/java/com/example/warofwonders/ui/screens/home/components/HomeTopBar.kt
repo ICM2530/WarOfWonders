@@ -159,7 +159,7 @@ fun HomeTopBar(navController: NavHostController) {
                     painter = painterResource(R.drawable.shop),
                     contentDescription = "Tienda",
                     modifier = Modifier
-                        .size(50.dp) // tamaño fijo en dp
+                        .size(50.dp)
                         .clickable { navController.navigate(AppScreens.Shop.name) }
                 )
                 Image(
