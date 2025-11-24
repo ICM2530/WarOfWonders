@@ -2,7 +2,7 @@ package com.example.warofwonders.ui.screens.map
 
 import com.example.warofwonders.R
 import com.example.warofwonders.data.model.ClanData
-import com.example.warofwonders.data.model.InterestPoint
+import com.example.warofwonders.data.model.InterestPointData
 import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.model.MarkerData
 import com.example.warofwonders.ui.model.Criatura
@@ -20,9 +20,7 @@ data class MapUiState(
 
     val permissionStatus: Boolean = false,
     val locationUpdates: Boolean = false,
-    val distanceToTarget: Double = 0.0,
-    val staticMarkers: List<InterestPoint> = emptyList(),
-    val savedLocations: List<LocationData> = emptyList(),
+    val interestPoint: List<InterestPointData> = emptyList(),
     val clans: List<ClanData> = emptyList(),
 
     val isDarkMap: Boolean = false,

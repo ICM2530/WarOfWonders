@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.android.taller2.data.repository.GeoCoderRepository
 import com.android.taller2.data.repository.RouteRepository
-import com.example.warofwonders.data.repository.InterestPointRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
@@ -15,6 +14,7 @@ import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
 import com.example.warofwonders.data.source.hardware.LocationDataSource
 import com.example.warofwonders.data.source.local.GeoCoderDataSource
 import com.example.warofwonders.data.source.remote.OsrmDataSource
+import com.example.warofwonders.data.source.remote.RestVolleyDataSource
 import com.example.warofwonders.ui.navigation.NavGraph
 import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.android.gms.location.LocationServices
@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
         val temperatureSensorDataSource = TemperatureSensorDataSource(context = this)
         val stepDetectorDataSource = StepDetectorDataSource(context = this)
         val magnetometerDataSource = MagnetometerDataSource(context = this)
-        val interestPointRepository = InterestPointRepository(context = this)
+        val restVolleyDataSource = RestVolleyDataSource(context = this)
 
         val osrmDataSource = OsrmDataSource()
         val routeRepository = RouteRepository(osrmDataSource)
@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                 temperatureSensorDataSource = temperatureSensorDataSource,
                 stepDetectorDataSource = stepDetectorDataSource,
                 magnetometerDataSource = magnetometerDataSource,
-                interestPointRepository = interestPointRepository,
+                restVolleyDataSource = restVolleyDataSource,
                 startDestination = startDestination
             )
         }

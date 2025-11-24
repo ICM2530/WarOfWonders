@@ -68,6 +68,7 @@ import com.example.warofwonders.ui.shared.utils.distanceBetween
 import com.example.warofwonders.ui.shared.utils.isPermissionGranted
 import com.example.warofwonders.ui.theme.Cyan
 import com.example.warofwonders.ui.theme.White
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.Polygon
 import com.google.maps.android.compose.Polyline
 import com.google.maps.android.compose.rememberUpdatedMarkerState
@@ -210,13 +211,6 @@ fun MapScreenContent(
                     marker.position.latitude,
                     marker.position.longitude
                 )
-                Toast.makeText(
-                    context,
-                    if (d >= 1000) "Distancia: %.1f km".format(d / 1000) else "Distancia: %.0f m".format(
-                        d
-                    ),
-                    Toast.LENGTH_SHORT
-                ).show()
             }
 
             if (uiState.routePoints.isNotEmpty()) {
@@ -228,9 +222,8 @@ fun MapScreenContent(
             }
 
             val clanColors = listOf(
-                Color(0xFFe57373), // rojo
-                Color(0xFF64b5f6), // azul
-                Color(0xFF81c784), // verde
+                Color(0xFF489ECC),
+                Color(0xFF5CC245),
             )
 
             uiState.clans.forEachIndexed { index, clan ->
@@ -245,6 +238,19 @@ fun MapScreenContent(
                     clickable = true,
                     onClick = {
                         Toast.makeText(context, clan.nombre, Toast.LENGTH_SHORT).show()
+                    }
+                )
+            }
+
+            uiState.interestPoint.forEach { poi ->
+                Marker(
+                    state = rememberUpdatedMarkerState(
+                        position = LatLng(poi.lat, poi.lng)
+                    ),
+                    title = poi.name,
+                    snippet = poi.address,
+                    icon = poi.icon?.let { bitmap ->
+                        BitmapDescriptorFactory.fromBitmap(bitmap)
                     }
                 )
             }

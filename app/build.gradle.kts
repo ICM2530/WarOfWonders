@@ -86,7 +86,8 @@ dependencies {
     implementation(libs.androidx.foundation)
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.compose.runtime)
-
+    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("com.android.volley:volley:1.2.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -10,13 +10,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.android.taller2.data.repository.GeoCoderRepository
 import com.android.taller2.data.repository.RouteRepository
-import com.example.warofwonders.data.repository.InterestPointRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.StepDetectorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
+import com.example.warofwonders.data.source.remote.RestVolleyDataSource
 import com.example.warofwonders.ui.model.InventarioViewModel
 import com.example.warofwonders.ui.model.MyUserState
 import com.example.warofwonders.ui.model.MyUserViewModel
@@ -50,7 +50,7 @@ fun NavGraph(
     temperatureSensorDataSource: TemperatureSensorDataSource,
     stepDetectorDataSource: StepDetectorDataSource,
     magnetometerDataSource: MagnetometerDataSource,
-    interestPointRepository: InterestPointRepository,
+    restVolleyDataSource: RestVolleyDataSource,
     startDestination: String
 ) {
     val inventarioVM: InventarioViewModel = viewModel()
@@ -85,7 +85,7 @@ fun NavGraph(
                         barometerSensorDataSource = barometerSensorDataSource,
                         temperatureSensorDataSource = temperatureSensorDataSource,
                         magnetometerDataSource = magnetometerDataSource,
-                        interestPointRepository = interestPointRepository,
+                        restVolleyDataSource = restVolleyDataSource,
                         inventarioVM = InventarioViewModel()
                     )
                 }
@@ -104,7 +104,7 @@ fun NavGraph(
                         barometerSensorDataSource = barometerSensorDataSource,
                         temperatureSensorDataSource = temperatureSensorDataSource,
                         magnetometerDataSource = magnetometerDataSource,
-                        interestPointRepository = interestPointRepository,
+                        restVolleyDataSource = restVolleyDataSource,
                         inventarioVM = InventarioViewModel()
                     )
                 }

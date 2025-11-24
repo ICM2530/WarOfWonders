@@ -6,14 +6,15 @@ import com.android.taller2.data.repository.GeoCoderRepository
 import com.android.taller2.data.repository.RouteRepository
 import com.example.warofwonders.R
 import com.example.warofwonders.data.model.ClanData
+import com.example.warofwonders.data.model.InterestPointData
 import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.model.MarkerData
-import com.example.warofwonders.data.repository.InterestPointRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
+import com.example.warofwonders.data.source.remote.RestVolleyDataSource
 import com.example.warofwonders.ui.model.Criatura
 import com.example.warofwonders.ui.model.InventarioViewModel
 import com.example.warofwonders.ui.model.TipoCriatura
@@ -39,7 +40,7 @@ class MapViewModel(
     private val temperatureSensorDataSource: TemperatureSensorDataSource,
     private val magnetometerDataSource: MagnetometerDataSource,
     private val lightSensorDataSource: LightSensorDataSource,
-    private val interestPointRepository: InterestPointRepository,
+    private val restVolleyDataSource: RestVolleyDataSource,
     private val inventarioVM: InventarioViewModel
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(MapUiState())
@@ -58,9 +59,8 @@ class MapViewModel(
             )
         }
 
-        loadInterestPoints()
         loadCreaturesFromFirebaseRealtime()
-
+        loadInterestPoints()
         observarClanesRealtime()
 
         viewModelScope.launch {
@@ -80,6 +80,14 @@ class MapViewModel(
             override fun onCancelled(error: DatabaseError) {
             }
         })
+    }
+
+    private fun loadInterestPoints() {
+        viewModelScope.launch {
+            restVolleyDataSource.loadInterestPoints { list ->
+                _uiState.update { it.copy(interestPoint = list) }
+            }
+        }
     }
 
     // Cosas de Mapas
@@ -172,12 +180,7 @@ class MapViewModel(
         locationRepository.stopLocationUpdates()
     }
 
-    private fun loadInterestPoints() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val puntos = interestPointRepository.readJSONFile()
-            _uiState.update { it.copy(staticMarkers = puntos) }
-        }
-    }
+
 
     // Otros
 
