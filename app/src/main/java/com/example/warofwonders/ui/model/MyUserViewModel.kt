@@ -74,7 +74,7 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                         "coins" to state.coins,
                         "level" to state.level,
                         "xp" to state.xp,
-                        "team" to state.team,
+                        "clanid" to state.clanid,
                         "profileImageUrl" to profileUrl,
                         "active" to true
                     )
@@ -185,7 +185,7 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         prefs.edit().apply {
             putString("email", user.email)
             putString("name", user.name)
-            putString("team", user.team)
+            putString("clanid", user.clanid)
             putString("profileImageUrl", user.profileImageUrl)
             apply()
         }
@@ -197,7 +197,7 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         return MyUserState(
             email = email,
             name = prefs.getString("name", "") ?: "",
-            team = prefs.getString("team", "") ?: "",
+            clanid = prefs.getString("clanid", "") ?: "",
             profileImageUrl = prefs.getString("profileImageUrl", "") ?: ""
         )
     }

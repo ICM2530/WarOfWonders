@@ -43,7 +43,7 @@ fun HomeTopBar(navController: NavHostController) {
                         ?: snap.child("lastName").getValue(String::class.java)
                         ?: snap.child("email").getValue(String::class.java)?.substringBefore("@")
                         ?: "Jugador"
-            team = snap.child("team").getValue(String::class.java) ?: "Sin equipo"
+            team = snap.child("clanid").getValue(String::class.java) ?: "Sin equipo"
             coins = (snap.child("coins").getValue(Long::class.java) ?: 0).toInt()
             xp = (snap.child("xp").getValue(Long::class.java) ?: 0).toInt()
             profileImageUrl = snap.child("profileImageUrl").getValue(String::class.java)

@@ -17,7 +17,7 @@ data class MyUserState(
     var coins: Int = 0,
     val level: Int = 0,
     val xp: Int = 0,
-    val team: String = "",
+    val clanid: String = "",
     val profileImageUrl: String = "",
 
     val friends: Map<String, Boolean> = emptyMap(),
