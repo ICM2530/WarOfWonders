@@ -117,7 +117,7 @@ fun SignUpScreen(navController: NavController) {
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-                // Imagen de perfil centrada arriba
+
 
                 Text("seleccione una imagen", fontSize = 18.sp, color = Color.White, fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(5.dp))
@@ -145,7 +145,7 @@ fun SignUpScreen(navController: NavController) {
                         contentScale = ContentScale.Crop
                     )
 
-                    // DropdownMenu para elegir Galería o Cámara
+
                     androidx.compose.material3.DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
@@ -171,7 +171,7 @@ fun SignUpScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Campos del formulario
+
                 TextFieldImage(
                     value = state.name,
                     onValueChange = signUpViewModel::updateName,
@@ -240,7 +240,7 @@ fun SignUpScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Botón de registro
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
