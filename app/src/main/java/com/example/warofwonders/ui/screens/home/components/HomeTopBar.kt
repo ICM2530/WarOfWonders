@@ -150,12 +150,12 @@ fun HomeTopBar(navController: NavHostController) {
             modifier = Modifier.align(Alignment.TopEnd),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            val iconSize = 50.dp
+
 
             Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                val iconSize = 50.dp
                 Image(
                     painter = painterResource(R.drawable.shop),
                     contentDescription = "Tienda",
@@ -170,6 +170,12 @@ fun HomeTopBar(navController: NavHostController) {
                         .size(iconSize)
                         .clickable { navController.navigate(AppScreens.Contacts.name) }
                 )
+            }
+
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
                 Image(
                     painter = painterResource(R.drawable.configbutton),
                     contentDescription = "Configuración",
@@ -177,14 +183,6 @@ fun HomeTopBar(navController: NavHostController) {
                         .size(iconSize)
                         .clickable { navController.navigate(AppScreens.Settings.name) }
                 )
-            }
-
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val iconSize = 50.dp
                 Image(
                     painter = painterResource(R.drawable.bell_icon),
                     contentDescription = "Notificaciones",
@@ -194,8 +192,5 @@ fun HomeTopBar(navController: NavHostController) {
                 )
             }
         }
-
-
-
     }
 }
