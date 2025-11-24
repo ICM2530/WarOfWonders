@@ -324,7 +324,7 @@ fun MapScreenContent(
                             contentDescription = criatura.nombre,
                             modifier = Modifier
                                 .padding(top = 12.dp)
-                                .size(140.dp), 
+                                .size(140.dp),
                             contentScale = ContentScale.Fit
                         )
                     }
@@ -391,7 +391,7 @@ fun MapScreenContent(
     if (uiState.mostrarPopupRecurso) {
         AlertDialog(
             onDismissRequest = { viewModel.rechazarRecurso() },
-            containerColor = Color(0x66C79E63), // Fondo general del diálogo
+            containerColor = Color(0x66C79E63),
             title = {
                 Text(
                     "¡Recurso encontrado!",
@@ -413,18 +413,15 @@ fun MapScreenContent(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    val imagen = uiState.recursoEncontrado?.imagen ?: ""
-                    val ctx = LocalContext.current
-                    val resId = ctx.resources.getIdentifier(imagen, "drawable", ctx.packageName)
+                    val imagenUrl = uiState.recursoEncontrado?.imagen ?: ""
 
-                    if (resId != 0) {
-                        Image(
-                            painter = painterResource(id = resId),
+                    if (imagenUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = imagenUrl, // URL de Firebase Storage
                             contentDescription = uiState.recursoEncontrado?.nombre,
                             modifier = Modifier
                                 .padding(top = 12.dp)
-                                .size(120.dp)
-                                .background(Color.Transparent), // Fondo transparente
+                                .size(120.dp),
                             contentScale = ContentScale.Fit
                         )
                     }
