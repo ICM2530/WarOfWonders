@@ -20,6 +20,7 @@ import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuth
+import com.example.warofwonders.data.repository.FcmTokenManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,10 +34,9 @@ class MainActivity : ComponentActivity() {
         val lightSensorDataSource = LightSensorDataSource(context = this)
         val barometerSensorDataSource = BarometerSensorDataSource(context = this)
         val temperatureSensorDataSource = TemperatureSensorDataSource(context = this)
-        val stepDetectorDataSource = StepDetectorDataSource (context = this)
-        val magnetometerDataSource = MagnetometerDataSource (context = this)
+        val stepDetectorDataSource = StepDetectorDataSource(context = this)
+        val magnetometerDataSource = MagnetometerDataSource(context = this)
         val restVolleyDataSource = RestVolleyDataSource(context = this)
-
         val osrmDataSource = OsrmDataSource()
         val routeRepository = RouteRepository(osrmDataSource)
 
@@ -45,6 +45,10 @@ class MainActivity : ComponentActivity() {
             AppScreens.Home.name
         } else {
             AppScreens.StartUp.name
+        }
+
+        if (isUserLoggedIn) {
+            FcmTokenManager.updateTokenIfLoggedIn()
         }
 
         setContent {
@@ -62,6 +66,4 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
-
-
 }
