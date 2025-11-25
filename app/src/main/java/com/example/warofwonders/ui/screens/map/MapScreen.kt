@@ -297,18 +297,6 @@ fun MapScreenContent(
                 )
             }
 
-            uiState.nearbyUsers.forEach { mu ->
-                val lat = mu.lastLocation.latitude
-                val lng = mu.lastLocation.longitude
-                if (!lat.isNaN() && !lng.isNaN()) {
-                    Marker(
-                        state = rememberUpdatedMarkerState(position = LatLng(lat, lng)),
-                        title = mu.displayName ?: "Jugador",
-                        snippet = mu.clanId
-                    )
-                }
-            }
-
             uiState.selectedFriendMarker.let { friend ->
                 Marker(
                     state = rememberUpdatedMarkerState(
@@ -329,14 +317,16 @@ fun MapScreenContent(
                 }
 
                 uiState.clanMiembrosList.forEach { member ->
-                    Marker(
-                        state = rememberUpdatedMarkerState(
-                            position = LatLng(member.latitude ?: 0.0, member.longitude ?: 0.0)
-                        ),
-                        title = "${member.name} ${member.lastname}",
-                        snippet = member.email,
-                        icon = iconoMiembro
-                    )
+                    if (member.active) {
+                        Marker(
+                            state = rememberUpdatedMarkerState(
+                                position = LatLng(member.latitude ?: 0.0, member.longitude ?: 0.0)
+                            ),
+                            title = "${member.name} ${member.lastname}",
+                            snippet = member.email,
+                            icon = iconoMiembro
+                        )
+                    }
                 }
             }
         }
@@ -405,8 +395,6 @@ fun MapScreenContent(
             )
         }
 
-        // Mostrar botón de atacar si el jugador está dentro del territorio de otro clan
-        // o si hay usuarios cercanos (proximidad PvP)
         if (uiState.insideEnemyTerritory || uiState.nearbyUsers.isNotEmpty()) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Button(onClick = { viewModel.attackNearestEnemy() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB00020), contentColor = Color.White)) {

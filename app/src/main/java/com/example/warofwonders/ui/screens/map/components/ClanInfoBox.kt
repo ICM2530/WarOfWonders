@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AlternateEmail
 import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -33,13 +34,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.warofwonders.R
 import com.example.warofwonders.data.model.ClanData
 import com.example.warofwonders.data.model.Friend
+import com.example.warofwonders.ui.theme.Brown
 
 @Composable
 fun ClanInfoBox(
@@ -102,7 +106,7 @@ fun ClanInfoBox(
                 )
 
                 Box(
-                    modifier = Modifier.height(80.dp).fillMaxWidth()
+                    modifier = Modifier.height(86.dp).fillMaxWidth()
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.clanmainbox),
@@ -144,21 +148,34 @@ fun ClanInfoBox(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(
-                                    text = "- ${miembro.name} ${miembro.lastname}",
-                                    color = Color.White,
-                                    modifier = Modifier.weight(1f)
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AlternateEmail,
+                                        contentDescription = "",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+
+                                    Spacer(modifier = Modifier.width(8.dp))
+
+                                    Text(
+                                        text = "${miembro.name} ${miembro.lastname} - ${miembro.email}",
+                                        color = Color.White
+                                    )
+                                }
 
                                 Box(
                                     modifier = Modifier
-                                        .size(12.dp)
+                                        .size(16.dp)
                                         .clip(CircleShape)
                                         .background(
-                                            if (miembro.active) Color(0xFF0D9A14)   // verde
-                                            else Color(0xFFA4A4A4)                  // gris
+                                            if (miembro.active) Color(0xFF0D9A14)
+                                            else Color(0xFFA4A4A4)
                                         )
                                 )
                             }
