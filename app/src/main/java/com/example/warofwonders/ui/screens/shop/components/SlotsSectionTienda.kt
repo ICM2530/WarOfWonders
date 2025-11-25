@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -88,7 +89,10 @@ fun SlotsSectionTienda(
                                     Text(
                                         text = recurso.nombre,
                                         color = Color.White,
-                                        fontSize = 12.sp
+                                        fontSize = 12.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+
                                     )
 
                                     Row(
@@ -107,18 +111,27 @@ fun SlotsSectionTienda(
                                         )
                                     }
 
-                                    Button(
-                                        onClick = { onComprar(recurso) },
+                                    Box(
                                         modifier = Modifier
-                                            .fillMaxWidth(0.8f)
-                                            .height(30.dp),
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = Color(0xFF8A5A33),
-                                            contentColor = Color.White
-                                        )
+                                            .fillMaxWidth(0.85f)
+                                            .height(28.dp),
+                                        contentAlignment = Alignment.Center
                                     ) {
-                                        Text("Comprar", fontSize = 6.sp)
+                                        Button(
+                                            onClick = { onComprar(recurso) },
+                                            modifier = Modifier.fillMaxSize(),
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFF8A5A33),
+                                                contentColor = Color.White
+                                            ),
+                                            shape = RoundedCornerShape(8.dp),
+                                            contentPadding = PaddingValues(0.dp)
+                                        ) {
+                                            Text("Comprar", fontSize = 10.sp)
+                                        }
                                     }
+
+
                                 }
                             }
 
