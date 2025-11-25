@@ -60,7 +60,6 @@ class MapViewModel(
         }
 
         loadCreaturesFromFirebaseRealtime()
-        loadInterestPoints()
         observarClanesRealtime()
 
         viewModelScope.launch {
@@ -82,11 +81,27 @@ class MapViewModel(
         })
     }
 
-    private fun loadInterestPoints() {
-        viewModelScope.launch {
-            restVolleyDataSource.loadInterestPoints { list ->
-                _uiState.update { it.copy(interestPoint = list) }
+    fun loadInterestPoints() {
+        if (_uiState.value.interestPoint.isEmpty()) {
+            viewModelScope.launch {
+                restVolleyDataSource.loadInterestPoints { list ->
+                    viewModelScope.launch(Dispatchers.Default) {
+                        val chunkSize = 50
+                        val chunks = list.chunked(chunkSize)
+
+                        chunks.forEach { chunk ->
+                            _uiState.update { state ->
+                                state.copy(
+                                    interestPoint = state.interestPoint + chunk
+                                )
+                            }
+                            kotlinx.coroutines.delay(1000)
+                        }
+                    }
+                }
             }
+        } else {
+            _uiState.update { it.copy(interestPoint = emptyList()) }
         }
     }
 

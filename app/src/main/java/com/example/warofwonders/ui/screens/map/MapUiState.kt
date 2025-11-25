@@ -12,7 +12,7 @@ data class MapUiState(
     val currentLocation: LocationData = LocationData(),
     val isUpdatingLocation: Boolean = false,
     val cameraTarget: LatLng? = null,
-    val cameraZoom: Float = 12f,
+    val cameraZoom: Float = 14f,
     val placeQuery: String = "",
     val mapStyleRes: Int = R.raw.map_light,
     val targetMarker: MarkerData? = null,

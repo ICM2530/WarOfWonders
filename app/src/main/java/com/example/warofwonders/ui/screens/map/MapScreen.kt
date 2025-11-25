@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOff
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
@@ -162,7 +163,7 @@ fun MapScreenContent(
     var uiSettings by remember {
         mutableStateOf(
             MapUiSettings(
-                compassEnabled = true,
+                compassEnabled = false,
                 mapToolbarEnabled = false,
                 zoomControlsEnabled = false,
             )
@@ -223,7 +224,7 @@ fun MapScreenContent(
 
             val clanColors = listOf(
                 Color(0xFF489ECC),
-                Color(0xFF5CC245),
+                Color(0xFF66DC4B),
             )
 
             uiState.clans.forEachIndexed { index, clan ->
@@ -260,6 +261,17 @@ fun MapScreenContent(
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp).wrapContentSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            FloatingButton(
+                onClick = {
+                    viewModel.loadInterestPoints()
+                },
+                modifier = Modifier.size(62.dp),
+                icon = Icons.Default.TravelExplore,
+                contentDescription = "Start Updating Location",
+                contentColor = White,
+                backgroundImage = painterResource(id = R.drawable.chatbutton)
+            )
+
             FloatingButton(
                 onClick = {
                     if (uiState.permissionStatus) onClickLocationUpdates()
