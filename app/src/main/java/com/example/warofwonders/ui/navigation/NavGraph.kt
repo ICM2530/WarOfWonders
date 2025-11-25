@@ -112,8 +112,7 @@ fun NavGraph(
             )
             MapScreen(
                 navController = navController,
-                viewModel = mapViewModel,
-
+                viewModel = mapViewModel
             )
         }
 
@@ -134,6 +133,7 @@ fun NavGraph(
         }
 
         composable(route = AppScreens.Combat.name) {
+            // ruta sin argumentos
             CombatScreen(navController = navController, attackerId = null, defenderId = null)
         }
 

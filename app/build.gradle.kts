@@ -49,6 +49,10 @@ kotlin {
 dependencies {
     implementation("androidx.compose.material:material-icons-extended:1.7.0")
 
+
+
+
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -85,7 +89,8 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.android.volley:volley:1.2.1")
     implementation("com.google.maps.android:maps-compose-utils:2.11.4")
-
+    implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
+    implementation("com.google.firebase:firebase-messaging-ktx")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

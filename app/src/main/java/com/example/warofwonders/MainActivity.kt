@@ -20,6 +20,7 @@ import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuth
+import com.example.warofwonders.data.repository.FcmTokenManager
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +37,6 @@ class MainActivity : ComponentActivity() {
         val stepDetectorDataSource = StepDetectorDataSource(context = this)
         val magnetometerDataSource = MagnetometerDataSource(context = this)
         val restVolleyDataSource = RestVolleyDataSource(context = this)
-
         val osrmDataSource = OsrmDataSource()
         val routeRepository = RouteRepository(osrmDataSource)
 
@@ -45,6 +45,10 @@ class MainActivity : ComponentActivity() {
             AppScreens.Home.name
         } else {
             AppScreens.StartUp.name
+        }
+
+        if (isUserLoggedIn) {
+            FcmTokenManager.updateTokenIfLoggedIn()
         }
 
         setContent {
@@ -60,48 +64,6 @@ class MainActivity : ComponentActivity() {
                 restVolleyDataSource = restVolleyDataSource,
                 startDestination = startDestination
             )
-        }
-    }
-
-    fun precargarCriaturas() {
-        val db = FirebaseFirestore.getInstance()
-        val criaturas = listOf(
-            mapOf(
-                "id" to "pinguino",
-                "nombre" to "pinguino",
-                "tipo" to "FRIO",
-                "salud" to 100,
-                "dano" to 10,
-                "velocidad" to 50,
-                "poder" to 10,
-                "imagen" to "pinguino"
-            ),
-            mapOf(
-                "id" to "fenix",
-                "nombre" to "fenix",
-                "tipo" to "CALOR",
-                "salud" to 100,
-                "dano" to 50,
-                "velocidad" to 20,
-                "poder" to 80,
-                "imagen" to "fenix"
-            ),
-            mapOf(
-                "id" to "golempiedra",
-                "nombre" to "golem de piedra",
-                "tipo" to "PRESION",
-                "salud" to 100,
-                "dano" to 10,
-                "velocidad" to 10,
-                "poder" to 10,
-                "imagen" to "golempiedra"
-            )
-        )
-
-        criaturas.forEach { criatura ->
-            db.collection("criaturas_disponibles")
-                .document(criatura["id"] as String)
-                .set(criatura)
         }
     }
 }

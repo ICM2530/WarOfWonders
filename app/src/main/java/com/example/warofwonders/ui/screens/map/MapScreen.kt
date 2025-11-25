@@ -45,10 +45,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
+import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
+import com.example.warofwonders.ui.shared.utils.shouldShowPermissionRationale
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -57,6 +59,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.navigation.AppScreens
@@ -66,6 +69,7 @@ import com.example.warofwonders.ui.screens.map.components.FloatingButton
 import com.example.warofwonders.ui.screens.map.components.FriendsBottomSheet
 import com.example.warofwonders.ui.screens.map.components.ImageIconButton
 import com.example.warofwonders.ui.shared.utils.bitmapDescriptorFromVector
+import com.example.warofwonders.ui.shared.utils.distanceBetween
 import com.example.warofwonders.ui.shared.utils.isPermissionGranted
 import com.example.warofwonders.ui.theme.Cyan
 import com.example.warofwonders.ui.theme.Gray
@@ -78,7 +82,7 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 
 @Composable
 fun MapScreen(
-    navController: NavHostController,
+    navController: NavController,
     viewModel: MapViewModel
 ) {
     val context = LocalContext.current
@@ -230,6 +234,20 @@ fun MapScreenContent(
                     title = marker.title,
                     snippet = marker.snippet
                 )
+
+                val d = distanceBetween(
+                    uiState.currentLocation.latitude,
+                    uiState.currentLocation.longitude,
+                    marker.position.latitude,
+                    marker.position.longitude
+                )
+                Toast.makeText(
+                    context,
+                    if (d >= 1000) "Distancia: %.1f km".format(d / 1000) else "Distancia: %.0f m".format(
+                        d
+                    ),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
             if (uiState.routePoints.isNotEmpty()) {
@@ -277,6 +295,18 @@ fun MapScreenContent(
                         BitmapDescriptorFactory.fromBitmap(bitmap)
                     }
                 )
+            }
+
+            uiState.nearbyUsers.forEach { mu ->
+                val lat = mu.lastLocation.latitude
+                val lng = mu.lastLocation.longitude
+                if (!lat.isNaN() && !lng.isNaN()) {
+                    Marker(
+                        state = rememberUpdatedMarkerState(position = LatLng(lat, lng)),
+                        title = mu.displayName ?: "Jugador",
+                        snippet = mu.clanId
+                    )
+                }
             }
 
             uiState.selectedFriendMarker.let { friend ->
@@ -373,6 +403,16 @@ fun MapScreenContent(
                 iconTint = if (uiState.isActive) Green else Gray,
                 iconSize = 42.dp
             )
+        }
+
+        // Mostrar botón de atacar si el jugador está dentro del territorio de otro clan
+        // o si hay usuarios cercanos (proximidad PvP)
+        if (uiState.insideEnemyTerritory || uiState.nearbyUsers.isNotEmpty()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Button(onClick = { viewModel.attackNearestEnemy() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB00020), contentColor = Color.White)) {
+                    Text(text = "Atacar")
+                }
+            }
         }
 
         if (showFriendsModal) {
