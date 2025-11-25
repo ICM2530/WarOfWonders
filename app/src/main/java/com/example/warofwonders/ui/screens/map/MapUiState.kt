@@ -2,6 +2,7 @@ package com.example.warofwonders.ui.screens.map
 
 import com.example.warofwonders.R
 import com.example.warofwonders.data.model.ClanData
+import com.example.warofwonders.data.model.Friend
 import com.example.warofwonders.data.model.InterestPointData
 import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.model.MarkerData
@@ -25,6 +26,11 @@ data class MapUiState(
     val clans: List<ClanData> = emptyList(),
     val recursoEncontrado: Recurso? = null,
     val mostrarPopupRecurso: Boolean = false,
+
+    val friendsList: List<Friend> = emptyList(),
+    val showFriendsMarkers: Boolean = false,
+    val isActive: Boolean = false,
+    val selectedFriendMarker: MarkerData? = null,
 
     val isDarkMap: Boolean = false,
     val isHigh: Boolean = false,

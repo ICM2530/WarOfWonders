@@ -14,11 +14,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import com.google.android.gms.maps.model.BitmapDescriptor
 
-fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor {
+fun bitmapDescriptorFromVector(context: Context, vectorResId: Int, maxDp: Float): BitmapDescriptor {
+    val density = context.resources.displayMetrics.density
+    val maxPx = (maxDp * density).toInt()
+
     val vectorDrawable = androidx.core.content.ContextCompat.getDrawable(context, vectorResId)!!
-    vectorDrawable.setBounds(0, 0, vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight)
-    val bitmap = createBitmap(vectorDrawable.intrinsicWidth, vectorDrawable.intrinsicHeight, android.graphics.Bitmap.Config.ARGB_8888)
-    val canvas = android.graphics.Canvas(bitmap)
+
+    val intrinsicWidth = vectorDrawable.intrinsicWidth
+    val intrinsicHeight = vectorDrawable.intrinsicHeight
+    val scale = minOf(maxPx / intrinsicWidth.toFloat(), maxPx / intrinsicHeight.toFloat())
+
+    val width = (intrinsicWidth * scale).toInt()
+    val height = (intrinsicHeight * scale).toInt()
+
+    vectorDrawable.setBounds(0, 0, width, height)
+    val bitmap = createBitmap(width, height, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
     vectorDrawable.draw(canvas)
     return com.google.android.gms.maps.model.BitmapDescriptorFactory.fromBitmap(bitmap)
 }

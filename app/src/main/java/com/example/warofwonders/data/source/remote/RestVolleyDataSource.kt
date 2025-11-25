@@ -41,7 +41,7 @@ class RestVolleyDataSource(
                                 return@launch
                             }
 
-                            for (i in 0 until features.length()) {
+                            for (i in 0 until 200) {
                                 val f = features.getJSONObject(i)
                                 val props = f.getJSONObject("properties")
                                 val geom = f.getJSONObject("geometry")

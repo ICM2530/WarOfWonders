@@ -7,6 +7,7 @@ import com.android.taller2.data.repository.GeoCoderRepository
 import com.android.taller2.data.repository.RouteRepository
 import com.example.warofwonders.R
 import com.example.warofwonders.data.model.ClanData
+import com.example.warofwonders.data.model.Friend
 import com.example.warofwonders.data.model.InterestPointData
 import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.model.MarkerData
@@ -46,48 +47,42 @@ class MapViewModel(
     private val restVolleyDataSource: RestVolleyDataSource,
     private val inventarioVM: InventarioViewModel
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState
 
     private val auth = FirebaseAuth.getInstance()
-    private val clanesDb = FirebaseDatabase.getInstance().getReference("clanes")
-
     private val realtimeDB = FirebaseDatabase.getInstance().reference
+    private val clanesDb = realtimeDB.child("clanes")
+    private val recursosDb = realtimeDB.child("recursos")
+
     private var criaturasDisponibles: List<Criatura> = emptyList()
-
-    private val recursosDb = FirebaseDatabase.getInstance().getReference("recursos")
     private var recursosDisponibles: List<Recurso> = emptyList()
-
 
     init {
         _uiState.update {
-            it.copy(
-                currentLocation = LocationData(4.634243207620236, -74.06992472665623),
-            )
+            it.copy(currentLocation = LocationData(4.634243207620236, -74.06992472665623))
         }
 
-        loadCreaturesFromFirebaseRealtime()
+        loadUserActiveState()
         observarClanesRealtime()
+        loadCreaturesFromFirebaseRealtime()
+        cargarRecursosRealtime()
+        iniciarDetectorRecursos()
 
         viewModelScope.launch {
             inventarioVM.cargarInventario()
         }
-
-        cargarRecursosRealtime()
-        iniciarDetectorRecursos()
     }
 
-    // Nuevo de Clanes
     private fun observarClanesRealtime() {
         clanesDb.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val lista = snapshot.children.mapNotNull { it.getValue(ClanData::class.java) }
-
                 _uiState.update { it.copy(clans = lista) }
             }
 
-            override fun onCancelled(error: DatabaseError) {
-            }
+            override fun onCancelled(error: DatabaseError) {}
         })
     }
 
@@ -95,19 +90,7 @@ class MapViewModel(
         if (_uiState.value.interestPoint.isEmpty()) {
             viewModelScope.launch {
                 restVolleyDataSource.loadInterestPoints { list ->
-                    viewModelScope.launch(Dispatchers.Default) {
-                        val chunkSize = 50
-                        val chunks = list.chunked(chunkSize)
-
-                        chunks.forEach { chunk ->
-                            _uiState.update { state ->
-                                state.copy(
-                                    interestPoint = state.interestPoint + chunk
-                                )
-                            }
-                            kotlinx.coroutines.delay(1500)
-                        }
-                    }
+                    _uiState.update { it.copy(interestPoint = list) }
                 }
             }
         } else {
@@ -115,8 +98,35 @@ class MapViewModel(
         }
     }
 
-    // Cosas de Mapas
+    fun setUserActiveState(active: Boolean) {
+        val currentUser = auth.currentUser ?: return
+        val userRef = realtimeDB.child("users/${currentUser.uid}")
+        userRef.child("active").setValue(active)
+            .addOnSuccessListener { _uiState.update { it.copy(isActive = active) } }
+            .addOnFailureListener { e ->
+                Log.e("MapViewModel", "Error actualizando estado activo: ${e.message}")
+            }
+    }
 
+    private fun loadUserActiveState() {
+        val currentUser = auth.currentUser ?: return
+        val userActiveRef = realtimeDB.child("users/${currentUser.uid}/active")
+        userActiveRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val active = snapshot.getValue(Boolean::class.java) ?: false
+                _uiState.update { it.copy(isActive = active) }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("MapViewModel", "Error cargando estado activo: ${error.message}")
+            }
+        })
+    }
+
+
+
+
+    // --- Cosas de Mapas ---
     fun toggleLocationUpdates() {
         val updating = !_uiState.value.isUpdatingLocation
         if (updating) startLocationUpdates() else stopLocationUpdates()
@@ -138,16 +148,14 @@ class MapViewModel(
 
     fun searchPlaceQuery(query: String) {
         viewModelScope.launch {
-            val location = geoCoderRepository.getLocationFromAddress(address = query)
+            val location = geoCoderRepository.getLocationFromAddress(query)
             location?.let { addTargetMarker(it) }
         }
     }
 
     fun addTargetMarker(location: LatLng) {
         clearMap()
-        val address =
-            geoCoderRepository.getAddressFromLocation(location) ?: "Ubicación desconocida"
-
+        val address = geoCoderRepository.getAddressFromLocation(location) ?: "Ubicación desconocida"
         val newMarker = MarkerData(
             position = location,
             title = address,
@@ -168,12 +176,7 @@ class MapViewModel(
     }
 
     fun clearMap() {
-        _uiState.update {
-            it.copy(
-                targetMarker = null,
-                routePoints = emptyList()
-            )
-        }
+        _uiState.update { it.copy(targetMarker = null, routePoints = emptyList()) }
     }
 
     fun loadRouteFromPoints(points: List<LatLng>) {
@@ -188,24 +191,27 @@ class MapViewModel(
     }
 
     private fun updateLocation(locData: LocationData) {
-        _uiState.update { state ->
-            state.copy(
-                currentLocation = locData,
-            )
-        }
+        _uiState.update { it.copy(currentLocation = locData) }
+
+        val currentUser = auth.currentUser ?: return
+        val locationMap = mapOf(
+            "latitude" to locData.latitude,
+            "longitude" to locData.longitude,
+            "altitude" to locData.altitude
+        )
+        realtimeDB.child("users/${currentUser.uid}/lastLocation").setValue(locationMap)
+            .addOnFailureListener { e ->
+                Log.e("MapViewModel", "Error updating lastLocation: ${e.message}")
+            }
     }
 
     fun startLocationUpdates() {
-        locationRepository.startLocationUpdates { locationData ->
-            updateLocation(locationData)
-        }
+        locationRepository.startLocationUpdates { updateLocation(it) }
     }
 
     fun stopLocationUpdates() {
         locationRepository.stopLocationUpdates()
     }
-
-
 
     // Otros
 

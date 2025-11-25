@@ -2,34 +2,31 @@ package com.example.warofwonders.ui.screens.map
 
 import android.Manifest
 import android.app.Activity
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOff
+import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.ToggleOff
+import androidx.compose.material.icons.filled.ToggleOn
 import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,20 +40,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
-import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberAsyncImagePainter
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
-import com.example.warofwonders.ui.shared.utils.shouldShowPermissionRationale
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -70,10 +62,14 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.screens.map.components.CreatureAlert
 import com.example.warofwonders.ui.screens.map.components.FloatingButton
+import com.example.warofwonders.ui.screens.map.components.FriendsBottomSheet
+import com.example.warofwonders.ui.screens.map.components.ImageIconButton
 import com.example.warofwonders.ui.shared.utils.bitmapDescriptorFromVector
 import com.example.warofwonders.ui.shared.utils.distanceBetween
 import com.example.warofwonders.ui.shared.utils.isPermissionGranted
 import com.example.warofwonders.ui.theme.Cyan
+import com.example.warofwonders.ui.theme.Gray
+import com.example.warofwonders.ui.theme.Green
 import com.example.warofwonders.ui.theme.White
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.maps.android.compose.Polygon
@@ -176,6 +172,8 @@ fun MapScreenContent(
         )
     }
 
+    var showFriendsModal by remember { mutableStateOf(false) }
+
     LaunchedEffect(uiState.cameraTarget) {
         uiState.cameraTarget?.let { target ->
             cameraPositionState.animate(
@@ -193,7 +191,9 @@ fun MapScreenContent(
             properties = MapProperties(
                 mapStyleOptions = MapStyleOptions.loadRawResourceStyle(context, uiState.mapStyleRes)
             ),
-            onMapClick = { onMapClick() },
+            onMapClick = {
+                onMapClick()
+            },
             onMapLongClick = { pos -> onMapLongClick(pos) }
         ) {
             Marker(
@@ -201,7 +201,8 @@ fun MapScreenContent(
                 icon = bitmapDescriptorFromVector(
                     context,
                     if (uiState.isUpdatingLocation) R.drawable.twotone_circle_blue
-                    else R.drawable.twotone_circle_gray
+                    else R.drawable.twotone_circle_gray,
+                    maxDp = 18f
                 )
             )
 
@@ -210,13 +211,6 @@ fun MapScreenContent(
                     state = rememberUpdatedMarkerState(position = marker.position),
                     title = marker.title,
                     snippet = marker.snippet
-                )
-
-                val d = distanceBetween(
-                    uiState.currentLocation.latitude,
-                    uiState.currentLocation.longitude,
-                    marker.position.latitude,
-                    marker.position.longitude
                 )
             }
 
@@ -269,6 +263,17 @@ fun MapScreenContent(
         ) {
             FloatingButton(
                 onClick = {
+                    showFriendsModal = true
+                },
+                modifier = Modifier.size(62.dp),
+                icon = Icons.Default.People,
+                contentDescription = "Ver amigos activos",
+                contentColor = White,
+                backgroundImage = painterResource(id = R.drawable.chatbutton)
+            )
+
+            FloatingButton(
+                onClick = {
                     viewModel.loadInterestPoints()
                 },
                 modifier = Modifier.size(62.dp),
@@ -291,16 +296,43 @@ fun MapScreenContent(
             )
         }
 
-        TextFieldSearch(
-            place = uiState.placeQuery,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 34.dp, vertical = 24.dp),
-            placeholderText = "Search",
-            onPlaceChange = { onPlaceTextFieldChange(it) },
-            onSearchAction = { onSearchPlace(it) },
-            backgroundImage = painterResource(id = R.drawable.textfield_image)
-        )
-    }
+        Column(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp, horizontal = 36.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.End
+        ) {
+            TextFieldSearch(
+                place = uiState.placeQuery,
+                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                placeholderText = "Search",
+                onPlaceChange = { onPlaceTextFieldChange(it) },
+                onSearchAction = { onSearchPlace(it) },
+                backgroundImage = painterResource(id = R.drawable.textfield_image)
+            )
 
+            ImageIconButton(
+                onClick = { viewModel.setUserActiveState(!uiState.isActive) },
+                modifier = Modifier.size(72.dp, 52.dp),
+                backgroundImage = painterResource(id = R.drawable.slots),
+                icon = if (uiState.isActive) Icons.Default.ToggleOn else Icons.Default.ToggleOff,
+                iconTint = if (uiState.isActive) Green else Gray,
+                iconSize = 42.dp
+            )
+        }
+
+        if (showFriendsModal) {
+            FriendsBottomSheet(
+                uiState = uiState,
+                onClose = {
+                    showFriendsModal = false
+                },
+                onShowFriendOnMap = { friendUid ->
+                    showFriendsModal = false
+                    Log.d("MapScreen", "Amigo seleccionado: $friendUid")
+                }
+            )
+        }
+    }
 
     if (uiState.alreadyOwnedCreature) {
         Box(
@@ -469,11 +501,6 @@ fun MapScreenContent(
             }
         )
     }
-
-
-
-
-
 
     LaunchedEffect(uiState.isHigh) {
         if (uiState.isHigh) {
