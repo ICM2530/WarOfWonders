@@ -49,6 +49,8 @@ import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
+import com.example.warofwonders.ui.shared.utils.shouldShowPermissionRationale
+import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -78,6 +80,7 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 
 @Composable
 fun MapScreen(
+    navController: NavController,
     viewModel: MapViewModel
 ) {
     val context = LocalContext.current
@@ -141,6 +144,16 @@ fun MapScreen(
             },
             onCancel = { showRationale = false }
         )
+    }
+
+    // Navegar a la pantalla de combate cuando un encuentro se de en el estado de MapViewModel
+    LaunchedEffect(uiState.encounterAttackerId, uiState.encounterDefenderId) {
+        val a = uiState.encounterAttackerId
+        val d = uiState.encounterDefenderId
+        if (!a.isNullOrBlank() && !d.isNullOrBlank()) {
+            navController.navigate(AppScreens.Combat.name + "/${a}/${d}")
+            viewModel.clearEncounter()
+        }
     }
 }
 
@@ -212,6 +225,20 @@ fun MapScreenContent(
                     title = marker.title,
                     snippet = marker.snippet
                 )
+
+                val d = distanceBetween(
+                    uiState.currentLocation.latitude,
+                    uiState.currentLocation.longitude,
+                    marker.position.latitude,
+                    marker.position.longitude
+                )
+                Toast.makeText(
+                    context,
+                    if (d >= 1000) "Distancia: %.1f km".format(d / 1000) else "Distancia: %.0f m".format(
+                        d
+                    ),
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
             if (uiState.routePoints.isNotEmpty()) {

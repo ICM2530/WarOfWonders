@@ -290,6 +290,11 @@ class MapViewModel(
     }
 
     //show alert
+    fun clearEncounter() {
+        _uiState.update { it.copy(encounterAttackerId = null, encounterDefenderId = null) }
+    }
+
+    //show alert
 
     fun showPressureCreatureAlert(show: Boolean) {
         _uiState.value = _uiState.value.copy(pressureCreatureFound = show)

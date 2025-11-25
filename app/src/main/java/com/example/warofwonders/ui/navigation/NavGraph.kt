@@ -110,6 +110,7 @@ fun NavGraph(
                 }
             )
             MapScreen(
+                navController = navController,
                 viewModel = mapViewModel
             )
         }
@@ -131,7 +132,14 @@ fun NavGraph(
         }
 
         composable(route = AppScreens.Combat.name) {
-            CombatScreen()
+            // ruta sin argumentos
+            CombatScreen(navController = navController, attackerId = null, defenderId = null)
+        }
+
+        composable(route = AppScreens.Combat.name + "/{attackerId}/{defenderId}") { backStackEntry ->
+            val attackerId = backStackEntry.arguments?.getString("attackerId")
+            val defenderId = backStackEntry.arguments?.getString("defenderId")
+            CombatScreen(navController = navController, attackerId = attackerId, defenderId = defenderId)
         }
 
         composable(route = AppScreens.Camera.name) {

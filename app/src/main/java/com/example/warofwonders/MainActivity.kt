@@ -33,8 +33,8 @@ class MainActivity : ComponentActivity() {
         val lightSensorDataSource = LightSensorDataSource(context = this)
         val barometerSensorDataSource = BarometerSensorDataSource(context = this)
         val temperatureSensorDataSource = TemperatureSensorDataSource(context = this)
-        val stepDetectorDataSource = StepDetectorDataSource(context = this)
-        val magnetometerDataSource = MagnetometerDataSource(context = this)
+        val stepDetectorDataSource = StepDetectorDataSource (context = this)
+        val magnetometerDataSource = MagnetometerDataSource (context = this)
         val restVolleyDataSource = RestVolleyDataSource(context = this)
 
         val osrmDataSource = OsrmDataSource()
