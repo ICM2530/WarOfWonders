@@ -4,9 +4,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,46 +49,54 @@ fun SlotsSectionCriaturas(
         val rows = (criaturas.size + columns - 1) / columns
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
             repeat(rows) { rowIndex ->
 
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
 
                     repeat(columns) { columnIndex ->
                         val index = rowIndex * columns + columnIndex
 
-                        if (index < criaturas.size) {
-                            val criatura = criaturas[index]
+                        // Cada celda usa weight → todas iguales en cualquier pantalla
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1.6f)   // controla la forma, ajustable
+                        ) {
+                            if (index < criaturas.size) {
+                                val criatura = criaturas[index]
 
-
-                            Card(
-                                shape = RoundedCornerShape(4.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFF965E35)
-                                ),
-                                border = BorderStroke(2.dp, Color.DarkGray),
-                                modifier = Modifier
-                                    .size(110.dp, 80.dp)
-                                    .clickable {
-                                        onClickCriatura(criatura)
-                                    }
-                            ) {
-                                AsyncImage(
-                                    model = criatura.imagen,
-                                    contentDescription = criatura.nombre,
+                                Card(
+                                    shape = RoundedCornerShape(8.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFF965E35)
+                                    ),
+                                    border = BorderStroke(2.dp, Color.DarkGray),
                                     modifier = Modifier
-                                        .padding(8.dp)
-                                        .fillMaxSize(),
-                                    contentScale = ContentScale.Fit
-                                )
-
+                                        .fillMaxSize()
+                                        .clickable { onClickCriatura(criatura) }
+                                ) {
+                                    AsyncImage(
+                                        model = criatura.imagen,
+                                        contentDescription = criatura.nombre,
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .fillMaxSize(),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
+                            } else {
+                                // Slot vacío pero manteniendo el tamaño correcto
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFF965E35)
+                                    ),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {}
                             }
-                        } else {
-                            Card(
-                                colors = CardDefaults.cardColors(
-                                    containerColor = Color(0xFF965E35)
-                                ),
-                                modifier = Modifier.size(110.dp, 80.dp)
-                            ) {}
                         }
                     }
                 }

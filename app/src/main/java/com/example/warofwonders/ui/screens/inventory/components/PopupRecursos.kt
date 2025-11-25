@@ -4,9 +4,13 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Surface
@@ -41,13 +45,18 @@ fun PopupRecursos(
         shadowElevation = 8.dp
     ) {
 
-        Column(modifier = Modifier.padding(20.dp)) {
+
+        Column(
+            modifier = Modifier
+                .padding(20.dp)
+                .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
+        ) {
 
             Text("Selecciona un recurso", color = Color(0xFF4B3306), fontWeight = FontWeight.Bold)
 
             Text("Salud actual: $saludActual")
             Text("Daño actual: $danoActual")
-
 
             AnimatedVisibility(visible = saludFlotante != 0) {
                 Text(
@@ -57,11 +66,16 @@ fun PopupRecursos(
                 )
             }
 
+            Spacer(modifier = Modifier.padding(6.dp))
+
+
             recursos.forEach { recurso ->
                 val estaEquipado = recursosEquipados.any { it.id == recurso.id }
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 6.dp)
+                ) {
 
                     AsyncImage(
                         model = recurso.imagen,
@@ -70,48 +84,45 @@ fun PopupRecursos(
                         contentScale = ContentScale.Fit
                     )
 
-                    Column(modifier = Modifier.padding(start = 8.dp)) {
+                    Column(modifier = Modifier.padding(start = 10.dp).weight(1f)) {
                         Text(recurso.nombre, color = Color(0xFF4B3306), fontWeight = FontWeight.Bold)
                         Text("Protección: ${recurso.proteccion}")
                         Text("Daño: ${recurso.dano}")
                     }
 
-
                     if (!estaEquipado) {
-                        Button(onClick = { onSelect(recurso) },
-                            modifier = Modifier.padding(start = 8.dp),
+                        Button(
+                            onClick = { onSelect(recurso) },
                             shape = RoundedCornerShape(4.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF795C34),
                                 contentColor = Color.White
                             )
-                        ) {
-                            Text("Equipar")
+                        ) { Text("Equipar") }
 
-                        }
                     } else {
-                        Button(onClick = { onUnselect(recurso) },
-                            modifier = Modifier.padding(start = 1.dp),
+                        Button(
+                            onClick = { onUnselect(recurso) },
                             shape = RoundedCornerShape(6.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = Color(0xFF795C34),
                                 contentColor = Color.White
                             )
-                            ) {
-                            Text("Quitar")
-                        }
+                        ) { Text("Quitar") }
                     }
                 }
             }
 
-            Button(onClick ={ onClose()},
-                modifier = Modifier.padding(start = 1.dp),
+            Spacer(modifier = Modifier.padding(top = 10.dp))
+
+            Button(
+                onClick = { onClose() },
                 shape = RoundedCornerShape(6.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF342711),
                     contentColor = Color.White
                 )
-                ) { Text("Cerrar") }
+            ) { Text("Cerrar") }
 
             if (mensajeError.isNotEmpty()) {
                 Text(
@@ -123,3 +134,4 @@ fun PopupRecursos(
         }
     }
 }
+
