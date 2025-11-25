@@ -56,4 +56,9 @@ data class MapUiState(
     // Campos de encuentro: cuando se den, la interfaz deberia navegar a la pantalla de combate con estas IDs
     val encounterAttackerId: String? = null,
     val encounterDefenderId: String? = null
+    ,
+    // Usuarios cercanos (simulados o reales)
+    val nearbyUsers: List<MapUser> = emptyList(),
+    // Indica si el jugador está dentro de un territorio que NO es de su clan
+    val insideEnemyTerritory: Boolean = false
 )

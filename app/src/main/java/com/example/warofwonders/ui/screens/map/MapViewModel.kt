@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import com.example.warofwonders.ui.screens.map.MapUser
 
 class MapViewModel(
     private val locationRepository: LocationRepository,
@@ -58,6 +59,7 @@ class MapViewModel(
 
     private var criaturasDisponibles: List<Criatura> = emptyList()
     private var recursosDisponibles: List<Recurso> = emptyList()
+    private var fakeUsers: MutableList<MapUser> = mutableListOf()
 
     init {
         _uiState.update {
@@ -69,6 +71,8 @@ class MapViewModel(
         loadCreaturesFromFirebaseRealtime()
         cargarRecursosRealtime()
         iniciarDetectorRecursos()
+        iniciarDetectorPvP()
+        seedFakeUser()
 
         viewModelScope.launch {
             inventarioVM.cargarInventario()
@@ -535,5 +539,207 @@ class MapViewModel(
 
 
 
+
+
+
+    // -------------------- DETECCIÓN DE ENCUENTROS PvP --------------------
+
+    private fun iniciarDetectorPvP() {
+        viewModelScope.launch {
+            while (true) {
+                delay(5 * 1000) // Verificar cada 5 segundos
+
+                // Si ya hay un encuentro activo, no buscar otro
+                if (_uiState.value.encounterAttackerId != null || _uiState.value.encounterDefenderId != null) {
+                    delay(1000)
+                    continue
+                }
+
+                val currentUser = auth.currentUser ?: continue
+                val currentLocation = _uiState.value.currentLocation
+                val PVP_RANGE = 0.00018 // ~20 metros en grados (aproximado)
+
+                try {
+                    // Leer todas las ubicaciones de usuarios
+                    val usersLocationsRef = realtimeDB.child("users")
+                    val snapshot = usersLocationsRef.get().await()
+
+                    var nearbyPlayerId: String? = null
+                    var minDistance = Double.MAX_VALUE
+
+                    snapshot.children.forEach { userSnapshot ->
+                        val userId = userSnapshot.key ?: return@forEach
+                        if (userId == currentUser.uid) return@forEach // Ignorar tu propio usuario
+
+                        val lastLocation = userSnapshot.child("lastLocation")
+                        val lat = lastLocation.child("latitude").getValue(Double::class.java)
+                        val lng = lastLocation.child("longitude").getValue(Double::class.java)
+                        val active = userSnapshot.child("active").getValue(Boolean::class.java) ?: false
+
+                        if (lat == null || lng == null || !active) return@forEach
+
+                        // Calcular distancia euclideana en grados
+                        val dLat = lat - currentLocation.latitude
+                        val dLng = lng - currentLocation.longitude
+                        val distance = kotlin.math.sqrt(dLat * dLat + dLng * dLng)
+
+                        // Mantener el jugador más cercano dentro del rango
+                        if (distance <= PVP_RANGE && distance < minDistance) {
+                            minDistance = distance
+                            nearbyPlayerId = userId
+                        }
+                    }
+
+                    // Considerar usuarios simulados locales (fakeUsers)
+                    fakeUsers.forEach { fu ->
+                        if (!fu.active) return@forEach
+                        val lat = fu.lastLocation.latitude
+                        val lng = fu.lastLocation.longitude
+                        val dLat = lat - currentLocation.latitude
+                        val dLng = lng - currentLocation.longitude
+                        val distance = kotlin.math.sqrt(dLat * dLat + dLng * dLng)
+                        if (distance <= PVP_RANGE && distance < minDistance) {
+                            minDistance = distance
+                            nearbyPlayerId = fu.uid
+                        }
+                    }
+
+                    // Actualizar lista de usuarios cercanos para UI (incluye simulados)
+                    val nearbyList = mutableListOf<MapUser>()
+                    // agregar desde snapshot (limit simple)
+                    snapshot.children.forEach { s2 ->
+                        val uid2 = s2.key ?: return@forEach
+                        val lastLoc2 = s2.child("lastLocation")
+                        val lat2 = lastLoc2.child("latitude").getValue(Double::class.java)
+                        val lng2 = lastLoc2.child("longitude").getValue(Double::class.java)
+                        val active2 = s2.child("active").getValue(Boolean::class.java) ?: false
+                        if (lat2 != null && lng2 != null && active2) {
+                            val mu = MapUser(uid = uid2, displayName = s2.child("displayName").getValue(String::class.java) ?: "Player", clanId = s2.child("clan").getValue(String::class.java) ?: "", nivel = s2.child("nivel").getValue(Int::class.java) ?: 1, coins = s2.child("coins").getValue(Long::class.java) ?: 0L, lastLocation = LocationData(lat2, lng2), active = active2)
+                            nearbyList.add(mu)
+                        }
+                    }
+                    // agregar fake users
+                    nearbyList.addAll(fakeUsers.filter { fu ->
+                        val dLat = fu.lastLocation.latitude - currentLocation.latitude
+                        val dLng = fu.lastLocation.longitude - currentLocation.longitude
+                        kotlin.math.sqrt(dLat * dLat + dLng * dLng) <= PVP_RANGE
+                    })
+
+                    // Actualizar banderas de territorio enemigo
+                    val clans = _uiState.value.clans
+                    val insideEnemy = checkInsideEnemyTerritory(currentLocation, clans)
+                    _uiState.update { it.copy(nearbyUsers = nearbyList, insideEnemyTerritory = insideEnemy) }
+
+                    // Si encontramos un jugador cercano, iniciar encuentro
+                    if (nearbyPlayerId != null) {
+                        Log.d("MapViewModel", "¡Jugador cercano detectado! UID: $nearbyPlayerId a ${minDistance * 111000}m")
+                        _uiState.update {
+                            it.copy(
+                                encounterAttackerId = currentUser.uid,
+                                encounterDefenderId = nearbyPlayerId
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("MapViewModel", "Error en detector PvP: ${e.message}")
+                }
+            }
+        }
+    }
+
+    // Comprueba si la ubicación actual está dentro del territorio de un clan diferente al del jugador
+    private fun checkInsideEnemyTerritory(currentLocation: LocationData, clans: List<ClanData>): Boolean {
+        val userClanId = inventarioVM.inventario.value.clanid
+        if (userClanId.isBlank()) return false
+
+        clans.forEach { clan ->
+            val polygon = clan.zona.map { LatLng(it.latitude, it.longitude) }
+            val inside = puntoDentro(LatLng(currentLocation.latitude, currentLocation.longitude), polygon)
+            if (inside && !clan.id.equals(userClanId, ignoreCase = true)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    // Sembrar un usuario simulado dentro de un clan (si hay clans cargados)
+    private fun seedFakeUser() {
+        viewModelScope.launch {
+            // Esperar un poco por si los clanes no están listos
+            delay(500)
+            val clans = _uiState.value.clans
+            val loc = _uiState.value.currentLocation
+
+            val fakeId = "fake_1"
+            val position = if (clans.isNotEmpty()) {
+                // colocar dentro del primer clan en su primera coordenada
+                val c = clans.first()
+                if (c.zona.isNotEmpty()) LocationData(c.zona[0].latitude, c.zona[0].longitude) else loc
+            } else loc
+
+            val fu = MapUser(
+                uid = fakeId,
+                displayName = "NPC Guerrero",
+                clanId = if (clans.isNotEmpty()) clans.first().id else "",
+                nivel = 5,
+                coins = 1000L,
+                criaturas = listOf(),
+                lastLocation = position,
+                active = true
+            )
+
+            fakeUsers.clear()
+            fakeUsers.add(fu)
+
+            // actualizar UI
+            _uiState.update { it.copy(nearbyUsers = listOf(fu)) }
+        }
+    }
+
+    // Acción de atacar al enemigo más cercano en la lista nearbyUsers
+    fun attackNearestEnemy() {
+        val list = _uiState.value.nearbyUsers
+        if (list.isEmpty()) return
+        val current = _uiState.value.currentLocation
+        var nearest: MapUser? = null
+        var minDist = Double.MAX_VALUE
+        list.forEach { u ->
+            val dLat = u.lastLocation.latitude - current.latitude
+            val dLng = u.lastLocation.longitude - current.longitude
+            val dist = kotlin.math.sqrt(dLat * dLat + dLng * dLng)
+            if (dist < minDist) {
+                minDist = dist
+                nearest = u
+            }
+        }
+        nearest?.let { attackUser(it) }
+    }
+
+    // Atacar un usuario (si es simulado, escribir temporalmente en Realtime DB para que CombatViewModel pueda leerlo)
+    fun attackUser(target: MapUser) {
+        val currentUser = auth.currentUser ?: return
+        viewModelScope.launch {
+            try {
+                if (target.uid.startsWith("fake_")) {
+                    // escribir temporalmente en users/{fakeId}
+                    val userRef = realtimeDB.child("users/${target.uid}")
+                    val data = mapOf(
+                        "displayName" to target.displayName,
+                        "clan" to target.clanId,
+                        "nivel" to target.nivel,
+                        "coins" to target.coins,
+                        "active" to true,
+                        "lastLocation" to mapOf("latitude" to target.lastLocation.latitude, "longitude" to target.lastLocation.longitude)
+                    )
+                    userRef.setValue(data).await()
+                }
+
+                // iniciar encuentro inmediato
+                _uiState.update { it.copy(encounterAttackerId = currentUser.uid, encounterDefenderId = target.uid) }
+            } catch (e: Exception) {
+                Log.e("MapViewModel", "Error al preparar ataque: ${e.message}")
+            }
+        }
+    }
 
 }

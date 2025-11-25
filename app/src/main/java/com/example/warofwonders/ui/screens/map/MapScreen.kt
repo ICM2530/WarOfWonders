@@ -46,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
@@ -282,6 +283,19 @@ fun MapScreenContent(
                     }
                 )
             }
+
+            // Mostrar marcadores para usuarios cercanos (incluye NPCs simulados)
+            uiState.nearbyUsers.forEach { mu ->
+                val lat = mu.lastLocation.latitude
+                val lng = mu.lastLocation.longitude
+                if (!lat.isNaN() && !lng.isNaN()) {
+                    Marker(
+                        state = rememberUpdatedMarkerState(position = LatLng(lat, lng)),
+                        title = mu.displayName ?: "Jugador",
+                        snippet = mu.clanId
+                    )
+                }
+            }
         }
 
         Column(
@@ -345,6 +359,16 @@ fun MapScreenContent(
                 iconTint = if (uiState.isActive) Green else Gray,
                 iconSize = 42.dp
             )
+        }
+
+        // Mostrar botón de atacar si el jugador está dentro del territorio de otro clan
+        // o si hay usuarios cercanos (proximidad PvP)
+        if (uiState.insideEnemyTerritory || uiState.nearbyUsers.isNotEmpty()) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Button(onClick = { viewModel.attackNearestEnemy() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB00020), contentColor = Color.White)) {
+                    Text(text = "Atacar")
+                }
+            }
         }
 
         if (showFriendsModal) {
