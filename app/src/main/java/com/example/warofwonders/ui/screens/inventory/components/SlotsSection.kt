@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -49,6 +50,7 @@ fun SlotsSection(
     var recursoSeleccionado by remember { mutableStateOf<Recurso?>(null) }
 
     Column(modifier = Modifier.padding(vertical = 8.dp)) {
+
         Text(
             text = title,
             color = Color.White,
@@ -60,30 +62,59 @@ fun SlotsSection(
         val rows = (items.size + columns - 1) / columns
 
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
             repeat(rows) { rowIndex ->
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+
                     repeat(columns) { columnIndex ->
+
                         val itemIndex = rowIndex * columns + columnIndex
 
-                        Card(
-                            shape = RoundedCornerShape(4.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF965E35)
-                            ),
-                            border = BorderStroke(2.dp, Color.DarkGray),
-                            modifier = Modifier.size(width = 110.dp, height = 80.dp)
+                        // Cada card ocupa exactamente 1/columns del ancho
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1.6f)
                         ) {
+
                             if (itemIndex < items.size) {
+
                                 val recurso = items[itemIndex]
-                                AsyncImage(
-                                    model = recurso.imagen,
-                                    contentDescription = recurso.nombre,
+
+                                Card(
+                                    shape = RoundedCornerShape(6.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFF965E35)
+                                    ),
+                                    border = BorderStroke(2.dp, Color.DarkGray),
                                     modifier = Modifier
-                                        .padding(8.dp)
                                         .fillMaxSize()
-                                        .clickable { recursoSeleccionado = recurso }, // click para popup
-                                    contentScale = ContentScale.Fit
-                                )
+                                        .clickable { recursoSeleccionado = recurso }
+                                ) {
+
+                                    AsyncImage(
+                                        model = recurso.imagen,
+                                        contentDescription = recurso.nombre,
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .fillMaxSize(),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
+
+                            } else {
+
+                                // Slot vacío pero manteniendo la alineación perfecta
+                                Card(
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Color(0xFF965E35)
+                                    ),
+                                    modifier = Modifier.fillMaxSize()
+                                ) {}
                             }
                         }
                     }
@@ -92,12 +123,14 @@ fun SlotsSection(
         }
     }
 
+    // ----------------- POPUP -----------------
 
     if (recursoSeleccionado != null) {
+
         Dialog(onDismissRequest = { recursoSeleccionado = null }) {
             Box(
                 modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center // centra el Card
+                contentAlignment = Alignment.Center
             ) {
                 Card(
                     shape = RoundedCornerShape(12.dp),
@@ -106,6 +139,7 @@ fun SlotsSection(
                         .wrapContentHeight(),
                     colors = CardDefaults.cardColors(containerColor = Color(0xFF3E2723))
                 ) {
+
                     Column(
                         modifier = Modifier
                             .padding(16.dp)
@@ -113,6 +147,7 @@ fun SlotsSection(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+
                         AsyncImage(
                             model = recursoSeleccionado?.imagen,
                             contentDescription = recursoSeleccionado?.nombre,
@@ -131,7 +166,7 @@ fun SlotsSection(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
-                            text = "Proteccion: ${recursoSeleccionado?.proteccion ?: 1}",
+                            text = "Protección: ${recursoSeleccionado?.proteccion ?: 1}",
                             color = Color.Yellow,
                             fontSize = 16.sp
                         )
@@ -144,10 +179,6 @@ fun SlotsSection(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
                         TextButton(onClick = { recursoSeleccionado = null }) {
                             Text("Cerrar", color = Color.White)
                         }
@@ -157,3 +188,4 @@ fun SlotsSection(
         }
     }
 }
+

@@ -50,11 +50,11 @@ fun SlotsSectionTienda(
                 repeat(columns) { columnIndex ->
                     val index = rowIndex * columns + columnIndex
 
-                    // Cada card ocupa exactamente 1/3 del ancho
+
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .aspectRatio(0.75f) // Mantiene proporción igual en todos los dispositivos
+                            .aspectRatio(0.75f) 
                     ) {
 
                         if (index < recursos.size) {
