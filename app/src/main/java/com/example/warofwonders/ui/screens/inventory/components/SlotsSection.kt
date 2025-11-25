@@ -136,6 +136,12 @@ fun SlotsSection(
                             fontSize = 16.sp
                         )
 
+                        Text(
+                            text = "Daño: ${recursoSeleccionado?.dano ?: 1}",
+                            color = Color.Red,
+                            fontSize = 16.sp
+                        )
+
                         Spacer(modifier = Modifier.height(16.dp))
 
 
