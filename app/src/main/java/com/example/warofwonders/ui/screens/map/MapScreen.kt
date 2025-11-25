@@ -64,7 +64,6 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.warofwonders.R
-import com.example.warofwonders.ui.navigation.AppScreens
 import com.example.warofwonders.ui.screens.map.components.CreatureAlert
 import com.example.warofwonders.ui.screens.map.components.FloatingButton
 import com.example.warofwonders.ui.screens.map.components.FriendsBottomSheet
