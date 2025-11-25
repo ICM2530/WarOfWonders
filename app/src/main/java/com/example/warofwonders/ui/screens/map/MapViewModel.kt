@@ -25,6 +25,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
@@ -56,6 +57,10 @@ class MapViewModel(
     private val realtimeDB = FirebaseDatabase.getInstance().reference
     private val clanesDb = realtimeDB.child("clanes")
     private val recursosDb = realtimeDB.child("recursos")
+    private var friendsListener: ValueEventListener? = null
+    private var friendsRefForListener: DatabaseReference? = null
+    private val friendChildListeners = mutableMapOf<String, ValueEventListener>()
+    private var selectedFriendListener: ValueEventListener? = null
 
     private var criaturasDisponibles: List<Criatura> = emptyList()
     private var recursosDisponibles: List<Recurso> = emptyList()
@@ -127,8 +132,133 @@ class MapViewModel(
         })
     }
 
+    fun observeFriendsRealtime() {
+        val currentUser = auth.currentUser ?: return
+        val userFriendsRef = realtimeDB.child("users/${currentUser.uid}/friends")
 
+        friendsRefForListener = userFriendsRef
 
+        friendsListener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val friendsList = mutableListOf<Friend>()
+
+                friendChildListeners.forEach { (uid, listener) ->
+                    realtimeDB.child("users").child(uid).removeEventListener(listener)
+                }
+                friendChildListeners.clear()
+
+                snapshot.children.forEach { friendChild ->
+                    val friendUid = friendChild.key ?: return@forEach
+                    val isFriend = friendChild.getValue(Boolean::class.java) ?: false
+                    if (!isFriend) return@forEach
+
+                    val friendRef = realtimeDB.child("users").child(friendUid)
+                    val childListener = object : ValueEventListener {
+                        override fun onDataChange(friendSnapshot: DataSnapshot) {
+                            val name = friendSnapshot.child("name").getValue(String::class.java) ?: ""
+                            val lastname = friendSnapshot.child("lastname").getValue(String::class.java) ?: ""
+                            val email = friendSnapshot.child("email").getValue(String::class.java) ?: ""
+                            val profileImage = friendSnapshot.child("profileImage").getValue(String::class.java)
+                            val active = friendSnapshot.child("active").getValue(Boolean::class.java) ?: false
+                            val latitude = friendSnapshot.child("lastLocation").child("latitude").getValue(Double::class.java)
+                            val longitude = friendSnapshot.child("lastLocation").child("longitude").getValue(Double::class.java)
+
+                            val existingIndex = friendsList.indexOfFirst { it.uid == friendUid }
+                            val friendData = Friend(
+                                uid = friendUid,
+                                name = name,
+                                lastname = lastname,
+                                email = email,
+                                profileImage = profileImage,
+                                active = active,
+                                latitude = latitude,
+                                longitude = longitude
+                            )
+                            if (existingIndex >= 0) {
+                                friendsList[existingIndex] = friendData
+                            } else {
+                                friendsList.add(friendData)
+                            }
+
+                            _uiState.update { it.copy(friendsList = friendsList.toList()) }
+                        }
+
+                        override fun onCancelled(error: DatabaseError) {}
+                    }
+
+                    friendRef.addValueEventListener(childListener)
+                    friendChildListeners[friendUid] = childListener
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {}
+        }
+
+        userFriendsRef.addValueEventListener(friendsListener!!)
+    }
+
+    fun stopFriendsListener() {
+        friendsListener?.let { listener ->
+            friendsRefForListener?.removeEventListener(listener)
+            friendsListener = null
+            friendsRefForListener = null
+        }
+        friendChildListeners.forEach { (uid, listener) ->
+            realtimeDB.child("users").child(uid).removeEventListener(listener)
+        }
+        friendChildListeners.clear()
+    }
+
+    fun observeSelectedFriendRealtime(friendUid: String) {
+        stopSelectedFriendListener()
+
+        val friendRef = realtimeDB.child("users").child(friendUid)
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val uid = snapshot.key ?: return
+                val name = snapshot.child("name").value as? String ?: ""
+                val lastname = snapshot.child("lastname").value as? String ?: ""
+                val email = snapshot.child("email").value as? String ?: ""
+                val profileImage = snapshot.child("profileImage").value as? String
+                val active = snapshot.child("active").value as? Boolean ?: false
+
+                val latitude = snapshot.child("lastLocation").child("latitude").value as? Double
+                val longitude = snapshot.child("lastLocation").child("longitude").value as? Double
+
+                val friend = Friend(
+                    uid = uid,
+                    name = name,
+                    lastname = lastname,
+                    email = email,
+                    profileImage = profileImage,
+                    active = active,
+                    latitude = latitude,
+                    longitude = longitude
+                )
+
+                _uiState.update { current ->
+                    current.copy(selectedFriendMarker = friend)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("MapViewModel", "Error escuchando amigo: ${error.message}")
+            }
+        }
+
+        friendRef.addValueEventListener(listener)
+        selectedFriendListener = listener
+    }
+
+    fun stopSelectedFriendListener() {
+        selectedFriendListener?.let { listener ->
+            _uiState.value.selectedFriendMarker?.uid?.let { uid ->
+                realtimeDB.child("users").child(uid).removeEventListener(listener)
+            }
+        }
+        selectedFriendListener = null
+        _uiState.update { it.copy(selectedFriendMarker = Friend()) }
+    }
 
     // --- Cosas de Mapas ---
     fun toggleLocationUpdates() {
@@ -533,6 +663,13 @@ class MapViewModel(
                 recursoEncontrado = null
             )
         }
+    }
+
+
+    ////////----combates/////
+
+    fun clearEncounter() {
+        _uiState.update { it.copy(encounterAttackerId = null, encounterDefenderId = null) }
     }
 
 

@@ -78,39 +78,39 @@ class CombatViewModel : ViewModel() {
         }
     }
 
-        private fun buildCombatantFromSnapshot(id: String, snap: DataSnapshot): Combatant {
-            val name = snap.child("name").getValue(String::class.java) ?: "Player"
-            val clan = snap.child("clan").getValue(String::class.java)
-            val level = (snap.child("nivel").getValue(Int::class.java) ?: 1)
-            // Read coins
-            val resources = (snap.child("coins").getValue(Int::class.java) ?: 0)
+    private fun buildCombatantFromSnapshot(id: String, snap: DataSnapshot): Combatant {
+        val name = snap.child("name").getValue(String::class.java) ?: "Player"
+        val clan = snap.child("clan").getValue(String::class.java)
+        val level = (snap.child("nivel").getValue(Int::class.java) ?: 1)
+        // Read coins
+        val resources = (snap.child("coins").getValue(Int::class.java) ?: 0)
 
-            // Parsear criaturas del snapshot
-            val criaturas = mutableListOf<Criatura>()
-            val criSnaps = snap.child("criaturas")
-            for (c in criSnaps.children) {
-                val criatura = c.getValue(Criatura::class.java)
-                if (criatura != null) criaturas.add(criatura)
-            }
-
-            val best = criaturas.maxByOrNull { it.poder }
-
-            val attack = best?.dano ?: (5 + level * 3)
-            val maxHealth = best?.salud ?: (100 + level * 10)
-
-            return Combatant(
-                id = id,
-                name = name,
-                clan = clan,
-                level = level,
-                attack = attack,
-                maxHealth = maxHealth,
-                resources = resources
-            )
+        // Parsear criaturas del snapshot
+        val criaturas = mutableListOf<Criatura>()
+        val criSnaps = snap.child("criaturas")
+        for (c in criSnaps.children) {
+            val criatura = c.getValue(Criatura::class.java)
+            if (criatura != null) criaturas.add(criatura)
         }
 
+        val best = criaturas.maxByOrNull { it.poder }
+
+        val attack = best?.dano ?: (5 + level * 3)
+        val maxHealth = best?.salud ?: (100 + level * 10)
+
+        return Combatant(
+            id = id,
+            name = name,
+            clan = clan,
+            level = level,
+            attack = attack,
+            maxHealth = maxHealth,
+            resources = resources
+        )
+    }
+
     fun resetCombat() { _uiState.value = CombatUIState() }
-    
+
     fun getWinner(): Combatant? {
         val result = _uiState.value.result ?: return null
         return if (result.winnerId == _uiState.value.attacker?.id) {
@@ -244,7 +244,7 @@ class CombatViewModel : ViewModel() {
             }
         }
     }
-    
+
     fun getLoser(): Combatant? {
         val result = _uiState.value.result ?: return null
         return if (result.loserId == _uiState.value.attacker?.id) {

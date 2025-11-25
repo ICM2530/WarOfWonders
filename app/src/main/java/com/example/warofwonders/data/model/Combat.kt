@@ -1,5 +1,6 @@
 package com.example.warofwonders.data.model
 
+
 data class Combatant(
     val id: String,
     val name: String,

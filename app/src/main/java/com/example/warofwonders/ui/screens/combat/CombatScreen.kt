@@ -280,7 +280,7 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                 }
 
                 Spacer(Modifier.height(12.dp))
-                
+
                 if (result == null && !uiState.isLoading) {
                     if (attackerId == null && defenderId == null) {
                         Text("No hay nadie a quien enfrentar!...", color = Color.White)
@@ -309,7 +309,7 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                 } else if (uiState.isLoading) {
                     Text("Combate en progreso...", color = Color.White)
                 }
-                
+
                 Spacer(Modifier.height(6.dp))
             }
         }

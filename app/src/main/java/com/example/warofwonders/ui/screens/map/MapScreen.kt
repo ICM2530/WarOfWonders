@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
@@ -63,6 +64,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.warofwonders.R
+import com.example.warofwonders.ui.navigation.AppScreens
 import com.example.warofwonders.ui.screens.map.components.CreatureAlert
 import com.example.warofwonders.ui.screens.map.components.FloatingButton
 import com.example.warofwonders.ui.screens.map.components.FriendsBottomSheet
@@ -147,6 +149,8 @@ fun MapScreen(
         )
     }
 
+    //-------combates-----//
+
     // Navegar a la pantalla de combate cuando un encuentro se de en el estado de MapViewModel
     LaunchedEffect(uiState.encounterAttackerId, uiState.encounterDefenderId) {
         val a = uiState.encounterAttackerId
@@ -157,6 +161,11 @@ fun MapScreen(
         }
     }
 }
+
+
+
+
+
 
 @Composable
 fun MapScreenContent(
@@ -207,6 +216,7 @@ fun MapScreenContent(
             ),
             onMapClick = {
                 onMapClick()
+                viewModel.stopSelectedFriendListener()
             },
             onMapLongClick = { pos -> onMapLongClick(pos) }
         ) {
@@ -305,6 +315,7 @@ fun MapScreenContent(
             FloatingButton(
                 onClick = {
                     showFriendsModal = true
+                    viewModel.observeFriendsRealtime()
                 },
                 modifier = Modifier.size(62.dp),
                 icon = Icons.Default.People,
@@ -376,10 +387,12 @@ fun MapScreenContent(
                 uiState = uiState,
                 onClose = {
                     showFriendsModal = false
+                    viewModel.stopFriendsListener()
                 },
                 onShowFriendOnMap = { friendUid ->
                     showFriendsModal = false
-                    Log.d("MapScreen", "Amigo seleccionado: $friendUid")
+                    viewModel.observeSelectedFriendRealtime(friendUid)
+                    viewModel.stopFriendsListener()
                 }
             )
         }
