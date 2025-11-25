@@ -27,10 +27,9 @@ data class MapUiState(
     val recursoEncontrado: Recurso? = null,
     val mostrarPopupRecurso: Boolean = false,
 
-    val friendsList: List<Friend> = emptyList(),
-    val showFriendsMarkers: Boolean = false,
     val isActive: Boolean = false,
-    val selectedFriendMarker: MarkerData? = null,
+    val friendsList: List<Friend> = emptyList(),
+    val selectedFriendMarker: Friend = Friend(),
 
     val isDarkMap: Boolean = false,
     val isHigh: Boolean = false,

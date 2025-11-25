@@ -193,6 +193,7 @@ fun MapScreenContent(
             ),
             onMapClick = {
                 onMapClick()
+                viewModel.stopSelectedFriendListener()
             },
             onMapLongClick = { pos -> onMapLongClick(pos) }
         ) {
@@ -255,6 +256,17 @@ fun MapScreenContent(
                     }
                 )
             }
+
+            uiState.selectedFriendMarker?.let { friend ->
+                Marker(
+                    state = rememberUpdatedMarkerState(
+                        position = LatLng(friend.latitude ?: 0.0, friend.longitude ?: 0.0)
+                    ),
+                    title = "${friend.name} ${friend.lastname}",
+                    snippet = friend.email,
+                    icon = bitmapDescriptorFromVector(context, R.drawable.gemaamazul, maxDp = 28f)
+                )
+            }
         }
 
         Column(
@@ -264,6 +276,7 @@ fun MapScreenContent(
             FloatingButton(
                 onClick = {
                     showFriendsModal = true
+                    viewModel.observeFriendsRealtime()
                 },
                 modifier = Modifier.size(62.dp),
                 icon = Icons.Default.People,
@@ -325,10 +338,12 @@ fun MapScreenContent(
                 uiState = uiState,
                 onClose = {
                     showFriendsModal = false
+                    viewModel.stopFriendsListener()
                 },
                 onShowFriendOnMap = { friendUid ->
                     showFriendsModal = false
-                    Log.d("MapScreen", "Amigo seleccionado: $friendUid")
+                    viewModel.observeSelectedFriendRealtime(friendUid)
+                    viewModel.stopFriendsListener()
                 }
             )
         }
