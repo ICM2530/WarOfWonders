@@ -95,7 +95,7 @@ class MapViewModel(
                                     interestPoint = state.interestPoint + chunk
                                 )
                             }
-                            kotlinx.coroutines.delay(1000)
+                            kotlinx.coroutines.delay(1500)
                         }
                     }
                 }
