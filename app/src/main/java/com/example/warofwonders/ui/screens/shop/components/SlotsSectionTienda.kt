@@ -34,86 +34,103 @@ fun SlotsSectionTienda(
     val rows = (recursos.size + columns - 1) / columns
     var recursoSeleccionado by remember { mutableStateOf<Recurso?>(null) }
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+
         repeat(rows) { rowIndex ->
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+
                 repeat(columns) { columnIndex ->
                     val index = rowIndex * columns + columnIndex
-                    if (index < recursos.size) {
-                        val recurso = recursos[index]
 
-                        Card(
-                            modifier = Modifier.size(130.dp, 170.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xD7B68047)
-                            )
-                        ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.Center,
+                    // Cada card ocupa exactamente 1/3 del ancho
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(0.75f) // Mantiene proporción igual en todos los dispositivos
+                    ) {
+
+                        if (index < recursos.size) {
+                            val recurso = recursos[index]
+
+                            Card(
+                                shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(8.dp)
+                                    .fillMaxSize(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xD7B68047)
+                                )
                             ) {
-                                AsyncImage(
-                                    model = recurso.imagen,
-                                    contentDescription = recurso.nombre,
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.SpaceBetween,
                                     modifier = Modifier
-                                        .size(64.dp)
-                                        .clickable { recursoSeleccionado = recurso },
-                                    contentScale = ContentScale.Fit,
-                                    placeholder = painterResource(R.drawable.ic_menu_gallery),
-                                    error = painterResource(R.drawable.ic_menu_close_clear_cancel)
-                                )
-
-                                Text(
-                                    text = recurso.nombre,
-                                    color = Color.White,
-                                    fontSize = 14.sp
-                                )
-
-                                Spacer(modifier = Modifier.height(6.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.Center,
-                                    verticalAlignment = Alignment.CenterVertically
+                                        .fillMaxSize()
+                                        .padding(8.dp)
                                 ) {
-                                    Image(
-                                        painter = painterResource(getDrawableId("moneda")),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(18.dp)
+
+                                    AsyncImage(
+                                        model = recurso.imagen,
+                                        contentDescription = recurso.nombre,
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.6f)
+                                            .aspectRatio(1f)
+                                            .clickable { recursoSeleccionado = recurso },
+                                        contentScale = ContentScale.Fit
                                     )
+
                                     Text(
-                                        "${recurso.precio}",
-                                        color = Color.Yellow,
-                                        fontSize = 14.sp
+                                        text = recurso.nombre,
+                                        color = Color.White,
+                                        fontSize = 12.sp
                                     )
-                                }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                    Row(
+                                        horizontalArrangement = Arrangement.Center,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Image(
+                                            painter = painterResource(getDrawableId("moneda")),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Text(
+                                            "${recurso.precio}",
+                                            color = Color.Yellow,
+                                            fontSize = 12.sp
+                                        )
+                                    }
 
-                                Button(
-                                    onClick = { onComprar(recurso) },
-                                    modifier = Modifier.height(32.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(0xFF8A5A33),
-                                        contentColor = Color.White
-                                    )
-                                ) {
-                                    Text("Comprar", fontSize = 12.sp)
+                                    Button(
+                                        onClick = { onComprar(recurso) },
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.8f)
+                                            .height(30.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = Color(0xFF8A5A33),
+                                            contentColor = Color.White
+                                        )
+                                    ) {
+                                        Text("Comprar", fontSize = 6.sp)
+                                    }
                                 }
                             }
-                        }
 
-                    } else {
-                        Card(
-                            modifier = Modifier.size(130.dp, 170.dp),
-                            colors = CardDefaults.cardColors(containerColor = Color(0xD7B68047))
-                        ) {}
+                        } else {
+
+                            Card(
+                                modifier = Modifier.fillMaxSize(),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Color(0xD7B68047)
+                                )
+                            ) {}
+                        }
                     }
                 }
             }
