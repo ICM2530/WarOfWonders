@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.model.Criatura
-import com.example.warofwonders.ui.screens.inventory.getDrawableId
+
 
 @Composable
 fun SlotsSectionCriaturas(

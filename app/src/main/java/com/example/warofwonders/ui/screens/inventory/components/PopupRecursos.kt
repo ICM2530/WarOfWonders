@@ -17,16 +17,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.model.Recurso
-import com.example.warofwonders.ui.screens.inventory.getDrawableId
+
 
 @Composable
 fun PopupRecursos(
     recursos: List<Recurso>,
     mensajeError: String,
     recursosEquipados: List<Recurso>,
+    danoActual: Int,
     saludActual: Int,
     saludFlotante: Int,
     onSelect: (Recurso) -> Unit,
@@ -41,9 +43,11 @@ fun PopupRecursos(
 
         Column(modifier = Modifier.padding(20.dp)) {
 
-            Text("Selecciona un recurso")
+            Text("Selecciona un recurso", color = Color(0xFF4B3306), fontWeight = FontWeight.Bold)
 
             Text("Salud actual: $saludActual")
+            Text("Daño actual: $danoActual")
+
 
             AnimatedVisibility(visible = saludFlotante != 0) {
                 Text(
@@ -67,8 +71,9 @@ fun PopupRecursos(
                     )
 
                     Column(modifier = Modifier.padding(start = 8.dp)) {
-                        Text(recurso.nombre)
+                        Text(recurso.nombre, color = Color(0xFF4B3306), fontWeight = FontWeight.Bold)
                         Text("Protección: ${recurso.proteccion}")
+                        Text("Daño: ${recurso.dano}")
                     }
 
 

@@ -124,6 +124,7 @@ fun InventoryScreen(
                     recursos = inventario.recursos,
                     mensajeError = inventarioVM.mensajeError.value,
                     recursosEquipados = criaturaSeleccionada!!.recursos,
+                    danoActual = criaturaSeleccionada!!.dano,
                     saludActual = criaturaSeleccionada!!.salud,
                     saludFlotante = saludFlotante ?: 0,
                     onSelect = { recurso ->

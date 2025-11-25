@@ -21,7 +21,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.model.Criatura
 import com.example.warofwonders.ui.model.Recurso
-import com.example.warofwonders.ui.screens.inventory.getDrawableId
+
 
 @Composable
 fun PopupDeCriatura(

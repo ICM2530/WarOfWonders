@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import androidx.compose.runtime.State
-
+import kotlinx.coroutines.delay
 
 
 enum class TipoCriatura { FRIO, CALOR, MEDIO, NOCHE, DIA, PRESION }
@@ -137,39 +137,57 @@ class InventarioViewModel : ViewModel() {
 
         val criatura = criaturas[index]
         var nuevaSalud = criatura.salud
+        var nuevoDano = criatura.dano
         val recursosCriatura = criatura.recursos.toMutableList()
 
+        // Si ya tiene el recurso, no agregar de nuevo
+        if (recursosCriatura.any { it.id == recurso.id }) return
+
+        // Aplicar efectos según tipo o rareza
         when (recurso.tipo.lowercase()) {
-
             "armadura" -> {
-                if (recursosCriatura.any { it.id == recurso.id }) return
-
                 nuevaSalud += recurso.proteccion
                 _saludFlotante.value = recurso.proteccion
-
-                recursosCriatura.add(recurso)
-                recursos.removeIf { it.id == recurso.id }
-            }
-
-            "pocion" -> {
-                if (criatura.salud >= 100) {
-                    _mensajeError.value = "¡Tu salud está al máximo!" // Nuevo: mensaje de error
-                    return
-                }
-
-                nuevaSalud += recurso.proteccion
-                if (nuevaSalud > 100) nuevaSalud = 100 // No superar 100
-                _saludFlotante.value = recurso.proteccion
-
-                recursos.removeIf { it.id == recurso.id }
             }
         }
 
+        if (recurso.rareza.lowercase() == "curacion") {
+            if (criatura.salud >= 100) {
+
+                _mensajeError.value = "¡Tu salud está al máximo!"
+                viewModelScope.launch {
+                    delay(1000)
+                    _mensajeError.value = ""
+                }
+                return
+            }
+
+
+            nuevaSalud += recurso.proteccion
+            if (nuevaSalud > 100) nuevaSalud = 100
+            _saludFlotante.value = recurso.proteccion
+        }
+
+
+
+
+        // Si la rareza indica daño, sumar al daño de la criatura
+        if (recurso.rareza.lowercase() == "dano") {
+            nuevoDano += recurso.dano
+        }
+
+        // Agregar recurso a la criatura y quitar del inventario
+        recursosCriatura.add(recurso)
+        recursos.removeIf { it.id == recurso.id }
+
+        // Actualizar criatura
         criaturas[index] = criatura.copy(
             salud = nuevaSalud,
+            dano = nuevoDano,
             recursos = recursosCriatura
         )
 
+        // Actualizar inventario
         val actualizado = usuario.copy(
             criaturas = criaturas,
             recursos = recursos
@@ -182,6 +200,8 @@ class InventarioViewModel : ViewModel() {
 
         refrescarCriaturaSeleccionada()
     }
+
+
 
 
 
