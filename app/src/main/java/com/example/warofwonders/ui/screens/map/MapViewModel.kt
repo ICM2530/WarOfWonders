@@ -527,6 +527,13 @@ class MapViewModel(
     }
 
 
+    ////////----combates/////
+
+    fun clearEncounter() {
+        _uiState.update { it.copy(encounterAttackerId = null, encounterDefenderId = null) }
+    }
+
+
 
 
 

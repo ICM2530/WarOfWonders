@@ -5,6 +5,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -110,7 +111,9 @@ fun NavGraph(
                 }
             )
             MapScreen(
-                viewModel = mapViewModel
+                navController = navController,
+                viewModel = mapViewModel,
+
             )
         }
 
@@ -131,7 +134,13 @@ fun NavGraph(
         }
 
         composable(route = AppScreens.Combat.name) {
-            CombatScreen()
+            CombatScreen(navController = navController, attackerId = null, defenderId = null)
+        }
+
+        composable(route = AppScreens.Combat.name + "/{attackerId}/{defenderId}") { backStackEntry ->
+            val attackerId = backStackEntry.arguments?.getString("attackerId")
+            val defenderId = backStackEntry.arguments?.getString("defenderId")
+            CombatScreen(navController = navController, attackerId = attackerId, defenderId = defenderId)
         }
 
         composable(route = AppScreens.Camera.name) {
