@@ -161,7 +161,7 @@ fun ProfileUser(
                             color = Color.White
                         )
                         Text(
-                            text = user?.team?: "Sin equipo",
+                            text = user?.clanid?: "Sin equipo",
                             fontSize = 13.sp,
                             fontStyle = FontStyle.Italic,
                             color = Color(0xFFCCCCCC)

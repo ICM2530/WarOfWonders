@@ -6,6 +6,7 @@ import com.example.warofwonders.data.model.InterestPointData
 import com.example.warofwonders.data.model.LocationData
 import com.example.warofwonders.data.model.MarkerData
 import com.example.warofwonders.ui.model.Criatura
+import com.example.warofwonders.ui.model.Recurso
 import com.google.android.gms.maps.model.LatLng
 
 data class MapUiState(
@@ -22,6 +23,8 @@ data class MapUiState(
     val locationUpdates: Boolean = false,
     val interestPoint: List<InterestPointData> = emptyList(),
     val clans: List<ClanData> = emptyList(),
+    val recursoEncontrado: Recurso? = null,
+    val mostrarPopupRecurso: Boolean = false,
 
     val isDarkMap: Boolean = false,
     val isHigh: Boolean = false,

@@ -1,11 +1,14 @@
 package com.example.warofwonders.ui.screens.shop
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -32,7 +35,6 @@ fun ShopScreen(
     val recursos by shopVM.recursos.collectAsState()
     val mensajeCompra by shopVM.mensajeCompra.collectAsState()
 
-
     LaunchedEffect(Unit) {
         shopVM.cargarRecursos()
         inventarioVM.cargarInventario()
@@ -56,9 +58,7 @@ fun ShopScreen(
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 
-            Box(
-                contentAlignment = Alignment.Center
-            ) {
+            Box(contentAlignment = Alignment.Center) {
                 Image(
                     painter = painterResource(id = R.drawable.chatframe),
                     contentDescription = "Marco tienda",
@@ -75,19 +75,80 @@ fun ShopScreen(
                 )
             }
 
-
-
-
-            SlotsSectionTienda(
-                recursos = recursos,
-                onComprar = { recurso ->
-                    shopVM.comprarRecurso(
-                        recurso = recurso,
-                        usuario = userState,
-                        inventarioVM = inventarioVM
+            // --- Secciones filtradas ---
+            val pociones = recursos.filter { it.tipo == "pocion" }
+            if (pociones.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .background(color = Color(0xFF4F2B12), shape = RoundedCornerShape(6.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "POCIONES",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(vertical = 6.dp)
                     )
                 }
-            )
+
+                SlotsSectionTienda(
+                    recursos = pociones,
+                    onComprar = { recurso ->
+                        shopVM.comprarRecurso(recurso, userState, inventarioVM)
+                    }
+                )
+            }
+
+            val armaduras = recursos.filter { it.tipo == "armadura" }
+            if (armaduras.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .background(color = Color(0xFF4F2B12), shape = RoundedCornerShape(6.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "ARMADURAS",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
+                }
+
+                SlotsSectionTienda(
+                    recursos = armaduras,
+                    onComprar = { recurso ->
+                        shopVM.comprarRecurso(recurso, userState, inventarioVM)
+                    }
+                )
+            }
+
+            val criaturas = recursos.filter { it.tipo == "criatura" }
+            if (criaturas.isNotEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                        .background(color = Color(0xFF4F2B12), shape = RoundedCornerShape(6.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "CRIATURAS EXOTICASxc",
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
+                }
+                SlotsSectionTienda(
+                    recursos = criaturas,
+                    onComprar = { recurso ->
+                        shopVM.comprarRecurso(recurso, userState, inventarioVM)
+                    }
+                )
+            }
         }
 
         if (mensajeCompra != null) {
@@ -104,9 +165,6 @@ fun ShopScreen(
                 onAccept = { shopVM.limpiarMensaje() }
             )
         }
-
-
-
-
     }
 }
+

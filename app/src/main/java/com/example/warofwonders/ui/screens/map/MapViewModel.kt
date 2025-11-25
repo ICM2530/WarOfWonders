@@ -1,5 +1,6 @@
 package com.example.warofwonders.ui.screens.map
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.taller2.data.repository.GeoCoderRepository
@@ -17,6 +18,7 @@ import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
 import com.example.warofwonders.data.source.remote.RestVolleyDataSource
 import com.example.warofwonders.ui.model.Criatura
 import com.example.warofwonders.ui.model.InventarioViewModel
+import com.example.warofwonders.ui.model.Recurso
 import com.example.warofwonders.ui.model.TipoCriatura
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
@@ -26,6 +28,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -52,6 +55,10 @@ class MapViewModel(
     private val realtimeDB = FirebaseDatabase.getInstance().reference
     private var criaturasDisponibles: List<Criatura> = emptyList()
 
+    private val recursosDb = FirebaseDatabase.getInstance().getReference("recursos")
+    private var recursosDisponibles: List<Recurso> = emptyList()
+
+
     init {
         _uiState.update {
             it.copy(
@@ -65,6 +72,9 @@ class MapViewModel(
         viewModelScope.launch {
             inventarioVM.cargarInventario()
         }
+
+        cargarRecursosRealtime()
+        iniciarDetectorRecursos()
     }
 
     // Nuevo de Clanes
@@ -410,4 +420,109 @@ class MapViewModel(
             detectarCriaturasPorSensor(TipoCriatura.PRESION, inventarioVM)
         }
     }
+
+
+
+    // -------------------- RECURSOS --------------------
+
+    private fun cargarRecursosRealtime() {
+        recursosDb.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val lista = snapshot.children.mapNotNull { it.getValue(Recurso::class.java) }
+                recursosDisponibles = lista
+            }
+
+            override fun onCancelled(error: DatabaseError) { }
+        })
+    }
+
+    fun puntoDentro(location: LatLng, polygon: List<LatLng>): Boolean {
+        return com.google.maps.android.PolyUtil.containsLocation(location, polygon, true)
+    }
+
+
+    private fun iniciarDetectorRecursos() {
+        viewModelScope.launch {
+            while (true) {
+
+                delay(30 * 1000) // 30 segundos
+
+
+
+                val location = _uiState.value.currentLocation
+                val clans = _uiState.value.clans
+
+                val uid = auth.currentUser?.uid ?: continue
+
+                val userClanId = inventarioVM.inventario.value.clanid
+                if (userClanId.isBlank()) continue
+
+                val clanJugador = clans.find { it.id.equals(userClanId, ignoreCase = true) } ?: continue
+
+                val poligono = clanJugador.zona.map { LatLng(it.latitude, it.longitude) }
+
+                val dentro = puntoDentro(LatLng(location.latitude, location.longitude), poligono)
+                if (!dentro) continue
+
+                lanzarRecursoAleatorio()
+            }
+        }
+    }
+
+
+    private fun lanzarRecursoAleatorio() {
+        if (recursosDisponibles.isEmpty()) return
+
+        val inventarioActual = inventarioVM.inventario.value.recursos
+
+        // filtra recursos que no sean armadura ya existente ni criaturas
+        val recursosFiltrados = recursosDisponibles.filter { recurso ->
+            (recurso.tipo != "armadura" || inventarioActual.none { it.nombre == recurso.nombre }) &&
+                    recurso.tipo != "criatura"
+        }
+
+        if (recursosFiltrados.isEmpty()) return
+
+        val recurso = recursosFiltrados.random()
+
+        _uiState.update {
+            it.copy(
+                recursoEncontrado = recurso,
+                mostrarPopupRecurso = true
+            )
+        }
+    }
+
+
+
+    fun capturarRecursoDesdeUI() {
+        val recurso = _uiState.value.recursoEncontrado ?: return
+
+        viewModelScope.launch {
+            inventarioVM.agregarRecurso(recurso)
+
+            _uiState.update {
+                it.copy(
+                    mostrarPopupRecurso = false,
+                    recursoEncontrado = null
+                )
+            }
+        }
+    }
+
+
+    fun rechazarRecurso() {
+        _uiState.update {
+            it.copy(
+                mostrarPopupRecurso = false,
+                recursoEncontrado = null
+            )
+        }
+    }
+
+
+
+
+
+
 }

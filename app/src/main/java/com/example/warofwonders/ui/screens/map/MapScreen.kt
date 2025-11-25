@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.TravelExplore
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
@@ -42,11 +44,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Gray
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
@@ -295,6 +301,7 @@ fun MapScreenContent(
         )
     }
 
+
     if (uiState.alreadyOwnedCreature) {
         Box(
             modifier = Modifier
@@ -330,23 +337,14 @@ fun MapScreenContent(
 
                     uiState.criaturaDetectada?.let { criatura ->
 
-                        val context = LocalContext.current
-
-                        val resId = context.resources.getIdentifier(
-                            criatura.imagen,
-                            "drawable",
-                            context.packageName
+                        AsyncImage(
+                            model = criatura.imagen,
+                            contentDescription = criatura.nombre,
+                            modifier = Modifier
+                                .padding(top = 12.dp)
+                                .size(140.dp),
+                            contentScale = ContentScale.Fit
                         )
-
-                        if (resId != 0) {   // si existe en drawable
-                            Image(
-                                painter = painterResource(resId),
-                                contentDescription = criatura.nombre,
-                                modifier = Modifier
-                                    .padding(top = 12.dp)
-                                    .size(140.dp)
-                            )
-                        }
                     }
 
                     Button(
@@ -359,6 +357,7 @@ fun MapScreenContent(
             }
         }
     }
+
 
     when {
         uiState.pressureCreatureFound -> CreatureAlert(
@@ -406,6 +405,75 @@ fun MapScreenContent(
             }
         )
     }
+
+    if (uiState.mostrarPopupRecurso) {
+        AlertDialog(
+            onDismissRequest = { viewModel.rechazarRecurso() },
+            containerColor = Color(0x66C79E63),
+            title = {
+                Text(
+                    "¡Recurso encontrado!",
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            text = {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        uiState.recursoEncontrado?.nombre ?: "",
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    val imagenUrl = uiState.recursoEncontrado?.imagen ?: ""
+
+                    if (imagenUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = imagenUrl, // URL de Firebase Storage
+                            contentDescription = uiState.recursoEncontrado?.nombre,
+                            modifier = Modifier
+                                .padding(top = 12.dp)
+                                .size(120.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.capturarRecursoDesdeUI() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF342711),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Tomar recurso")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { viewModel.rechazarRecurso() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF342711),
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Rechazar")
+                }
+            }
+        )
+    }
+
+
+
+
+
 
     LaunchedEffect(uiState.isHigh) {
         if (uiState.isHigh) {

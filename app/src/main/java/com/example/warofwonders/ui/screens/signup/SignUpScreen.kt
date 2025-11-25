@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -119,13 +120,12 @@ fun SignUpScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
 
 
-                Text("seleccione una imagen", fontSize = 18.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(5.dp))
 
                 Box(
                     modifier = Modifier
                         .size(120.dp)
                         .clip(CircleShape)
+                        .border(width = 3.dp, color = Color(0xFFA17745), shape = CircleShape)
                         .clickable { showMenu = true },
                     contentAlignment = Alignment.Center
                 ) {
