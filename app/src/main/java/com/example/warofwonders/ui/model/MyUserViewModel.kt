@@ -19,6 +19,7 @@ const val pathUsers = "users/"
 class MyUserViewModel(application: Application) : AndroidViewModel(application) {
 
     private val myRef = database.getReference(pathUsers)
+
     @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
 
@@ -46,39 +47,63 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
     )
 
     fun registerUserWithFirebase(
-        user: MyUserState,
+        state: MyUserState,
+        profileImageUri: Uri?,
         onSuccess: () -> Unit,
         onError: (Exception) -> Unit
     ) {
         val auth = FirebaseAuth.getInstance()
-        val email = user.email.trim()
-        val password = user.password.trim()
+        val email = state.email.trim()
+        val password = state.password.trim()
 
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-                    val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
+                if (!task.isSuccessful) {
+                    onError(task.exception ?: Exception("Error al crear usuario"))
+                    return@addOnCompleteListener
+                }
 
+                val uid = auth.currentUser?.uid ?: return@addOnCompleteListener
+
+                fun saveUser(profileUrl: String) {
                     val userData = mapOf(
-                        "name" to user.name,
-                        "lastName" to user.lastName,
-                        "phone" to user.phone,
-                        "email" to user.email,
-                        "monedas" to user.monedas,
-                        "nivel" to user.nivel,
-                        "experiencia" to user.experiencia,
-                        "clan" to user.clanId,
-                        "profileImageUrl" to user.imagen
+                        "name" to state.name,
+                        "lastName" to state.lastName,
+                        "phone" to state.phone,
+                        "email" to state.email,
+                        "coins" to state.coins,
+                        "level" to state.level,
+                        "xp" to state.xp,
+                        "clanid" to state.clanid,
+                        "profileImageUrl" to profileUrl,
+                        "active" to true
                     )
 
                     myRef.child(uid).setValue(userData)
                         .addOnSuccessListener {
-                            cacheUserLocally(user)
+                            val cached = state.copy(profileImageUrl = profileUrl)
+                            cacheUserLocally(cached)
+                            _currentUser.value = cached
                             onSuccess()
                         }
                         .addOnFailureListener { e -> onError(e) }
+                }
+
+                if (profileImageUri != null) {
+                    val storageRef = Firebase.storage.reference
+                        .child("profile_images/$uid.jpg")
+
+                    storageRef.putFile(profileImageUri)
+                        .continueWithTask { storageRef.downloadUrl }
+                        .addOnSuccessListener { uri ->
+                            saveUser(uri.toString())
+                        }
+                        .addOnFailureListener { e ->
+                            Log.e("FirebaseApp", "Error al subir imagen de registro: ${e.message}")
+                            saveUser("")
+                        }
                 } else {
-                    onError(task.exception ?: Exception("Error al crear usuario"))
+                    saveUser("")
                 }
             }
     }
@@ -90,13 +115,11 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun loadCurrentUser() {
-
         val cachedUser = getCachedUser()
         if (cachedUser != null) {
             _currentUser.value = cachedUser
             Log.i("FirebaseApp", "Usuario cargado desde cache: ${cachedUser.name}")
         }
-
 
         val currentEmail = FirebaseAuth.getInstance().currentUser?.email ?: return
 
@@ -122,8 +145,11 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         onSuccess: (() -> Unit)? = null,
         onError: ((Exception) -> Unit)? = null
     ) {
+        val auth = FirebaseAuth.getInstance()
+        val uid = auth.currentUser?.uid ?: return
+
         val storageRef = Firebase.storage.reference
-        val imageRef = storageRef.child("profile_images/${email}.jpg")
+        val imageRef = storageRef.child("profile_images/${uid}.jpg")
 
         imageRef.putFile(imageUri)
             .addOnSuccessListener {
@@ -135,8 +161,8 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                                 myRef.child(key).child("profileImageUrl").setValue(uri.toString())
                                 Log.i("FirebaseApp", "Imagen actualizada correctamente para $email")
 
-
-                                _currentUser.value = _currentUser.value?.copy(imagen = uri.toString())
+                                _currentUser.value =
+                                    _currentUser.value?.copy(profileImageUrl = uri.toString())
                                 _currentUser.value?.let { cacheUserLocally(it) }
 
                                 onSuccess?.invoke()
@@ -154,18 +180,16 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
             }
     }
 
-
     private fun cacheUserLocally(user: MyUserState) {
         val prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
         prefs.edit().apply {
             putString("email", user.email)
             putString("name", user.name)
-            putString("team", user.clanId)
-            putString("profileImageUrl", user.imagen)
+            putString("clanid", user.clanid)
+            putString("profileImageUrl", user.profileImageUrl)
             apply()
         }
     }
-
 
     private fun getCachedUser(): MyUserState? {
         val prefs = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
@@ -173,8 +197,8 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         return MyUserState(
             email = email,
             name = prefs.getString("name", "") ?: "",
-            clanId = prefs.getString("clan", "") ?: "",
-            imagen = prefs.getString("foto de perfil", "") ?: ""
+            clanid = prefs.getString("clanid", "") ?: "",
+            profileImageUrl = prefs.getString("profileImageUrl", "") ?: ""
         )
     }
 
@@ -182,4 +206,16 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
         super.onCleared()
         myRef.removeEventListener(vel)
     }
+
+    fun loadUser(uid: String) {
+        FirebaseDatabase.getInstance().reference
+            .child("users")
+            .child(uid)
+            .get()
+            .addOnSuccessListener { snap ->
+                val user = snap.getValue(MyUserState::class.java)
+                _currentUser.value = user
+            }
+    }
+
 }

@@ -18,12 +18,12 @@ import com.example.warofwonders.R
 import com.example.warofwonders.ui.components.ImageButton
 import com.example.warofwonders.ui.model.firebaseAuth
 import com.example.warofwonders.ui.navigation.AppScreens
+import com.google.firebase.database.FirebaseDatabase
 
 @Composable
 fun SettingsScreen(navController: NavHostController) {
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // Fondo (si lo tienes)
         Image(
             painter = painterResource(id = R.drawable.background_image),
             contentDescription = "Background",
@@ -31,7 +31,6 @@ fun SettingsScreen(navController: NavHostController) {
             contentScale = ContentScale.Crop
         )
 
-        // Título
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
@@ -53,7 +52,6 @@ fun SettingsScreen(navController: NavHostController) {
             )
         }
 
-        // Opciones
         Column(
             modifier = Modifier
                 .align(Alignment.Center)
@@ -66,7 +64,6 @@ fun SettingsScreen(navController: NavHostController) {
             SettingOption("Idioma")
             SettingOption("Cuenta")
 
-            // Botón de cerrar sesión
             Box(contentAlignment = Alignment.Center) {
                 ImageButton(
                     imageRes = R.drawable.chatframe,
@@ -74,7 +71,18 @@ fun SettingsScreen(navController: NavHostController) {
                     modifier = Modifier
                         .size(width = 220.dp, height = 60.dp),
                     onClick = {
+                        val uid = firebaseAuth.currentUser?.uid
+                        if (uid != null) {
+                            FirebaseDatabase.getInstance()
+                                .reference
+                                .child("users")
+                                .child(uid)
+                                .child("active")
+                                .setValue(false)
+                        }
+
                         firebaseAuth.signOut()
+
                         navController.navigate(AppScreens.StartUp.name) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -90,8 +98,6 @@ fun SettingsScreen(navController: NavHostController) {
                 )
             }
         }
-
-
     }
 }
 

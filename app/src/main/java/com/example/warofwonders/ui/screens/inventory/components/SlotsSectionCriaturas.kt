@@ -16,12 +16,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.warofwonders.ui.model.Criatura
 import com.example.warofwonders.ui.screens.inventory.getDrawableId
+
 
 @Composable
 fun SlotsSectionCriaturas(
@@ -52,7 +55,7 @@ fun SlotsSectionCriaturas(
 
                         if (index < criaturas.size) {
                             val criatura = criaturas[index]
-                            val drawableId = getDrawableId(criatura.imagen)
+
 
                             Card(
                                 shape = RoundedCornerShape(4.dp),
@@ -66,13 +69,15 @@ fun SlotsSectionCriaturas(
                                         onClickCriatura(criatura)
                                     }
                             ) {
-                                Image(
-                                    painter = painterResource(drawableId),
+                                AsyncImage(
+                                    model = criatura.imagen,
                                     contentDescription = criatura.nombre,
                                     modifier = Modifier
                                         .padding(8.dp)
-                                        .fillMaxSize()
+                                        .fillMaxSize(),
+                                    contentScale = ContentScale.Fit
                                 )
+
                             }
                         } else {
                             Card(

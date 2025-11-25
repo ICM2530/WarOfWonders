@@ -1,8 +1,14 @@
 package com.example.warofwonders.ui.screens.map
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.warofwonders.data.repository.GeoRepository
+import com.android.taller2.data.repository.GeoCoderRepository
+import com.android.taller2.data.repository.RouteRepository
+import com.example.warofwonders.R
+import com.example.warofwonders.data.model.ClanData
+import com.example.warofwonders.data.model.LocationData
+import com.example.warofwonders.data.model.MarkerData
 import com.example.warofwonders.data.repository.InterestPointRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.LightSensorDataSource
@@ -11,81 +17,292 @@ import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
 import com.example.warofwonders.ui.model.Criatura
 import com.example.warofwonders.ui.model.InventarioViewModel
+import com.example.warofwonders.ui.model.Recurso
 import com.example.warofwonders.ui.model.TipoCriatura
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.database.ValueEventListener
 
-import com.google.maps.android.PolyUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import com.example.warofwonders.data.service.CombatService
-import com.example.warofwonders.data.model.Combatant
-import com.google.firebase.Firebase
-import com.google.firebase.database.*
 
 class MapViewModel(
     private val locationRepository: LocationRepository,
-    private val geoRepository: GeoRepository,
+    private val geoCoderRepository: GeoCoderRepository,
+    private val routeRepository: RouteRepository,
     private val barometerSensorDataSource: BarometerSensorDataSource,
     private val temperatureSensorDataSource: TemperatureSensorDataSource,
     private val magnetometerDataSource: MagnetometerDataSource,
     private val lightSensorDataSource: LightSensorDataSource,
     private val interestPointRepository: InterestPointRepository,
     private val inventarioVM: InventarioViewModel
-
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(MapUiState())
     val uiState: StateFlow<MapUiState> = _uiState
 
-
-
-
     private val auth = FirebaseAuth.getInstance()
-
-    //IMPORTANTE: Lo siguiente son variables provicionales para la gestion de combates y territorios, si es necesario, cambiar despues
-    // Referencias a Realtime DB usadas para ubicacion de jugadores, usuarios y almacenar territorios de clanes
-    private val realtime = Firebase.database
-    private val userLocationsRef: DatabaseReference = realtime.getReference("user_locations")
-    private val usersRef: DatabaseReference = realtime.getReference("users")
-    private val clansTerritoryRef: DatabaseReference = realtime.getReference("clans_territory")
-
-    private val combatService = CombatService()
-    //IMPORTANTE: Aca terminan las variables provisionales
+    private val clanesDb = FirebaseDatabase.getInstance().getReference("clanes")
 
     private val realtimeDB = FirebaseDatabase.getInstance().reference
-    private var criaturasDisponibles: List<Criatura> = emptyList()
+
+    private val recursosDb = FirebaseDatabase.getInstance().getReference("recursos")
+    private var recursosDisponibles: List<Recurso> = emptyList()
+
 
     init {
+        _uiState.update {
+            it.copy(
+                currentLocation = LocationData(4.634243207620236, -74.06992472665623),
+            )
+        }
+
         loadInterestPoints()
-        loadCreaturesFromFirebaseRealtime()
+
+        observarClanesRealtime()
 
         viewModelScope.launch {
             inventarioVM.cargarInventario()
         }
+
+        cargarRecursosRealtime()
+        iniciarDetectorRecursos()
     }
 
-    //cargar las criaturas desde la base de datos pero realtime ahora
-    private fun loadCreaturesFromFirebaseRealtime() {
+    // Nuevo de Clanes
+    private fun observarClanesRealtime() {
+        clanesDb.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val lista = snapshot.children.mapNotNull { it.getValue(ClanData::class.java) }
+
+                _uiState.update { it.copy(clans = lista) }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+            }
+        })
+    }
+
+    // Cosas de Mapas
+
+    fun toggleLocationUpdates() {
+        val updating = !_uiState.value.isUpdatingLocation
+        if (updating) startLocationUpdates() else stopLocationUpdates()
+
+        _uiState.update { state ->
+            state.copy(
+                isUpdatingLocation = updating,
+                cameraTarget = if (updating)
+                    LatLng(state.currentLocation.latitude, state.currentLocation.longitude)
+                else null,
+                cameraZoom = 18f
+            )
+        }
+    }
+
+    fun updatePlaceQuery(newQuery: String) {
+        _uiState.update { it.copy(placeQuery = newQuery) }
+    }
+
+    fun searchPlaceQuery(query: String) {
+        viewModelScope.launch {
+            val location = geoCoderRepository.getLocationFromAddress(address = query)
+            location?.let { addTargetMarker(it) }
+        }
+    }
+
+    fun addTargetMarker(location: LatLng) {
+        clearMap()
+        val address =
+            geoCoderRepository.getAddressFromLocation(location) ?: "Ubicación desconocida"
+
+        val newMarker = MarkerData(
+            position = location,
+            title = address,
+            snippet = "%.5f, %.5f".format(location.latitude, location.longitude),
+            iconResId = null
+        )
+
+        _uiState.update {
+            it.copy(
+                targetMarker = newMarker,
+                cameraTarget = location,
+                cameraZoom = 16f
+            )
+        }
+
+        val current = _uiState.value.currentLocation
+        loadRouteFromPoints(listOf(LatLng(current.latitude, current.longitude), location))
+    }
+
+    fun clearMap() {
+        _uiState.update {
+            it.copy(
+                targetMarker = null,
+                routePoints = emptyList()
+            )
+        }
+    }
+
+    fun loadRouteFromPoints(points: List<LatLng>) {
+        viewModelScope.launch {
+            val routePoints = routeRepository.fetchRouteGeoJson(points)
+            _uiState.update { it.copy(routePoints = routePoints) }
+        }
+    }
+
+    fun updatePermissionStatus(granted: Boolean) {
+        _uiState.update { it.copy(permissionStatus = granted) }
+    }
+
+    private fun updateLocation(locData: LocationData) {
+        _uiState.update { state ->
+            state.copy(
+                currentLocation = locData,
+            )
+        }
+    }
+
+    fun startLocationUpdates() {
+        locationRepository.startLocationUpdates { locationData ->
+            updateLocation(locationData)
+        }
+    }
+
+    fun stopLocationUpdates() {
+        locationRepository.stopLocationUpdates()
+    }
+
+    private fun loadInterestPoints() {
         viewModelScope.launch(Dispatchers.IO) {
-            realtimeDB.child("criaturas_disponibles").get().addOnSuccessListener { snapshot ->
-                val lista = mutableListOf<Criatura>()
-                snapshot.children.forEach { child ->
-                    val criatura = child.getValue(Criatura::class.java)
-                    if (criatura != null) lista.add(criatura)
-                }
-                criaturasDisponibles = lista
+            val puntos = interestPointRepository.readJSONFile()
+            _uiState.update { it.copy(staticMarkers = puntos) }
+        }
+    }
+
+    // Otros
+
+    fun startBarometerSensor() {
+        barometerSensorDataSource.startListening { hPa ->
+            val isHigh = hPa > 1000
+            if (isHigh != _uiState.value.isHigh) {
+                _uiState.update { it.copy(isHigh = isHigh) }
             }
         }
     }
+
+    fun stopBarometerSensor() {
+        barometerSensorDataSource.stopListening()
+    }
+
+    fun startTemperatureSensor() {
+        temperatureSensorDataSource.startListening { cel ->
+
+            val isCold = cel < 15
+            val isHot = cel > 30
+            val isMedium = cel in 15.0..30.0
+
+            val current = _uiState.value
+
+            if (isCold != current.isCold ||
+                isHot != current.isHot ||
+                isMedium != current.isMedium
+            ) {
+                _uiState.update {
+                    it.copy(
+                        isCold = isCold,
+                        isHot = isHot,
+                        isMedium = isMedium
+                    )
+                }
+            }
+        }
+    }
+
+    fun stopTemperatureSensor() {
+        temperatureSensorDataSource.stopListening()
+    }
+
+    fun startMagnetometerSensor() {
+        magnetometerDataSource.startListening { magn ->
+            val isMagn = magn > 60
+            if (isMagn != _uiState.value.isMagn) {
+                _uiState.update { it.copy(isMagn = isMagn) }
+            }
+        }
+    }
+
+    fun stopMagnetometerSensor() {
+        magnetometerDataSource.stopListening()
+    }
+
+    fun startLightSensor() {
+        lightSensorDataSource.startListening { lux ->
+            val styleRes = if (lux < 100) R.raw.map_dark else R.raw.map_light
+            _uiState.update { it.copy(mapStyleRes = styleRes) }
+        }
+    }
+
+    fun stopLightSensor() {
+        lightSensorDataSource.stopListening()
+    }
+
+    override fun onCleared() {
+        stopLightSensor()
+        stopBarometerSensor()
+        stopTemperatureSensor()
+        stopMagnetometerSensor()
+        stopLocationUpdates()
+        super.onCleared()
+    }
+
+    fun clearEncounter() {
+        _uiState.update { it.copy(encounterAttackerId = null, encounterDefenderId = null) }
+    }
+
+    //show alert
+
+    fun showPressureCreatureAlert(show: Boolean) {
+        _uiState.value = _uiState.value.copy(pressureCreatureFound = show)
+    }
+
+    fun showColdCreatureAlert(show: Boolean) {
+        _uiState.value = _uiState.value.copy(coldCreatureFound = show)
+    }
+
+    fun showHotCreatureAlert(show: Boolean) {
+        _uiState.value = _uiState.value.copy(hotCreatureFound = show)
+    }
+
+    fun showMediumCreatureAlert(show: Boolean) {
+        _uiState.value = _uiState.value.copy(mediumCreatureFound = show)
+    }
+
+    fun findArmor(show: Boolean) {
+        _uiState.value = _uiState.value.copy(armorFound = show)
+    }
+
+    fun captureArmor() {
+        _uiState.value = _uiState.value.copy(armorCaptured = true, armorFound = false)
+    }
+
+    fun resetAlreadyOwned() {
+        _uiState.update {
+            it.copy(
+                alreadyOwnedCreature = false,
+                criaturaDetectada = null
+            )
+        }
+    }
+
+
 
     //cargar las criaturas segun el sensor
 
@@ -128,12 +345,6 @@ class MapViewModel(
             )
         }
     }
-
-
-
-
-
-
 
     fun captureColdCreature() {
         _uiState.value = _uiState.value.copy(
@@ -182,465 +393,107 @@ class MapViewModel(
     }
 
 
-    private fun loadInterestPoints() {
-        viewModelScope.launch(Dispatchers.IO) {
-            val puntos = interestPointRepository.readJSONFile()
-            _uiState.update { it.copy(staticMarkers = puntos) }
-        }
-    }
 
-    fun updatePermissionStatus(granted: Boolean) {
-        _uiState.update { it.copy(permissionStatus = granted) }
-    }
+    // -------------------- RECURSOS --------------------
 
-    fun updateSearchQuery(query: String) {
-        _uiState.update { it.copy(searchQuery = query) }
-    }
-
-    fun toggleLocationUpdates() {
-        val updating = _uiState.value.locationUpdates
-        if (updating) stopLocationUpdates() else startLocationUpdates()
-    }
-
-    private fun startLocationUpdates() {
-        _uiState.update { it.copy(locationUpdates = true, isCameraFollowing = true) }
-        locationRepository.startLocationUpdates { location ->
-            _uiState.update { state ->
-                state.copy(
-                    currentLocation = location,
-                )
-            }
-            //IMPORTANTE: Lo siguiente son funciones provisionales para la gestion de combates y territorios, si es necesario, cambiar despues
-            // publicar mi ubicacion a la realtime DB
-            val uid = auth.currentUser?.uid
-            uid?.let { id ->
-                try {
-                    val locMap = mapOf(
-                        "lat" to location.latitude,
-                        "lng" to location.longitude,
-                        "ts" to System.currentTimeMillis(),
-                        "uid" to id
-                    )
-                    userLocationsRef.child(id).setValue(locMap)
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
+    private fun cargarRecursosRealtime() {
+        recursosDb.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val lista = snapshot.children.mapNotNull { it.getValue(Recurso::class.java) }
+                recursosDisponibles = lista
             }
 
-            // revisar si hay jugadores y territorios cercanos
-            uid?.let { id ->
-                checkNearbyPlayersAndTerritories(id, location.latitude, location.longitude)
-            }
-        }
+            override fun onCancelled(error: DatabaseError) { }
+        })
     }
 
-    private fun checkNearbyPlayersAndTerritories(currentUid: String, lat: Double, lng: Double) {
-        // Revisar las ubicaciones de otros jugadores una vez
-        userLocationsRef.get().addOnSuccessListener { snapshot ->
-            for (child in snapshot.children) {
-                val otherUid = child.key ?: continue
-                if (otherUid == currentUid) continue
-                val oLat = child.child("lat").getValue(Double::class.java) ?: continue
-                val oLng = child.child("lng").getValue(Double::class.java) ?: continue
-                val dist = distanceMeters(lat, lng, oLat, oLng)
-                if (dist <= 20.0) {
-                    // iniciar el combate: marcar encuentro en el estado para que la UI navegue a Combat
-                    val already = _uiState.value.encounterAttackerId != null || _uiState.value.encounterDefenderId != null
-                    if (!already) {
-                        _uiState.update { it.copy(encounterAttackerId = currentUid, encounterDefenderId = otherUid) }
-                    }
-                    break
-                }
-            }
-        }
-
-        // Revisar puntos de interes para los territorios de clanes
-        _uiState.value.staticMarkers.forEach { punto ->
-            val distToPoint = distanceMeters(lat, lng, punto.lat, punto.lng)
-            if (distToPoint <= 50.0 && punto.clanesPeleando.isNotEmpty()) {
-                // clan defesnor (el primero en la lista)
-                val defenderClan = punto.clanesPeleando.first()
-                // iniciar combate contra un clan defensor (animal)
-                initiateTerritoryIncursion(currentUid, punto, defenderClan)
-            }
-        }
+    fun puntoDentro(location: LatLng, polygon: List<LatLng>): Boolean {
+        return com.google.maps.android.PolyUtil.containsLocation(location, polygon, true)
     }
 
-    private fun initiatePvPCombat(attackerUid: String, defenderUid: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                // obtener info basica del usuario (level, monedas, clan) del realtime DB
-                val attackerSnap = usersRef.child(attackerUid).get().await()
-                val defenderSnap = usersRef.child(defenderUid).get().await()
 
-                val atkLevel = (attackerSnap.child("nivel").getValue(Int::class.java) ?: 1)
-                val defLevel = (defenderSnap.child("nivel").getValue(Int::class.java) ?: 1)
-                val atkName = attackerSnap.child("name").getValue(String::class.java) ?: "Player"
-                val defName = defenderSnap.child("name").getValue(String::class.java) ?: "Player"
-                val atkClan = attackerSnap.child("clan").getValue(String::class.java)
-                val defClan = defenderSnap.child("clan").getValue(String::class.java)
-                val atkResources = (attackerSnap.child("monedas").getValue(Int::class.java) ?: 0)
-                val defResources = (defenderSnap.child("monedas").getValue(Int::class.java) ?: 0)
+    private fun iniciarDetectorRecursos() {
+        viewModelScope.launch {
+            while (true) {
+
+                delay(30 * 1000) // 30 segundos
 
 
-                // Obtener criaturas del inventario del atacante
-                val atkCriaturas = inventarioVM.inventario.value.criaturas
-                val atkCriatura = atkCriaturas.maxByOrNull { it.poder }
 
-                // Obtener criaturas del inventario del defensor desde la base de datos
-                val defCriaturasList = mutableListOf<Criatura>()
-                val defCriaturasSnap = defenderSnap.child("criaturas")
-                for (criaturaSnap in defCriaturasSnap.children) {
-                    val criatura = criaturaSnap.getValue(Criatura::class.java)
-                    if (criatura != null) defCriaturasList.add(criatura)
-                }
-                val defCriatura = defCriaturasList.maxByOrNull { it.poder }
+                val location = _uiState.value.currentLocation
+                val clans = _uiState.value.clans
 
-                // Modificar stats del Combatant según la criatura seleccionada
-                val attacker = Combatant(
-                    id = attackerUid,
-                    name = atkName,
-                    clan = atkClan,
-                    level = atkLevel,
-                    attack = (atkCriatura?.dano ?: (5 + atkLevel * 3)),
-                    maxHealth = (atkCriatura?.salud ?: (100 + atkLevel * 10)),
-                    resources = atkResources
-                )
+                val uid = auth.currentUser?.uid ?: continue
 
-                val defender = Combatant(
-                    id = defenderUid,
-                    name = defName,
-                    clan = defClan,
-                    level = defLevel,
-                    attack = (defCriatura?.dano ?: (5 + defLevel * 3)),
-                    maxHealth = (defCriatura?.salud ?: (100 + defLevel * 10)),
-                    resources = defResources
-                )
+                val userClanId = inventarioVM.inventario.value.clanid
+                if (userClanId.isBlank()) continue
 
-                val result = combatService.fight(attacker, defender)
+                val clanJugador = clans.find { it.id.equals(userClanId, ignoreCase = true) } ?: continue
 
-                // Aplicar transferencia de recursos: decrementar al perdedor, incrementar al ganador
-                applyResourceTransfer(result)
+                val poligono = clanJugador.zona.map { LatLng(it.latitude, it.longitude) }
 
-                // actualizar uiState brevemente
-                _uiState.update { it.copy() }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+                val dentro = puntoDentro(LatLng(location.latitude, location.longitude), poligono)
+                if (!dentro) continue
 
-    private fun initiateTerritoryIncursion(attackerUid: String, punto: com.example.warofwonders.data.model.PuntoInteres, defenderClan: com.example.warofwonders.data.model.Clan) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                // info del atacante
-                val attackerSnap = usersRef.child(attackerUid).get().await()
-                val atkLevel = (attackerSnap.child("nivel").getValue(Int::class.java) ?: 1)
-                val atkName = attackerSnap.child("name").getValue(String::class.java) ?: "Player"
-                val atkClan = attackerSnap.child("clan").getValue(String::class.java)
-                val atkResources = (attackerSnap.child("monedas").getValue(Int::class.java) ?: 0)
-
-                // Obtener criaturas del inventario del atacante
-                val atkCriaturas = inventarioVM.inventario.value.criaturas
-                val atkCriatura = atkCriaturas.maxByOrNull { it.poder }
-
-                val attacker = Combatant(
-                    id = attackerUid,
-                    name = atkName,
-                    clan = atkClan,
-                    level = atkLevel,
-                    attack = (atkCriatura?.dano ?: (5 + atkLevel * 3)),
-                    maxHealth = (atkCriatura?.salud ?: (100 + atkLevel * 10)),
-                    resources = atkResources
-                )
-
-                // el animal defensor esta basado en el poder del clan
-                val defPower = defenderClan.poder
-                val defender = Combatant(
-                    id = "clan_defender_${defenderClan.nombre}_${punto.id}",
-                    name = "Defender of ${defenderClan.nombre}",
-                    clan = defenderClan.nombre,
-                    level = (defPower / 2).coerceAtLeast(1),
-                    attack = 5 + defPower * 2,
-                    maxHealth = 120 + defPower * 15,
-                    resources = 0
-                )
-
-                val result = combatService.fight(attacker, defender)
-
-                if (result.winnerId == attacker.id) {
-                    // el atacante gana: el territorio del clan se expande y por consiguiente se le reduce al defensor
-                    val expandMeters = 50L
-                    val loserClanName = defenderClan.nombre
-                    val winnerClanName = attacker.clan ?: ""
-                    if (winnerClanName.isNotBlank()) {
-                        adjustClanTerritory(winnerClanName, expandMeters)
-                        adjustClanTerritory(loserClanName, -expandMeters)
-                    }
-                }
-
-                // la transferencia de recursos no aplica para defensores NPC
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private fun adjustClanTerritory(clanName: String, deltaMeters: Long) {
-        // revisar el territorio existente y ajustar el radio
-        clansTerritoryRef.child(clanName).get().addOnSuccessListener { snap ->
-            val centerLat = snap.child("centerLat").getValue(Double::class.java) ?: 0.0
-            val centerLng = snap.child("centerLng").getValue(Double::class.java) ?: 0.0
-            val radius = (snap.child("radiusMeters").getValue(Long::class.java) ?: 200L)
-            val newRadius = (radius + deltaMeters).coerceAtLeast(50L)
-            val map = mapOf(
-                "centerLat" to centerLat,
-                "centerLng" to centerLng,
-                "radiusMeters" to newRadius
-            )
-            clansTerritoryRef.child(clanName).setValue(map)
-        }.addOnFailureListener {
-            // crear un territorio por defecto si no existia
-            val default = mapOf("centerLat" to 0.0, "centerLng" to 0.0, "radiusMeters" to 200L)
-            clansTerritoryRef.child(clanName).setValue(default)
-        }
-    }
-
-    private fun applyResourceTransfer(result: com.example.warofwonders.data.model.CombatResult) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val winnerRef = usersRef.child(result.winnerId)
-                val loserRef = usersRef.child(result.loserId)
-
-                // leer cantidades actuales
-                val winnerSnap = winnerRef.get().await()
-                val loserSnap = loserRef.get().await()
-                val winnerCoins = (winnerSnap.child("monedas").getValue(Int::class.java) ?: 0)
-                val loserCoins = (loserSnap.child("monedas").getValue(Int::class.java) ?: 0)
-
-                val transfer = result.resourcesTransferred.coerceAtMost(loserCoins)
-                winnerRef.child("monedas").setValue(winnerCoins + transfer)
-                loserRef.child("monedas").setValue(loserCoins - transfer)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    private fun distanceMeters(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val earthRadius = 6371000.0 // metros
-        val dLat = Math.toRadians(lat2 - lat1)
-        val dLon = Math.toRadians(lon2 - lon1)
-        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
-                Math.sin(dLon / 2) * Math.sin(dLon / 2)
-        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-        return earthRadius * c
-        //IMPORTANTE: Aca terminan las funciones provisionales
-    }
-
-    private fun stopLocationUpdates() {
-        locationRepository.stopLocationUpdates()
-        _uiState.update { it.copy(locationUpdates = false, isCameraFollowing = false) }
-    }
-
-    fun searchLocation() {
-        val query = _uiState.value.searchQuery
-        if (query.isBlank()) return
-
-        val origin = LatLng(
-            _uiState.value.currentLocation.latitude,
-            _uiState.value.currentLocation.longitude
-        )
-
-        _uiState.update { it.copy(isSearching = true) }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            val result = geoRepository.getLocationFromAddress(query)
-            result?.let { destination ->
-                _uiState.update { state ->
-                    state.copy(
-                        searchMarker = destination,
-                        routePoints = emptyList(),
-                    )
-                }
-
-                if (origin.latitude != 0.0 && origin.longitude != 0.0) {
-                    val route = fetchRoute(origin, destination)
-                    _uiState.update { state -> state.copy(routePoints = route) }
-                }
-            }
-            _uiState.update { it.copy(isSearching = false) }
-        }
-    }
-
-    fun onMapLongClick(latLng: LatLng) {
-        viewModelScope.launch(Dispatchers.IO) {
-            _uiState.update { state ->
-                state.copy(
-                    clickMarker = latLng,
-                    routePoints = emptyList()
-                )
-            }
-
-            val origin = LatLng(
-                _uiState.value.currentLocation.latitude,
-                _uiState.value.currentLocation.longitude
-            )
-
-            if (origin.latitude != 0.0 && origin.longitude != 0.0) {
-                val route = fetchRoute(origin, latLng)
-                _uiState.update { state -> state.copy(routePoints = route) }
-            }
-        }
-    }
-
-    private fun fetchRoute(origin: LatLng, destination: LatLng): List<LatLng> {
-        return try {
-            val client = OkHttpClient()
-            val url = "https://router.project-osrm.org/route/v1/driving/" +
-                    "${origin.longitude},${origin.latitude};${destination.longitude},${destination.latitude}" +
-                    "?overview=full&geometries=polyline"
-            val request = Request.Builder().url(url).build()
-            val response = client.newCall(request).execute()
-            val body = response.body?.string() ?: return emptyList()
-            val json = org.json.JSONObject(body)
-            val routes = json.getJSONArray("routes")
-            if (routes.length() > 0) {
-                val geometry = routes.getJSONObject(0).getString("geometry")
-                PolyUtil.decode(geometry)
-            } else emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
-    }
-
-    fun clearMarkers() {
-        _uiState.update { it.copy(
-            searchMarker = null,
-            clickMarker = null,
-            routePoints = emptyList(),
-            isCameraFollowing = false
-        ) }
-    }
-
-    fun startBarometerSensor() {
-        barometerSensorDataSource.startListening { hPa ->
-            val isHigh = hPa > 1000
-            if (isHigh != _uiState.value.isHigh) {
-                _uiState.update { it.copy(isHigh = isHigh) }
-            }
-        }
-    }
-
-    fun stopBarometerSensor() {
-        barometerSensorDataSource.stopListening()
-    }
-
-    fun startTemperatureSensor() {
-        temperatureSensorDataSource.startListening { cel ->
-
-            val isCold = cel < 15
-            val isHot = cel > 30
-            val isMedium = cel in 15.0..30.0
-
-            val current = _uiState.value
-
-            if (isCold != current.isCold ||
-                isHot != current.isHot ||
-                isMedium != current.isMedium
-            ) {
-                _uiState.update {
-                    it.copy(
-                        isCold = isCold,
-                        isHot = isHot,
-                        isMedium = isMedium
-                    )
-                }
+                lanzarRecursoAleatorio()
             }
         }
     }
 
 
-    fun stopTemperatureSensor() {
-        temperatureSensorDataSource.stopListening()
-    }
+    private fun lanzarRecursoAleatorio() {
+        if (recursosDisponibles.isEmpty()) return
 
-    fun startMagnetometerSensor() {
-        magnetometerDataSource.startListening { magn ->
-            val isMagn = magn > 60
-            if (isMagn != _uiState.value.isMagn) {
-                _uiState.update { it.copy(isMagn = isMagn) }
-            }
+        val inventarioActual = inventarioVM.inventario.value.recursos
+
+        // filtra recursos que no sean armadura ya existente ni criaturas
+        val recursosFiltrados = recursosDisponibles.filter { recurso ->
+            (recurso.tipo != "armadura" || inventarioActual.none { it.nombre == recurso.nombre }) &&
+                    recurso.tipo != "criatura"
         }
-    }
 
-    fun stopMagnetometerSensor() {
-        magnetometerDataSource.stopListening()
-    }
+        if (recursosFiltrados.isEmpty()) return
 
-    fun startLightSensor() {
-        lightSensorDataSource.startListening { lux ->
-            val isDark = lux < 2000f
-            if (isDark != _uiState.value.isDarkMap) {
-                _uiState.update { it.copy(isDarkMap = isDark) }
-            }
-        }
-    }
+        val recurso = recursosFiltrados.random()
 
-    fun stopLightSensor() {
-        lightSensorDataSource.stopListening()
-    }
-
-    override fun onCleared() {
-        stopLightSensor()
-        stopBarometerSensor()
-        stopTemperatureSensor()
-        stopMagnetometerSensor()
-        stopLocationUpdates()
-        super.onCleared()
-    }
-
-    fun clearEncounter() {
-        _uiState.update { it.copy(encounterAttackerId = null, encounterDefenderId = null) }
-    }
-
-    //show alert
-
-    fun showPressureCreatureAlert(show: Boolean) {
-        _uiState.value = _uiState.value.copy(pressureCreatureFound = show)
-    }
-
-    fun showColdCreatureAlert(show: Boolean) {
-        _uiState.value = _uiState.value.copy(coldCreatureFound = show)
-    }
-
-    fun showHotCreatureAlert(show: Boolean) {
-        _uiState.value = _uiState.value.copy(hotCreatureFound = show)
-    }
-
-    fun showMediumCreatureAlert(show: Boolean) {
-        _uiState.value = _uiState.value.copy(mediumCreatureFound = show)
-    }
-
-
-
-
-    fun findArmor(show: Boolean) {
-        _uiState.value = _uiState.value.copy(armorFound = show)
-    }
-
-    fun captureArmor() {
-        _uiState.value = _uiState.value.copy(armorCaptured = true, armorFound = false)
-    }
-
-    fun resetAlreadyOwned() {
         _uiState.update {
             it.copy(
-                alreadyOwnedCreature = false,
-                criaturaDetectada = null
+                recursoEncontrado = recurso,
+                mostrarPopupRecurso = true
             )
         }
     }
+
+
+
+    fun capturarRecursoDesdeUI() {
+        val recurso = _uiState.value.recursoEncontrado ?: return
+
+        viewModelScope.launch {
+            inventarioVM.agregarRecurso(recurso)
+
+            _uiState.update {
+                it.copy(
+                    mostrarPopupRecurso = false,
+                    recursoEncontrado = null
+                )
+            }
+        }
+    }
+
+
+    fun rechazarRecurso() {
+        _uiState.update {
+            it.copy(
+                mostrarPopupRecurso = false,
+                recursoEncontrado = null
+            )
+        }
+    }
+
+
+
+
+
 
 }

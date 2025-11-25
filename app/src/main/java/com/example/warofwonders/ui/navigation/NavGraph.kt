@@ -1,11 +1,15 @@
 package com.example.warofwonders.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.warofwonders.data.repository.GeoRepository
+import com.android.taller2.data.repository.GeoCoderRepository
+import com.android.taller2.data.repository.RouteRepository
 import com.example.warofwonders.data.repository.InterestPointRepository
 import com.example.warofwonders.data.repository.LocationRepository
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
@@ -14,6 +18,9 @@ import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.StepDetectorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
 import com.example.warofwonders.ui.model.InventarioViewModel
+import com.example.warofwonders.ui.model.MyUserState
+import com.example.warofwonders.ui.model.MyUserViewModel
+import com.example.warofwonders.ui.model.ShopViewModel
 import com.example.warofwonders.ui.screens.camera.CameraScreen
 import com.example.warofwonders.ui.screens.chat.ChatScreen
 import com.example.warofwonders.ui.screens.clan.ClanScreen
@@ -28,12 +35,16 @@ import com.example.warofwonders.ui.screens.startup.StartUpScreen
 import com.example.warofwonders.ui.screens.map.MapScreen
 import com.example.warofwonders.ui.screens.map.MapViewModel
 import com.example.warofwonders.ui.screens.settings.SettingsScreen
+import com.example.warofwonders.ui.screens.shop.ShopScreen
+
 import com.example.warofwonders.ui.shared.GenericViewModelFactory
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun NavGraph(
     locationRepository: LocationRepository,
-    geoRepository: GeoRepository,
+    geoCoderRepository: GeoCoderRepository,
+    routeRepository: RouteRepository,
     lightSensorDataSource: LightSensorDataSource,
     barometerSensorDataSource: BarometerSensorDataSource,
     temperatureSensorDataSource: TemperatureSensorDataSource,
@@ -42,6 +53,8 @@ fun NavGraph(
     interestPointRepository: InterestPointRepository,
     startDestination: String
 ) {
+    val inventarioVM: InventarioViewModel = viewModel()
+
     val navController = rememberNavController()
 
     NavHost(navController = navController, startDestination = startDestination) {
@@ -66,7 +79,8 @@ fun NavGraph(
                 factory = GenericViewModelFactory {
                     MapViewModel(
                         locationRepository = locationRepository,
-                        geoRepository = geoRepository,
+                        geoCoderRepository = geoCoderRepository,
+                        routeRepository = routeRepository,
                         lightSensorDataSource = lightSensorDataSource,
                         barometerSensorDataSource = barometerSensorDataSource,
                         temperatureSensorDataSource = temperatureSensorDataSource,
@@ -84,7 +98,8 @@ fun NavGraph(
                 factory = GenericViewModelFactory {
                     MapViewModel(
                         locationRepository = locationRepository,
-                        geoRepository = geoRepository,
+                        geoCoderRepository = geoCoderRepository,
+                        routeRepository = routeRepository,
                         lightSensorDataSource = lightSensorDataSource,
                         barometerSensorDataSource = barometerSensorDataSource,
                         temperatureSensorDataSource = temperatureSensorDataSource,
@@ -128,11 +143,30 @@ fun NavGraph(
         }
 
         composable(route = AppScreens.Camera.name) {
-            CameraScreen()
+            CameraScreen(navController = navController)
         }
 
         composable(route = AppScreens.Gallery.name) {
             GalleryScreen(navController = navController)
+        }
+
+        composable(route = AppScreens.Shop.name) {
+
+            val userVM: MyUserViewModel = viewModel()
+            val currentUser by userVM.currentUser.collectAsState()
+
+            LaunchedEffect(Unit) {
+                val uid = FirebaseAuth.getInstance().currentUser?.uid
+                if (uid != null) {
+                    userVM.loadUser(uid)
+                }
+            }
+
+            ShopScreen(
+                navController = navController,
+                userState = currentUser ?: MyUserState(),
+                inventarioVM = inventarioVM
+            )
         }
     }
 }

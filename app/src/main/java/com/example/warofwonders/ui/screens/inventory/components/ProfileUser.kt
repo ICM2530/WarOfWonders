@@ -139,7 +139,7 @@ fun ProfileUser(
                     ) {
                         val profilePainter = when {
                             imageUri != null -> rememberAsyncImagePainter(imageUri)
-                            !user?.imagen.isNullOrEmpty() -> rememberAsyncImagePainter(user?.imagen)
+                            !user?.profileImageUrl.isNullOrEmpty() -> rememberAsyncImagePainter(user?.profileImageUrl)
                             else -> painterResource(id = R.drawable.profile_user)
                         }
 
@@ -161,7 +161,7 @@ fun ProfileUser(
                             color = Color.White
                         )
                         Text(
-                            text = user?.clanId ?: "Sin equipo",
+                            text = user?.clanid?: "Sin equipo",
                             fontSize = 13.sp,
                             fontStyle = FontStyle.Italic,
                             color = Color(0xFFCCCCCC)
@@ -183,7 +183,7 @@ fun ProfileUser(
                         contentScale = ContentScale.FillBounds
                     )
                     Text(
-                        text = "${user?.monedas ?: 0}",
+                        text = "${user?.coins ?: 0}",
                         style = TextStyle(
                             fontSize = 14.sp,
                             color = Color.White,
@@ -201,8 +201,8 @@ fun ProfileUser(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                StatItem(icon = R.drawable.trophy, value = "lvl ${user?.nivel ?: 1}", fontSize = 25.sp)
-                StatItem(icon = R.drawable.exp, value = "${user?.experiencia ?: 0} xp", fontSize = 25.sp)
+                StatItem(icon = R.drawable.trophy, value = "lvl ${user?.level ?: 1}", fontSize = 25.sp)
+                StatItem(icon = R.drawable.exp, value = "${user?.xp ?: 0} xp", fontSize = 25.sp)
 
                 Image(
                     painter = painterResource(id = R.drawable.archivo),

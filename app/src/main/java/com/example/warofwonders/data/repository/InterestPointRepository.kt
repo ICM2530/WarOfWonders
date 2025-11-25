@@ -4,7 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.warofwonders.R
 import com.example.warofwonders.data.model.Clan
-import com.example.warofwonders.data.model.PuntoInteres
+import com.example.warofwonders.data.model.InterestPoint
 import com.example.warofwonders.data.model.Recurso
 import org.json.JSONArray
 import org.json.JSONObject
@@ -12,11 +12,10 @@ import java.io.BufferedReader
 import java.io.File
 
 class InterestPointRepository(private val context: Context) {
-
     private val filename = "puntos_interes.json"
     private val file = File(context.getExternalFilesDir(null), filename)
 
-    fun readJSONFile(): List<PuntoInteres> {
+    fun readJSONFile(): List<InterestPoint> {
         val jsonText: String = try {
             // 1️⃣ Primero busca en almacenamiento externo
             if (file.exists()) {
@@ -33,7 +32,7 @@ class InterestPointRepository(private val context: Context) {
 
         return try {
             val jsonArray = JSONArray(jsonText)
-            val list = mutableListOf<PuntoInteres>()
+            val list = mutableListOf<InterestPoint>()
             for (i in 0 until jsonArray.length()) {
                 val obj = jsonArray.getJSONObject(i)
                 list.add(parsePunto(obj))
@@ -45,7 +44,7 @@ class InterestPointRepository(private val context: Context) {
         }
     }
 
-    private fun parsePunto(obj: JSONObject): PuntoInteres {
+    private fun parsePunto(obj: JSONObject): InterestPoint {
         val recursosJson = obj.optJSONArray("recursos") ?: JSONArray()
         val recursos = mutableListOf<Recurso>()
         for (i in 0 until recursosJson.length()) {
@@ -60,7 +59,7 @@ class InterestPointRepository(private val context: Context) {
             clanes.add(Clan(c.getString("nombre"), c.getInt("poder")))
         }
 
-        return PuntoInteres(
+        return InterestPoint(
             id = obj.getInt("id"),
             nombre = obj.getString("nombre"),
             lat = obj.getDouble("lat"),

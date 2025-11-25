@@ -9,5 +9,6 @@ data class Criatura(
     val dano: Int = 0,
     val velocidad: Int = 0,
     val poder: Int = 0,
-    val imagen: String = ""
+    val imagen: String = "",
+    val recursos: List<Recurso> = emptyList()
 )

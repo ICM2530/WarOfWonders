@@ -21,12 +21,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.warofwonders.R
-import com.example.warofwonders.ui.screens.home.components.HomeTopBar
 import com.example.warofwonders.ui.components.ImageButton
 import com.example.warofwonders.ui.navigation.AppScreens
+import com.example.warofwonders.ui.screens.home.components.HomeTopBar
 
 @Composable
-fun HomeScreen(navController: NavHostController) {
+fun HomeScreen(navController: NavHostController,) {
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -40,17 +40,20 @@ fun HomeScreen(navController: NavHostController) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 32.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             HomeTopBar(
+
                 navController = navController
             )
 
             Box(
-                modifier = Modifier.size(220.dp)
-                    .clickable { navController.navigate(AppScreens.Map.name) }
+                modifier = Modifier
+                    .size(260.dp)
+                    .clickable { navController.navigate(AppScreens.Map.name) },
+                contentAlignment = Alignment.Center
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.map_image),
@@ -61,27 +64,36 @@ fun HomeScreen(navController: NavHostController) {
             }
 
             Row(
-                modifier = Modifier.fillMaxWidth().wrapContentHeight(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .wrapContentHeight()
+                    .padding(bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 ImageButton(
                     imageRes = R.drawable.button_mouse,
-                    contentDescription = "LogIn",
-                    modifier = Modifier.width(120.dp).height(90.dp),
+                    contentDescription = "Criaturas / Inventario",
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(90.dp),
                     onClick = { navController.navigate(AppScreens.Inventory.name) },
                 )
 
                 ImageButton(
                     imageRes = R.drawable.button_battle,
-                    contentDescription = "LogIn",
-                    modifier = Modifier.width(120.dp).height(90.dp),
+                    contentDescription = "Batalla",
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(90.dp),
                     onClick = { navController.navigate(AppScreens.Combat.name) },
                 )
 
                 ImageButton(
                     imageRes = R.drawable.button_clan,
-                    contentDescription = "LogIn",
-                    modifier = Modifier.width(120.dp).height(90.dp),
+                    contentDescription = "Clan / Chat",
+                    modifier = Modifier
+                        .width(120.dp)
+                        .height(90.dp),
                     onClick = { navController.navigate(AppScreens.Chat.name) },
                 )
             }
