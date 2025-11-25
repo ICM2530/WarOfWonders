@@ -161,6 +161,18 @@ fun SlotsSectionTienda(
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Text(
+                            text = "Protección: ${recursoSeleccionado?.proteccion}",
+                            color = Color.Green,
+                            fontSize = 16.sp
+                        )
+
+                        Text(
+                            text = "Daño: ${recursoSeleccionado?.dano}",
+                            color = Color.Red,
+                            fontSize = 16.sp
+                        )
+
+                        Text(
                             text = "Precio: ${recursoSeleccionado?.precio}",
                             color = Color.Yellow,
                             fontSize = 16.sp
