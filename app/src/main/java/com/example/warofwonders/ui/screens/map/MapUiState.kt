@@ -23,13 +23,15 @@ data class MapUiState(
     val permissionStatus: Boolean = false,
     val locationUpdates: Boolean = false,
     val interestPoint: List<InterestPointData> = emptyList(),
-    val clans: List<ClanData> = emptyList(),
     val recursoEncontrado: Recurso? = null,
     val mostrarPopupRecurso: Boolean = false,
 
     val isActive: Boolean = false,
     val friendsList: List<Friend> = emptyList(),
     val selectedFriendMarker: Friend = Friend(),
+    val clans: List<ClanData> = emptyList(),
+    val clanSeleccionado: ClanData? = null,
+    val clanMiembrosList: List<Friend> = emptyList(),
 
     val isDarkMap: Boolean = false,
     val isHigh: Boolean = false,
