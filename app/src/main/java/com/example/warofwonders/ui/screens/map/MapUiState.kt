@@ -51,5 +51,10 @@ data class MapUiState(
     val searchQuery: String = "",
     val isSearching: Boolean = false,
     val alreadyOwnedCreature: Boolean = false,
-    val criaturaDetectada: Criatura? = null
+    val criaturaDetectada: Criatura? = null,
+
+    // Campos de encuentro: cuando se den, la interfaz deberia navegar a la pantalla de combate con estas IDs
+    val encounterAttackerId: String? = null,
+    val encounterDefenderId: String? = null
+
 )

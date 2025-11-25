@@ -46,6 +46,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale
+import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
@@ -60,6 +61,7 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.warofwonders.R
+import com.example.warofwonders.ui.navigation.AppScreens
 import com.example.warofwonders.ui.screens.map.components.CreatureAlert
 import com.example.warofwonders.ui.screens.map.components.FloatingButton
 import com.example.warofwonders.ui.screens.map.components.FriendsBottomSheet
@@ -78,6 +80,7 @@ import com.google.maps.android.compose.rememberUpdatedMarkerState
 
 @Composable
 fun MapScreen(
+    navController: NavHostController,
     viewModel: MapViewModel
 ) {
     val context = LocalContext.current
@@ -142,7 +145,24 @@ fun MapScreen(
             onCancel = { showRationale = false }
         )
     }
+
+    //-------combates-----//
+
+    // Navegar a la pantalla de combate cuando un encuentro se de en el estado de MapViewModel
+    LaunchedEffect(uiState.encounterAttackerId, uiState.encounterDefenderId) {
+        val a = uiState.encounterAttackerId
+        val d = uiState.encounterDefenderId
+        if (!a.isNullOrBlank() && !d.isNullOrBlank()) {
+            navController.navigate(AppScreens.Combat.name + "/${a}/${d}")
+            viewModel.clearEncounter()
+        }
+    }
 }
+
+
+
+
+
 
 @Composable
 fun MapScreenContent(
