@@ -20,9 +20,6 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
 
     private val myRef = database.getReference(pathUsers)
 
-
-
-
     @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
 
@@ -221,9 +218,19 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
             }
     }
 
+    fun notificarEventoDeJuego(titulo: String, mensaje: String) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
+        val eventosRef = database.getReference("userEvents")
+            .child(uid)
+            .push()
 
+        val data = mapOf(
+            "title" to titulo,
+            "body" to mensaje,
+            "timestamp" to ServerValue.TIMESTAMP
+        )
 
-
-
+        eventosRef.setValue(data)
+    }
 }

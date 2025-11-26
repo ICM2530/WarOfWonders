@@ -25,6 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.warofwonders.R
 import com.example.warofwonders.ui.model.InventarioViewModel
+import com.example.warofwonders.ui.model.MyUserViewModel
 import com.example.warofwonders.ui.screens.inventory.components.PopupDeCriatura
 import com.example.warofwonders.ui.screens.inventory.components.PopupRecursos
 import com.example.warofwonders.ui.screens.inventory.components.ProfileUser
@@ -34,17 +35,14 @@ import com.example.warofwonders.ui.screens.inventory.components.SlotsSectionCria
 @Composable
 fun InventoryScreen(
     navController: NavHostController,
-    inventarioVM: InventarioViewModel = viewModel()
+    inventarioVM: InventarioViewModel = viewModel(),
+    myUserViewModel: MyUserViewModel = viewModel()
 ) {
     val inventario by inventarioVM.inventario.collectAsState()
     val criaturaSeleccionada by inventarioVM.criaturaSeleccionada.collectAsState()
     val mostrarPopup by inventarioVM.mostrarPopup.collectAsState()
     val mostrarPopupRecursos by inventarioVM.mostrarPopupRecursos.collectAsState()
     val saludFlotante by inventarioVM.saludFlotante.collectAsState()
-
-
-
-
 
     LaunchedEffect(Unit) {
         inventarioVM.cargarInventario()
@@ -69,9 +67,8 @@ fun InventoryScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-        ProfileUser(navController = navController)
+            ProfileUser(navController = navController)
 
-            // CRIATURAS
             SlotsSectionCriaturas(
                 title = "CRIATURAS",
                 criaturas = inventario.criaturas,
@@ -84,11 +81,7 @@ fun InventoryScreen(
                 title = "RECURSOS",
                 items = inventario.recursos
             )
-
-
-
         }
-
 
         AnimatedVisibility(
             visible = mostrarPopup && criaturaSeleccionada != null,
@@ -112,9 +105,8 @@ fun InventoryScreen(
             }
         }
 
-
         AnimatedVisibility(
-            visible = mostrarPopupRecursos,
+            visible = mostrarPopupRecursos && criaturaSeleccionada != null,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
@@ -134,19 +126,24 @@ fun InventoryScreen(
                     onSelect = { recurso ->
                         inventarioVM.asignarRecursoACriatura(criaturaSeleccionada!!.id, recurso)
                         inventarioVM.refrescarCriaturaSeleccionada()
+                        myUserViewModel.notificarEventoDeJuego(
+                            titulo = "Inventario actualizado",
+                            mensaje = "Has equipado un nuevo recurso."
+                        )
                     },
                     onUnselect = { recurso ->
                         inventarioVM.quitarArmadura(criaturaSeleccionada!!.id, recurso)
                         inventarioVM.refrescarCriaturaSeleccionada()
+                        myUserViewModel.notificarEventoDeJuego(
+                            titulo = "Inventario actualizado",
+                            mensaje = "Has retirado un recurso equipado."
+                        )
                     },
                     onClose = { inventarioVM.cerrarPopupRecursos() }
                 )
-
-
             }
         }
 
-        // SALUD FLOTANTE
         if (saludFlotante != null) {
             AnimatedVisibility(
                 visible = true,
