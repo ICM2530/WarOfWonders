@@ -16,6 +16,7 @@ import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
+import com.example.warofwonders.data.source.local.JsonManagerDataSource
 import com.example.warofwonders.data.source.remote.RestVolleyDataSource
 import com.example.warofwonders.ui.model.Criatura
 import com.example.warofwonders.ui.model.InventarioViewModel
@@ -47,7 +48,8 @@ class MapViewModel(
     private val magnetometerDataSource: MagnetometerDataSource,
     private val lightSensorDataSource: LightSensorDataSource,
     private val restVolleyDataSource: RestVolleyDataSource,
-    private val inventarioVM: InventarioViewModel
+    private val inventarioVM: InventarioViewModel,
+    private val jsonManager: JsonManagerDataSource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
@@ -79,9 +81,45 @@ class MapViewModel(
         iniciarDetectorRecursos()
         iniciarDetectorPvP()
         seedFakeUser()
+        loadSavedInterestPoints()
 
         viewModelScope.launch {
             inventarioVM.cargarInventario()
+        }
+    }
+
+    fun saveSelectedInterestPoint(point: InterestPointData) {
+        jsonManager.saveInterestPoint(point)
+    }
+
+    private fun loadSavedInterestPoints() {
+        val savedPoints = jsonManager.readInterestPoints()
+        _uiState.update { it.copy(interestPoint = savedPoints) }
+    }
+
+    fun toggleShowSavedInterestPoints() {
+        val currentlyEmpty = _uiState.value.interestPoint.isEmpty()
+        if (currentlyEmpty) {
+            loadSavedInterestPoints()
+        } else {
+            _uiState.update { it.copy(interestPoint = emptyList()) }
+        }
+    }
+
+    fun visitPoi() {
+        viewModelScope.launch {
+            val db = FirebaseDatabase.getInstance().reference
+            val userRef = db.child("users").child(auth.currentUser?.uid ?: return@launch)
+            val snapshot = userRef.get().await()
+
+            val currentExp = (snapshot.child("xp").value as? Number)?.toInt() ?: 0
+            val currentCoins = (snapshot.child("coins").value as? Number)?.toInt() ?: 0
+
+            val updates = mapOf(
+                "xp" to (currentExp + 20),
+                "coins" to (currentCoins + 50)
+            )
+            userRef.updateChildren(updates)
         }
     }
 
@@ -188,7 +226,8 @@ class MapViewModel(
     }
 
     fun loadInterestPoints() {
-        if (_uiState.value.interestPoint.isEmpty()) {
+        if (_uiState.value.interestPoint.size < 20) {
+            _uiState.update { it.copy(interestPoint = emptyList()) }
             viewModelScope.launch {
                 restVolleyDataSource.loadInterestPoints { list ->
                     _uiState.update { it.copy(interestPoint = list) }
@@ -196,6 +235,7 @@ class MapViewModel(
             }
         } else {
             _uiState.update { it.copy(interestPoint = emptyList()) }
+            loadSavedInterestPoints()
         }
     }
 

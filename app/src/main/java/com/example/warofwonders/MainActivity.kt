@@ -21,6 +21,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuth
 import com.example.warofwonders.data.repository.FcmTokenManager
+import com.example.warofwonders.data.source.local.JsonManagerDataSource
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,6 +44,7 @@ class MainActivity : ComponentActivity() {
         val restVolleyDataSource = RestVolleyDataSource(context = this)
         val osrmDataSource = OsrmDataSource()
         val routeRepository = RouteRepository(osrmDataSource)
+        val jsonManagerDataSource = JsonManagerDataSource(context = this)
 
         val isUserLoggedIn = FirebaseAuth.getInstance().currentUser != null
         val startDestination = if (isUserLoggedIn) {
@@ -66,7 +68,8 @@ class MainActivity : ComponentActivity() {
                 stepDetectorDataSource = stepDetectorDataSource,
                 magnetometerDataSource = magnetometerDataSource,
                 restVolleyDataSource = restVolleyDataSource,
-                startDestination = startDestination
+                startDestination = startDestination,
+                jsonManagerDataSource = jsonManagerDataSource
             )
         }
     }

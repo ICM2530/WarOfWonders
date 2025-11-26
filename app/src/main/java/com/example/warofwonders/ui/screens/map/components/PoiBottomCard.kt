@@ -45,6 +45,7 @@ fun PoiBottomCard(
     onVisitClick: () -> Unit,
     onAddClick: () -> Unit,
     canVisit: Boolean,
+    isLocal: Boolean,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -125,7 +126,7 @@ fun PoiBottomCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    if (canVisit) {
+                    if (canVisit && !isLocal) {
                         OutlinedButton(onClick = onVisitClick, border = BorderStroke(2.dp, Brown)) {
                             Text(text = "Visitar", color = Color.White, fontSize = 12.sp)
                         }
@@ -134,16 +135,18 @@ fun PoiBottomCard(
 
                     Spacer(Modifier.width(10.dp))
 
-                    Button(
-                        onClick = onAddClick,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Brown,
-                            contentColor = Color.White
-                        ),
-                        modifier = Modifier.width(120.dp).padding(0.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null)
-                        Text(text = "Guardar", fontSize = 12.sp)
+                    if (!isLocal) {
+                        Button(
+                            onClick = onAddClick,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Brown,
+                                contentColor = Color.White
+                            ),
+                            modifier = Modifier.width(120.dp).padding(0.dp)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null)
+                            Text(text = "Guardar", fontSize = 12.sp)
+                        }
                     }
                 }
             }
@@ -177,6 +180,7 @@ fun PreviewPoiBottomCard() {
                 onVisitClick = { },
                 onAddClick = { },
                 canVisit = true,
+                isLocal = false,
                 modifier = Modifier
                     .width(340.dp)
                     .align(Alignment.CenterHorizontally)

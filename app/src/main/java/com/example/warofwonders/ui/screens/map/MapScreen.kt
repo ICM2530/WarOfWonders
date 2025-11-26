@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.FiberManualRecord
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.ToggleOff
@@ -328,7 +330,8 @@ fun MapScreenContent(
                     state = rememberUpdatedMarkerState(
                         position = LatLng(poi.lat, poi.lng)
                     ),
-                    icon = poi.icon?.let { BitmapDescriptorFactory.fromBitmap(it) },
+                    icon = poi.icon?.let { BitmapDescriptorFactory.fromBitmap(it) }
+                        ?: bitmapDescriptorFromVector(context, R.drawable.poi, maxDp = 28f), // ícono por defecto
                     onClick = {
                         val distance = distanceBetween(
                             uiState.currentLocation.latitude,
@@ -338,11 +341,9 @@ fun MapScreenContent(
                         )
 
                         selectedPoi = poi.copy()
-                        val isNearby = distance <= 500
-                        selectedPoiCanVisit = isNearby
+                        selectedPoiCanVisit = distance <= 500
                         true
                     }
-
                 )
             }
         }
@@ -350,9 +351,15 @@ fun MapScreenContent(
         selectedPoi?.let { poi ->
             PoiBottomCard(
                 poi = poi,
-                onAddClick = { },
-                onVisitClick = { },
-                canVisit = selectedPoiCanVisit,  // <-- aquí
+                onAddClick = {
+                    selectedPoi?.let { viewModel.saveSelectedInterestPoint(it) }
+                    selectedPoi = null
+                },
+                onVisitClick = {
+                    viewModel.visitPoi()
+                },
+                canVisit = selectedPoiCanVisit,
+                isLocal = uiState.interestPoint.size < 20,
                 modifier = Modifier
                     .width(300.dp)
                     .align(Alignment.Center)
@@ -364,6 +371,15 @@ fun MapScreenContent(
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp).wrapContentSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            FloatingButton(
+                onClick = { viewModel.toggleShowSavedInterestPoints() },
+                modifier = Modifier.size(62.dp),
+                icon = Icons.AutoMirrored.Filled.List,
+                contentDescription = "Mostrar/Ocultar puntos guardados",
+                contentColor = White,
+                backgroundImage = painterResource(id = R.drawable.chatbutton)
+            )
+
             FloatingButton(
                 onClick = {
                     showFriendsModal = true
