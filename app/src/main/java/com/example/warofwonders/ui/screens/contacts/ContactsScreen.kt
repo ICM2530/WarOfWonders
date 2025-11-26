@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -312,59 +313,61 @@ fun DrawContactCard(
             painter = painterResource(R.drawable.chatframe),
             contentDescription = "Fondo contenedor contacto",
             contentScale = ContentScale.FillBounds,
-            modifier = Modifier
-                .matchParentSize()
-                .padding(0.dp)
+            modifier = Modifier.matchParentSize()
+
         )
 
         Row(
-            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
+            // ICONO
             Image(
                 painter = painterResource(R.drawable.iconocontacto),
                 contentDescription = "Contacto",
-                modifier = Modifier.height(45.dp)
+                modifier = Modifier
+                    .weight(0.15f)
+                    .height(40.dp)
             )
 
-            Spacer(modifier = Modifier.width(15.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
+            // NOMBRE
             Text(
                 text = contact.name,
                 color = Color.White,
                 fontSize = 18.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(0.55f)
             )
 
+            // BOTÓN
             if (showAddButton) {
-                Spacer(modifier = Modifier.width(8.dp))
-                Box(contentAlignment = Alignment.Center) {
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .weight(0.60f)
+                        .aspectRatio(3f)
+                ) {
                     ImageButton(
-                        imageRes = R.drawable.button,
+                        imageRes = R.drawable.solicitar,
                         contentDescription = "Enviar solicitud",
-                        modifier = Modifier
-                            .width(100.dp)
-                            .height(45.dp),
+                        modifier = Modifier.fillMaxSize(),
                         onClick = { onAddFriend(uid) }
-                    )
-                    Text(
-                        text = "Solicitar",
-                        style = TextStyle(
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.White
-                        )
                     )
                 }
             }
+
+
         }
     }
 }
+
 
 @Composable
 fun FriendRequestCard(
@@ -383,81 +386,72 @@ fun FriendRequestCard(
             painter = painterResource(R.drawable.chatframe),
             contentDescription = "Fondo contenedor contacto",
             contentScale = ContentScale.FillBounds,
-            modifier = Modifier
-                .matchParentSize()
-                .padding(0.dp)
+            modifier = Modifier.matchParentSize()
         )
 
         Row(
-            horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
+            // ICONO
             Image(
                 painter = painterResource(R.drawable.iconocontacto),
                 contentDescription = "Contacto",
-                modifier = Modifier.height(45.dp)
+                modifier = Modifier
+                    .weight(0.15f)
+                    .height(40.dp)
             )
 
-            Spacer(modifier = Modifier.width(15.dp))
+            Spacer(modifier = Modifier.width(10.dp))
 
+            // NOMBRE
             Text(
                 text = contact.name,
                 color = Color.White,
                 fontSize = 18.sp,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(0.45f)
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(6.dp))
 
-            Row {
-                Box(contentAlignment = Alignment.Center) {
+            // BOTONES ACEPTAR / RECHAZAR
+            Row(
+                modifier = Modifier.weight(0.40f),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.weight(1f)) {
                     ImageButton(
-                        imageRes = R.drawable.button,
+                        imageRes = R.drawable.aceptar,
                         contentDescription = "Aceptar",
                         modifier = Modifier
-                            .width(90.dp)
-                            .height(45.dp),
+                            .fillMaxWidth()
+                            .height(40.dp),
                         onClick = onAccept
-                    )
-                    Text(
-                        text = "Aceptar",
-                        style = TextStyle(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.White
-                        )
                     )
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                Box(contentAlignment = Alignment.Center) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.weight(1f)) {
                     ImageButton(
-                        imageRes = R.drawable.button,
+                        imageRes = R.drawable.rechazar,
                         contentDescription = "Rechazar",
                         modifier = Modifier
-                            .width(90.dp)
-                            .height(45.dp),
+                            .fillMaxWidth()
+                            .height(40.dp),
                         onClick = onReject
-                    )
-                    Text(
-                        text = "Rechazar",
-                        style = TextStyle(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Color.White
-                        )
                     )
                 }
             }
         }
     }
 }
+
 
 private fun normalizePhone(num: String): String =
     num.filter { it.isDigit() }.takeLast(10)
