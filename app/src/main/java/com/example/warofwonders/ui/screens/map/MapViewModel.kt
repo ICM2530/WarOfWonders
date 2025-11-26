@@ -84,6 +84,15 @@ class MapViewModel(
         }
     }
 
+    fun clearAllSavedInterestPoints() {
+        val delete = jsonManager.deleteJsonIfExists()
+        if (delete) {
+            _uiState.update { state ->
+                state.copy(interestPoint = emptyList())
+            }
+        }
+    }
+
     private fun loadUserLastLocation() {
         val currentUser = auth.currentUser ?: return
         val locationRef = realtimeDB.child("users/${currentUser.uid}/lastLocation")

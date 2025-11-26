@@ -1,10 +1,14 @@
 package com.example.warofwonders.ui.screens.signup
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,7 +16,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -27,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -38,6 +49,7 @@ import com.example.warofwonders.ui.model.MyUserState
 import com.example.warofwonders.ui.model.MyUserViewModel
 import com.example.warofwonders.ui.model.SignUpViewModel
 import com.example.warofwonders.ui.navigation.AppScreens
+import com.google.android.gms.location.LocationServices
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,6 +82,18 @@ fun SignUpScreen(navController: NavController) {
     ) { success -> if (success) profileImageUri = cameraImageUri }
 
     var showMenu by remember { mutableStateOf(false) }
+
+    // Launcher para pedir permiso de ubicación en runtime
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            // permiso concedido, obtener la última ubicación conocida
+            getLastKnownLocation(context, signUpViewModel)
+        } else {
+            signUpViewModel.updateLocationError("Permiso de ubicación denegado")
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -240,6 +264,75 @@ fun SignUpScreen(navController: NavController) {
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // --- Ubicación: muestra y botón ---
+            Row(
+                modifier = Modifier
+                    .width(260.dp)
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier.weight(2f)
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.textfield_image),
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxWidth(),
+                        contentScale = ContentScale.Crop
+                    )
+
+                    Column(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp)
+                    ) {
+                        if (state.latitude != null && state.longitude != null) {
+                            Text(
+                                text = "Lat: ${"%.5f".format(state.latitude)}\nLng: ${"%.5f".format(state.longitude)}",
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                        } else {
+                            Text(
+                                text = "Location not obtained yet",
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                        }
+                        if (state.locationError.isNotEmpty()) {
+                            Text(
+                                text = state.locationError,
+                                color = Color(0xFFFF6B6B),
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                IconButton(
+                    onClick = {
+                        val fineGranted = ContextCompat.checkSelfPermission(
+                            context, Manifest.permission.ACCESS_FINE_LOCATION
+                        ) == PackageManager.PERMISSION_GRANTED
+
+                        if (fineGranted) {
+                            getLastKnownLocation(context, signUpViewModel)
+                        } else {
+                            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                        }
+                    },
+                    modifier = Modifier.size(50.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MyLocation, // Cambia el ícono aquí
+                        contentDescription = "Get Location",
+                        tint = Color(0xFFE49C6C),
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Box(
                 modifier = Modifier
@@ -289,6 +382,50 @@ fun SignUpScreen(navController: NavController) {
     }
 }
 
+/** --- Helpers: obtener última ubicación conocida --- **/
+@SuppressLint("MissingPermission")
+private fun getLastKnownLocation(
+    context: android.content.Context,
+    signUpViewModel: SignUpViewModel
+) {
+    try {
+        val fused = LocationServices.getFusedLocationProviderClient(context)
+
+        fused.lastLocation
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    signUpViewModel.updateLatitude(location.latitude)
+                    signUpViewModel.updateLongitude(location.longitude)
+                    signUpViewModel.updateAltitude(location.altitude)
+                    signUpViewModel.updateLocationError("")
+                } else {
+                    fused.getCurrentLocation(
+                        com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+                        null
+                    ).addOnSuccessListener { loc2 ->
+                        if (loc2 != null) {
+                            signUpViewModel.updateLatitude(loc2.latitude)
+                            signUpViewModel.updateLongitude(loc2.longitude)
+                            signUpViewModel.updateAltitude(loc2.altitude)
+                            signUpViewModel.updateLocationError("")
+                        } else {
+                            signUpViewModel.updateLocationError(
+                                "No se pudo obtener la ubicación. Intenta más tarde."
+                            )
+                        }
+                    }.addOnFailureListener { ex ->
+                        signUpViewModel.updateLocationError("Error: ${ex.message}")
+                    }
+                }
+            }
+            .addOnFailureListener { ex ->
+                signUpViewModel.updateLocationError("Error: ${ex.message}")
+            }
+
+    } catch (e: Exception) {
+        signUpViewModel.updateLocationError("Error: ${e.message}")
+    }
+}
 
 @Composable
 fun AnimatedErrorText(error: String) {

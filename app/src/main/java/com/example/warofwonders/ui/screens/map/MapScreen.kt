@@ -19,10 +19,12 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FiberManualRecord
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.RestoreFromTrash
 import androidx.compose.material.icons.filled.ToggleOff
 import androidx.compose.material.icons.filled.ToggleOn
 import androidx.compose.material.icons.filled.TravelExplore
@@ -372,6 +374,18 @@ fun MapScreenContent(
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp).wrapContentSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (uiState.interestPoint.size < 20 && uiState.interestPoint.isNotEmpty()) {
+                FloatingButton(
+                    onClick = {
+                        viewModel.clearAllSavedInterestPoints()
+                    },
+                    modifier = Modifier.size(62.dp),
+                    icon = Icons.Default.Delete,
+                    contentDescription = "Borrar puntos de Interes",
+                    contentColor = White,
+                    backgroundImage = painterResource(id = R.drawable.chatbutton)
+                )
+            }
             FloatingButton(
                 onClick = {
                     showFriendsModal = true
