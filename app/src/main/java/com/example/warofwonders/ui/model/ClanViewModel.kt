@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.resume
 
 class ClanViewModel : ViewModel() {
@@ -200,20 +201,61 @@ class ClanViewModel : ViewModel() {
         return intersect
     }
 
+    // --------------------------- Escuchar usuario actual ---------------------------
     fun listenCurrentUserRealtime() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
         usersRef.child(uid).addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val user = snapshot.getValue(MyUserState::class.java)
-                if (user != null) {
-                    _currentUser.value = user
-                }
+                if (user != null) _currentUser.value = user
             }
 
             override fun onCancelled(error: DatabaseError) {}
         })
     }
+
+    // --------------------------- Obtener usuario por UID ---------------------------
+    suspend fun getUsuarioAsync(uid: String): MyUserState? {
+        return try {
+            val snapshot = usersRef.child(uid).get().await()
+            snapshot.getValue(MyUserState::class.java)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    // --------------------------- Ascender usuario ---------------------------
+    fun ascender(usuario: MyUserState, clan: Clan) {
+        val currentRole = _currentUser.value?.clanRole ?: return
+
+        val nuevoRol = when (currentRole) {
+            "lider" -> when (usuario.clanRole) {
+                "miembro" -> "colider"
+                "colider" -> "lider"
+                else -> usuario.clanRole
+            }
+            "colider" -> if (usuario.clanRole == "miembro") "colider" else usuario.clanRole
+            else -> usuario.clanRole
+        }
+
+        usersRef.child(usuario.id).child("clanRole").setValue(nuevoRol)
+    }
+
+
+    // --------------------------- Expulsar usuario ---------------------------
+    fun expulsarUsuario(usuario: MyUserState, clan: Clan) {
+        db.child(clan.id).child("miembros").child(usuario.id).removeValue()
+        usersRef.child(usuario.id).child("clanid").setValue("")
+        usersRef.child(usuario.id).child("clanRole").setValue("")
+    }
+
+    // --------------------------- Salir del clan ---------------------------
+    fun salirse(usuario: MyUserState, clan: Clan) {
+        usersRef.child(usuario.id).child("clanid").setValue("")
+        usersRef.child(usuario.id).child("clanRole").setValue("")
+        db.child(clan.id).child("miembros").child(usuario.id).removeValue()
+    }
+
 
 
 
