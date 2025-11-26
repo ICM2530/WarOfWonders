@@ -1,236 +1,176 @@
 package com.example.warofwonders.ui.screens.clan
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.warofwonders.R
-
-data class ClanMember(
-    val avatar: Int,
-    val name: String,
-    val role: String,
-    val level: Int
-)
-
-data class ClanHistory(
-    val battle: String,
-    val result: String
-)
+import com.example.warofwonders.ui.model.MyUserState
 
 @Composable
-fun ClanScreen() {
-    val members = listOf(
-        ClanMember(R.drawable.profile2, "jaime", "Líder", 20),
-        ClanMember(R.drawable.profile_user, "pablo", "co-líder", 17),
-        ClanMember(R.drawable.perfil3, "user #11", "miembro", 1),
-    )
+fun ClanScreen(
+    viewModel: ClanViewModel,
+    onClanSelected: () -> Unit
+) {
+    val clanes by viewModel.clanes.collectAsState()
+    val mensaje by viewModel.mensaje.collectAsState()
 
-    val history = listOf(
-        ClanHistory("Batalla vs Bogotá clan", "Victoria"),
-        ClanHistory("Batalla vs Los Piratas", "Derrota")
-    )
 
+    val user by viewModel.currentUser.collectAsState()
+
+    var creandoClan by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.listenCurrentUserRealtime()
+        viewModel.cargarClanes()
+    }
+
+
+    if (user == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    val u = user!!   // usuario ya listo
+
+    // -----------------------------------------------------------------
+    // Crear Clan
+    // -----------------------------------------------------------------
+    if (creandoClan) {
+        CreateClanScreen(
+            user = u,
+            viewModel = viewModel,
+            onClanCreated = {
+                creandoClan = false
+                viewModel.cargarClanes()
+            },
+            onBack = { creandoClan = false }
+        )
+        return
+    }
+
+    // -----------------------------------------------------------------
+    // Pantalla principal
+    // -----------------------------------------------------------------
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1B3A1D))
-            .padding(8.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        ClanHeader()
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Miembros",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        LazyColumn {
-            items(members) { member ->
-                ClanMemberItem(member)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "Historial",
-            fontSize = 14.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        LazyColumn {
-            items(history) { item ->
-                ClanHistoryItem(item)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-        }
-    }
-}
-
-@Composable
-fun ClanHeader(
-
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .clip(RoundedCornerShape(6.dp))
-            .height(80.dp)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.madera),
-            contentDescription = "Fondo madera",
-            modifier = Modifier.matchParentSize(),
-            contentScale = ContentScale.FillBounds
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.shield),
-                    contentDescription = "Escudo",
-                    modifier = Modifier.size(40.dp)
-                        .clickable(
-                            onClick = { }
-                        )
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "teusaquillo amigos",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.crown),
-                    contentDescription = "Corona",
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "8",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ClanMemberItem(member: ClanMember) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .height(60.dp)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.chatframe),
-            contentDescription = "Fondo chatframe",
-            modifier = Modifier.matchParentSize(),
-            contentScale = ContentScale.FillBounds
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Image(
-                painter = painterResource(id = member.avatar),
-                contentDescription = member.name,
-                modifier = Modifier.size(36.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Column {
-                Text(
-                    text = member.name,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-                Text(
-                    text = member.role,
-                    fontSize = 12.sp,
-                    color = Color.White
-                )
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(id = R.drawable.trophy),
-                    contentDescription = "Nivel",
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "lvl ${member.level}",
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun ClanHistoryItem(item: ClanHistory) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth(0.9f)
-            .height(50.dp)
-    ) {
-        Image(
-            painter = painterResource(id = R.drawable.chatframe),
-            contentDescription = "Fondo chatframe",
-            modifier = Modifier.matchParentSize(),
-            contentScale = ContentScale.FillBounds
-        )
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 40.dp, vertical = 6.dp),
-            verticalArrangement = Arrangement.Center
-        ) {
+        if (mensaje.isNotEmpty()) {
             Text(
-                text = item.battle,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
+                text = mensaje,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyLarge
             )
+            Spacer(modifier = Modifier.height(10.dp))
+        }
+
+        // -----------------------------------------------------------------
+        // NO TIENE CLAN
+        // -----------------------------------------------------------------
+        if (u.clanid.isEmpty()) {
+
             Text(
-                text = item.result,
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = if (item.result == "victoria") Color.Green else Color.Red
+                "No perteneces a un clan",
+                style = MaterialTheme.typography.headlineSmall
             )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+
+                Button(
+                    onClick = { creandoClan = true },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Crear Clan")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
+                items(clanes) { clan ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+
+                            Text(
+                                clan.nombre,
+                                style = MaterialTheme.typography.titleMedium
+                            )
+
+                            Spacer(modifier = Modifier.height(4.dp))
+
+                            Text(
+                                clan.descripcion,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Text(
+                                "Miembros: ${clan.miembros.size}",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            Button(
+                                onClick = { viewModel.unirseAClan(clan, u) },
+                                modifier = Modifier.align(Alignment.End)
+                            ) {
+                                Text("Unirse")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // -----------------------------------------------------------------
+        // YA TIENE CLAN
+        // -----------------------------------------------------------------
+        else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    "Ya perteneces al clan:",
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    u.clanid,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+            }
         }
     }
 }

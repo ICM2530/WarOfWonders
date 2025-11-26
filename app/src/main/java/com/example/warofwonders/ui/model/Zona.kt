@@ -1,4 +1,8 @@
 package com.example.warofwonders.ui.model
 
-class Zona {
-}
+
+data class Zona(
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0,
+    val altitude: Double = 0.0
+)
