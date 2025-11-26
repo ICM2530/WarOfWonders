@@ -11,19 +11,26 @@ exports.onFriendRequestCreated = functions.database
     const toUid = context.params.toUid;
     const fromUid = context.params.fromUid;
     const request = snapshot.val();
+
     if (!request || request.status !== "pending") return null;
 
-    const userSnap = await admin
+    const toTokenSnap = await admin
       .database()
       .ref(`/users/${toUid}/fcmToken`)
       .once("value");
-    const token = userSnap.val();
-    if (!token) return null;
+    const toToken = toTokenSnap.val();
+    if (!toToken) return null;
+
+    const fromNameSnap = await admin
+      .database()
+      .ref(`/users/${fromUid}/name`)
+      .once("value");
+    const fromName = fromNameSnap.val() || "Un jugador";
 
     const payload = {
       notification: {
-        title: "Nueva solicitud de amistad",
-        body: "Tienes una nueva solicitud de amistad en War of Wonders",
+        title: "Solicitud de amistad",
+        body: `¡Tienes una nueva solicitud de amistad de ${fromName}!`,
       },
       data: {
         type: "friend_request",
@@ -31,7 +38,7 @@ exports.onFriendRequestCreated = functions.database
       },
     };
 
-    return admin.messaging().sendToDevice(token, payload);
+    return admin.messaging().sendToDevice(toToken, payload);
   });
 
 exports.onFriendRequestStatusChanged = functions.database
@@ -45,22 +52,27 @@ exports.onFriendRequestStatusChanged = functions.database
     if (before === after) return null;
     if (after !== "accepted" && after !== "rejected") return null;
 
-    const userSnap = await admin
+    const fromTokenSnap = await admin
       .database()
       .ref(`/users/${fromUid}/fcmToken`)
       .once("value");
-    const token = userSnap.val();
-    if (!token) return null;
+    const fromToken = fromTokenSnap.val();
+    if (!fromToken) return null;
 
-    const body =
-      after === "accepted"
-        ? "Han aceptado tu solicitud de amistad"
-        : "Han rechazado tu solicitud de amistad";
+    const toNameSnap = await admin
+      .database()
+      .ref(`/users/${toUid}/name`)
+      .once("value");
+    const toName = toNameSnap.val() || "El jugador";
+
+    const aceptada = after === "accepted";
+    const titulo = aceptada ? "Solicitud aceptada" : "Solicitud rechazada";
+    const verbo = aceptada ? "aceptado" : "rechazado";
 
     const payload = {
       notification: {
-        title: "Respuesta a tu solicitud",
-        body: body,
+        title: titulo,
+        body: `${toName} ha ${verbo} tu solicitud de amistad.`,
       },
       data: {
         type: "friend_request_response",
@@ -69,5 +81,5 @@ exports.onFriendRequestStatusChanged = functions.database
       },
     };
 
-    return admin.messaging().sendToDevice(token, payload);
+    return admin.messaging().sendToDevice(fromToken, payload);
   });
