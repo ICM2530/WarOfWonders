@@ -181,9 +181,7 @@ fun ClanDetailScreen(
         }
 
 
-        // -----------------------------
-        // Dialogs para acciones
-        // -----------------------------
+
         if (dialogUsuario != null && dialogAccion != null) {
             AlertDialog(
                 onDismissRequest = { dialogUsuario = null; dialogAccion = null },
