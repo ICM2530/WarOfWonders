@@ -115,12 +115,13 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                         if (!atkImage.isNullOrBlank()) {
                             AsyncImage(model = atkImage, contentDescription = "Atacante criatura", modifier = Modifier.size(64.dp).padding(end = 8.dp), contentScale = ContentScale.Crop)
                         }
-                        TopNameLine(
-                            title = attacker?.name ?: "User #11",
-                            subtitle = attacker?.clan ?: "teusaquillo amigos"
-                        )
+                        attacker?.let {
+                            TopNameLine(
+                                title = it.name,
+                                subtitle = it.clan ?: "Sin clan"
+                            )
+                        }
                     }
-                    // mostrar barra de vida y texto numérico
                     HealthBar(current = uiState.attackerHp ?: attacker?.maxHealth ?: 0, max = attacker?.maxHealth ?: 0)
                     Text(text = "HP: ${uiState.attackerHp ?: attacker?.maxHealth ?: 0} / ${attacker?.maxHealth ?: 0}", color = Color.White, fontSize = 12.sp)
                 }
@@ -133,10 +134,12 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                     horizontalAlignment = Alignment.End
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
-                        TopNameLine(
-                            title = defender?.name ?: "User #18",
-                            subtitle = defender?.clan ?: "los piratas"
-                        )
+                        defender?.let {
+                            TopNameLine(
+                                title = it.name,
+                                subtitle = it.clan ?: "Sin clan"
+                            )
+                        }
                         val defImage = if (selectionVisible && selectedCriatura != null && isLocalDefender) selectedCriatura?.imagen else defender?.creatureImage
                         if (!defImage.isNullOrBlank()) {
                             AsyncImage(model = defImage, contentDescription = "Defensor criatura", modifier = Modifier.size(64.dp).padding(start = 8.dp), contentScale = ContentScale.Crop)
@@ -151,7 +154,8 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                     CombatResultDisplay(result = result, combatViewModel = combatViewModel, navController = navController)
                 } else {
                     // Si aún no hay resultado y se deben mostrar opciones de selección
-                    if (selectionVisible && attackerId != null && defenderId != null) {
+                    // Solo mostrar si hay datos reales de combatientes (ambos no nulos)
+                    if (selectionVisible && attackerId != null && defenderId != null && attacker != null && defender != null) {
                         // UI para elegir criatura del inventario
                         Card(
                             modifier = Modifier
