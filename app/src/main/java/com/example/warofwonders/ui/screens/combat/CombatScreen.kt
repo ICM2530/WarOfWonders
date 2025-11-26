@@ -261,19 +261,16 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                             if (attackerId == null && defenderId == null) {
                                 Text("No hay nadie a quien enfrentar!...", color = Color.White)
                             } else {
-                                val atk = attacker
-                                val def = defender
                                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Button(
                                         onClick = {
-                                            // Confirmar la selección en Firebase y esperar al otro jugador
                                             hasConfirmed = true
-                                            combatViewModel.confirmSelectionForEncounter(attackerId, defenderId, selectedCriatura)
+                                            combatViewModel.forceStartCombat(attackerId, defenderId, selectedCriatura)
                                         },
-                                        enabled = ((!uiState.isLoading) && !hasConfirmed && (((selectedCriatura != null) && selectionAllowed) || ((atk != null && def != null)))),
+                                        enabled = ((!uiState.isLoading) && !hasConfirmed && selectionAllowed),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                                     ) {
-                                        Text(text = if (!hasConfirmed) "Confirmar y esperar" else "Esperando...", color = Color.White)
+                                        Text(text = "Confirmar", color = Color.White)
                                     }
 
                                     Button(onClick = { navController.popBackStack() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB00020))) {

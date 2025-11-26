@@ -160,9 +160,10 @@ fun FriendlyBattleScreen(navController: NavController) {
                 }
                 sendBattleRequest(toUid, stakeCoins) { success ->
                     if (success) {
-                        Toast.makeText(context, "Solicitud enviada", Toast.LENGTH_SHORT).show()
-                        // navegación automática por NPCs removida — esperar aceptación real
-                    } else Toast.makeText(context, "Error al enviar solicitud", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Batalla iniciada", Toast.LENGTH_SHORT).show()
+                        // Navegar directamente a combate sin esperar aceptación
+                        navController.navigate("${com.example.warofwonders.ui.navigation.AppScreens.Combat.name}/$currentUid/$toUid")
+                    } else Toast.makeText(context, "Error al iniciar batalla", Toast.LENGTH_SHORT).show()
                 }
             }, enabled = canSend) { Text("Enviar reto (coins)") }
 
@@ -171,83 +172,44 @@ fun FriendlyBattleScreen(navController: NavController) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        if (incomingRequests.isNotEmpty()) {
-            Text("Solicitudes entrantes:")
-            incomingRequests.forEach { (fromUid, map) ->
-                Row(modifier = Modifier.fillMaxWidth().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    val fromName = map["fromName"] as? String ?: fromUid
-                    val stake = (map["stake"] as? Long)?.toInt() ?: 0
-                    Text(text = "$fromName apuesta $stake coins", modifier = Modifier.weight(1f))
-                    Button(onClick = {
-                        respondToBattleRequest(fromUid, accept = true) { ok ->
-                            if (ok) navController.navigate("${com.example.warofwonders.ui.navigation.AppScreens.Combat.name}/$fromUid/$currentUid")
-                        }
-                    }) { Text("Aceptar") }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(onClick = { respondToBattleRequest(fromUid, accept = false) {} }) { Text("Rechazar") }
-                }
-            }
-        }
     }
 }
 
-// Funciones de utilidad para enviar y responder solicitudes de batalla amistosa
+// Funciones de utilidad para enviar solicitudes de batalla amistosa
+/**
+ * Enviar reto: crear encuentro inmediatamente y navegar directamente a combate.
+ * No esperar confirmación del otro jugador.
+ */
 fun sendBattleRequest(toUid: String, stakeCoins: Int, onComplete: (Boolean) -> Unit) {
     val currentUid = FirebaseAuth.getInstance().currentUser?.uid ?: run { onComplete(false); return }
     if (currentUid == toUid) { onComplete(false); return }
 
-    val requestsRef = database.getReference("battleRequests").child(toUid).child(currentUid)
-    val sentRef = database.getReference("battleRequestsSent").child(currentUid).child(toUid)
+    try {
+        // Generar clave de encounter (mismo algoritmo que CombatViewModel)
+        val ids = listOf(currentUid, toUid).sorted()
+        val encounterKey = "encounter_${ids[0]}_${ids[1]}"
+        val encounterRef = database.getReference("encounters").child(encounterKey)
 
-    val data = hashMapOf<String, Any>(
-        "fromUid" to currentUid,
-        "toUid" to toUid,
-        "fromName" to (FirebaseAuth.getInstance().currentUser?.displayName ?: "Jugador"),
-        "stake" to stakeCoins,
-        "status" to "pending",
-        "timestamp" to ServerValue.TIMESTAMP
-    )
+        // Crear datos del encuentro
+        val encounterData = hashMapOf<String, Any>(
+            "attackerId" to currentUid,
+            "defenderId" to toUid,
+            "stake" to stakeCoins,
+            "started" to false,
+            "started_at" to ServerValue.TIMESTAMP,
+            "started_by" to "system_auto_start"
+        )
 
-    // Escribir solicitud
-    requestsRef.setValue(data).addOnSuccessListener {
-        // tambien escribir para que el que envia pueda observar
-        		sentRef.setValue(data).addOnSuccessListener {
-            		// solicitud enviada correctamente
-            		onComplete(true)
-        		}.addOnFailureListener { ex ->
-        			Log.e("FriendlyBattle", "Failed to write sentRef for $currentUid -> $toUid: ${ex.message}")
-        			onComplete(false)
-        		}
+        // Escribir encuentro (crea nodo con todos los campos necesarios)
+        encounterRef.setValue(encounterData).addOnSuccessListener {
+            Log.d("FriendlyBattle", "Encounter created: $encounterKey")
+            onComplete(true)
         }.addOnFailureListener { ex ->
-            Log.e("FriendlyBattle", "Failed to write sentRef for $currentUid -> $toUid: ${ex.message}")
+            Log.e("FriendlyBattle", "Failed to create encounter for $currentUid -> $toUid: ${ex.message}")
             onComplete(false)
         }
-        .addOnFailureListener { ex ->
-        Log.e("FriendlyBattle", "Failed to write request for $currentUid -> $toUid: ${ex.message}")
+    } catch (e: Exception) {
+        Log.e("FriendlyBattle", "Exception in sendBattleRequest: ${e.message}")
         onComplete(false)
     }
-}
-
-
-fun respondToBattleRequest(fromUid: String, accept: Boolean, onComplete: (Boolean) -> Unit) {
-    val currentUid = FirebaseAuth.getInstance().currentUser?.uid ?: run { onComplete(false); return }
-    val reqRef = database.getReference("battleRequests").child(currentUid).child(fromUid)
-    val sentRef = database.getReference("battleRequestsSent").child(fromUid).child(currentUid)
-
-    reqRef.get().addOnSuccessListener { snap ->
-        if (!snap.exists()) { onComplete(false); return@addOnSuccessListener }
-        if (accept) {
-            // Actualizar ambos nodos a aceptados
-            val updates = hashMapOf<String, Any>(
-                "battleRequests/$currentUid/$fromUid/status" to "accepted",
-                "battleRequestsSent/$fromUid/$currentUid/status" to "accepted"
-            )
-            database.reference.updateChildren(updates).addOnSuccessListener { onComplete(true) }.addOnFailureListener { onComplete(false) }
-        } else {
-            reqRef.child("status").setValue("rejected").addOnSuccessListener {
-                sentRef.child("status").setValue("rejected").addOnSuccessListener { onComplete(true) }.addOnFailureListener { onComplete(false) }
-            }.addOnFailureListener { onComplete(false) }
-        }
-    }.addOnFailureListener { onComplete(false) }
 }

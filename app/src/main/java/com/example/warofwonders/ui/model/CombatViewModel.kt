@@ -298,8 +298,9 @@ class CombatViewModel : ViewModel() {
     }
 
     /**
-     * Inicia la escucha para el encuentro compartido. Crea un listener que
-     * observará cuando ambos jugadores hayan confirmado su selección.
+     * Inicia la escucha para el encuentro compartido. Flujo simplificado:
+     * - Si el encuentro existe, cargar combatientes e iniciar automáticamente.
+     * - Escuchar cambios en progress y result.
      */
     fun startEncounterListener(attackerId: String?, defenderId: String?) {
         if (attackerId == null || defenderId == null) return
@@ -312,19 +313,10 @@ class CombatViewModel : ViewModel() {
         encounterListener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 try {
-                    val sels = snapshot.child("selections")
-                    val conf = snapshot.child("confirmed")
+                    // Si el encuentro no existe, no hacer nada
+                    if (!snapshot.exists()) return
 
-                    val aConfirmed = conf.child(attackerId).getValue(Boolean::class.java) ?: false
-                    val dConfirmed = conf.child(defenderId).getValue(Boolean::class.java) ?: false
-
-                    // Si ambos confirmaron, intentar marcar started via transacción
-                    if (aConfirmed && dConfirmed) {
-                        tryToStartEncounter(snapshot.ref, attackerId, defenderId)
-                        return
-                    }
-
-                    // Si hay progreso publicado, actualizar UI para que el cliente no-starter vea las rondas
+                    // Si hay progreso publicado, actualizar UI
                     val progressSnap = snapshot.child("progress")
                     if (progressSnap.exists()) {
                         try {
@@ -346,7 +338,7 @@ class CombatViewModel : ViewModel() {
                         }
                     }
 
-                    // Si hay resultado, actualizar UI con el resultado (y no eliminar aquí, cleanup lo hace el starter)
+                    // Si hay resultado, actualizar UI con el resultado
                     val resultSnap = snapshot.child("result")
                     if (resultSnap.exists()) {
                         try {
@@ -368,35 +360,10 @@ class CombatViewModel : ViewModel() {
                         }
                     }
 
-                    // Si sólo uno confirmó, comprobar timeout y limpiar si excede
-                    val timeoutMillis = 30_000L // 30 segundos
-                    val confirmedAtSnapshot = snapshot.child("confirmedAt")
-                    val aTime = confirmedAtSnapshot.child(attackerId).getValue(Long::class.java) ?: 0L
-                    val dTime = confirmedAtSnapshot.child(defenderId).getValue(Long::class.java) ?: 0L
-
-                    val now = System.currentTimeMillis()
-
-                    if (aConfirmed && !dConfirmed) {
-                        if (aTime > 0L && now - aTime > timeoutMillis) {
-                            // Timeout: limpiar el nodo del encuentro
-                            try {
-                                snapshot.ref.removeValue()
-                                _uiState.value = _uiState.value.copy(errorMessage = "Encuentro cancelado por timeout de confirmación")
-                                Log.d("CombatVM", "Encounter ${snapshot.ref.key} removed due to timeout (attacker confirmed)")
-                            } catch (e: Exception) {
-                                Log.w("CombatVM", "Failed to remove encounter on timeout: ${e.message}")
-                            }
-                        }
-                    } else if (dConfirmed && !aConfirmed) {
-                        if (dTime > 0L && now - dTime > timeoutMillis) {
-                            try {
-                                snapshot.ref.removeValue()
-                                _uiState.value = _uiState.value.copy(errorMessage = "Encuentro cancelado por timeout de confirmación")
-                                Log.d("CombatVM", "Encounter ${snapshot.ref.key} removed due to timeout (defender confirmed)")
-                            } catch (e: Exception) {
-                                Log.w("CombatVM", "Failed to remove encounter on timeout: ${e.message}")
-                            }
-                        }
+                    // Si no hemos iniciado combate aún y no hay resultado, iniciarlo automáticamente
+                    if (_uiState.value.attacker != null && _uiState.value.defender != null && !_uiState.value.isLoading && _uiState.value.result == null) {
+                        Log.d("CombatVM", "Auto-starting combat for $attackerId vs $defenderId")
+                        startCombatByIds(attackerId, defenderId)
                     }
                 } catch (e: Exception) {
                     Log.w("CombatVM", "encounter listener error: ${e.message}")
@@ -411,186 +378,20 @@ class CombatViewModel : ViewModel() {
         currentEncounterRef?.addValueEventListener(encounterListener as ValueEventListener)
     }
 
-    private fun tryToStartEncounter(encRef: DatabaseReference, attackerId: String, defenderId: String) {
-        // Intentar una transacción para establecer started=true y starter=uid si no existe
-        try {
-            val myUid = FirebaseAuth.getInstance().currentUser?.uid
-            if (myUid == null) return
-
-            encRef.runTransaction(object : Transaction.Handler {
-                override fun doTransaction(currentData: MutableData): Transaction.Result {
-                    val started = currentData.child("started").getValue(Boolean::class.java) ?: false
-                    if (started) {
-                        return Transaction.success(currentData)
-                    }
-                    // Marcar como iniciado por este cliente
-                    currentData.child("started").value = true
-                    currentData.child("starter").value = myUid
-                    return Transaction.success(currentData)
-                }
-
-                override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
-                    if (error != null) {
-                        Log.e("CombatVM", "Encounter start transaction failed: ${error.message}")
-                        return
-                    }
-                    if (committed) {
-                        val starter = currentData?.child("starter")?.getValue(String::class.java)
-                        val myUidLocal = FirebaseAuth.getInstance().currentUser?.uid
-                        if (starter == myUidLocal) {
-                            // Este cliente ganó la transacción y debe iniciar el combate real
-                            startCombatFromEncounter(attackerId, defenderId, currentData)
-                        } else {
-                            // Otro cliente iniciará; este cliente esperará a que el ViewModel se actualice
-                            Log.d("CombatVM", "Another client started the encounter: $starter")
-                        }
-                    }
-
-                }
-            })
-        } catch (e: Exception) {
-            Log.e("CombatVM", "tryToStartEncounter error: ${e.message}")
-        }
-    }
-
     /**
-     * Escribe la selección del usuario en el nodo `encounters/{key}` y marca que confirmó.
-     */
-    fun confirmSelectionForEncounter(attackerId: String?, defenderId: String?, selectedCriatura: com.example.warofwonders.ui.model.Criatura?) {
-        if (attackerId == null || defenderId == null) return
-        val key = encounterKeyFor(attackerId, defenderId)
-        val ref = encountersRef.child(key)
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-
-        viewModelScope.launch {
-            try {
-                // Guardar selection id (o null) y marcar confirmed en una sola actualización atómica
-                val selectionId = selectedCriatura?.id
-                val updates: MutableMap<String, Any?> = mutableMapOf()
-                updates["selections/$uid"] = selectionId
-                updates["confirmed/$uid"] = true
-                updates["confirmedAt/$uid"] = ServerValue.TIMESTAMP
-
-                ref.updateChildren(updates as Map<String, Any>).addOnSuccessListener {
-                    Log.d("CombatVM", "Wrote selection for $uid -> $selectionId in $key (atomic)")
-                }.addOnFailureListener { ex ->
-                    Log.w("CombatVM", "Failed atomic write selection for $uid in $key: ${ex.message}")
-                }
-            } catch (e: Exception) {
-                Log.e("CombatVM", "confirmSelectionForEncounter error: ${e.message}")
-            }
-        }
-    }
-
-    /**
-     * Intentar abandonar/limpiar el encuentro para el usuario local.
-     * Borra la selección/confirmed/confirmedAt del usuario y elimina
-     * el nodo si queda vacío. Ejecuta una transacción segura.
+     * Simplificar: Abandonar encuentro (eliminar el nodo si está vacío).
      */
     fun leaveEncounter(attackerId: String?, defenderId: String?) {
         if (attackerId == null || defenderId == null) return
         val key = encounterKeyFor(attackerId, defenderId)
         val ref = encountersRef.child(key)
-        val myUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
-        try {
-            ref.runTransaction(object : Transaction.Handler {
-                override fun doTransaction(currentData: MutableData): Transaction.Result {
-                    if (currentData.value == null) return Transaction.success(currentData)
-
-                    // Eliminar keys del usuario
-                    currentData.child("selections").child(myUid).value = null
-                    currentData.child("confirmed").child(myUid).value = null
-                    currentData.child("confirmedAt").child(myUid).value = null
-
-                    // Si no quedan children relevantes, borrar todo el nodo
-                    val hasSelections = currentData.child("selections").hasChildren()
-                    val hasConfirmed = currentData.child("confirmed").hasChildren()
-                    val hasProgress = currentData.child("progress").hasChildren()
-                    val hasResult = currentData.child("result").hasChildren()
-                    val started = currentData.child("started").getValue(Boolean::class.java) ?: false
-
-                    if (!hasSelections && !hasConfirmed && !hasProgress && !hasResult && !started) {
-                        currentData.value = null
-                    }
-
-                    return Transaction.success(currentData)
-                }
-
-                override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
-                    if (error != null) {
-                        Log.w("CombatVM", "leaveEncounter transaction failed: ${error.message}")
-                    } else {
-                        Log.d("CombatVM", "leaveEncounter completed for $myUid on $key")
-                    }
-                }
-            })
-        } catch (e: Exception) {
-            Log.w("CombatVM", "leaveEncounter exception: ${e.message}")
+        // Simplemente intentar remover el nodo de encuentro
+        ref.removeValue().addOnSuccessListener {
+            Log.d("CombatVM", "leaveEncounter completed for $key")
+        }.addOnFailureListener { ex ->
+            Log.w("CombatVM", "leaveEncounter failed: ${ex.message}")
         }
-    }
-
-    private fun startCombatFromEncounter(attackerId: String, defenderId: String, currentData: DataSnapshot?) {
-        viewModelScope.launch {
-            try {
-                val key = encounterKeyFor(attackerId, defenderId)
-                val ref = encountersRef.child(key)
-                val selsSnap = currentData?.child("selections") ?: ref.child("selections").get().await()
-
-                // Obtener selección de cada jugador (puede ser null)
-                val atkSel = selsSnap.child(attackerId).getValue(String::class.java)
-                val defSel = selsSnap.child(defenderId).getValue(String::class.java)
-
-                // Cargar snapshots de usuarios
-                val atkSnap = usersRef.child(attackerId).get().await()
-                val defSnap = usersRef.child(defenderId).get().await()
-
-                // Construir combatants aplicando seleccion si existe
-                val attacker = buildCombatantFromSnapshotWithSelection(attackerId, atkSnap, atkSel)
-                val defender = buildCombatantFromSnapshotWithSelection(defenderId, defSnap, defSel)
-
-                // Iniciar combate localmente (este cliente es el que generó la transacción)
-                startCombat(attacker, defender, key)
-
-            } catch (e: Exception) {
-                Log.e("CombatVM", "startCombatFromEncounter error: ${e.message}")
-            }
-        }
-    }
-
-    private fun buildCombatantFromSnapshotWithSelection(id: String, snap: DataSnapshot, selectionId: String?): Combatant {
-        // Si selectionId está presente, buscar esa criatura dentro del snapshot
-        var selectedCri: Criatura? = null
-        if (!selectionId.isNullOrBlank()) {
-            val criSnaps = snap.child("criaturas")
-            for (c in criSnaps.children) {
-                val cri = c.getValue(Criatura::class.java)
-                if (cri != null && cri.id == selectionId) {
-                    selectedCri = cri
-                    break
-                }
-            }
-        }
-
-        val name = snap.child("name").getValue(String::class.java) ?: "Player"
-        val clan = snap.child("clan").getValue(String::class.java)
-        val level = (snap.child("nivel").getValue(Int::class.java) ?: 1)
-        val resources = (snap.child("coins").getValue(Int::class.java) ?: 0)
-
-        val attack = selectedCri?.dano ?: (5 + level * 3)
-        val maxHealth = selectedCri?.salud ?: (100 + level * 10)
-
-        val combatant = Combatant(
-            id = id,
-            name = name,
-            clan = clan,
-            level = level,
-            attack = attack,
-            maxHealth = maxHealth,
-            resources = resources
-        )
-        combatant.creatureImage = selectedCri?.imagen
-        return combatant
     }
 
     fun resetCombat() {
@@ -677,6 +478,87 @@ class CombatViewModel : ViewModel() {
                 startCombat(attacker, defender)
             } catch (e: Exception) {
                 _uiState.value = CombatUIState(errorMessage = "Error iniciando combate: ${e.message}", isLoading = false)
+            }
+        }
+    }
+
+    /**
+     * Forzar inicio de combate localmente aun si uno de los IDs es null.
+     * - Si ambos IDs están presentes, delega a las funciones existentes.
+     * - Si falta el defensor, crea un combatiente temporal y corre el combate localmente.
+     */
+    fun forceStartCombat(attackerId: String?, defenderId: String?, selectedCriatura: com.example.warofwonders.ui.model.Criatura?) {
+        viewModelScope.launch {
+            try {
+                // Ambos presentes: intentar iniciar normalmente (aplica selección si corresponde)
+                if (!attackerId.isNullOrBlank() && !defenderId.isNullOrBlank()) {
+                    if (selectedCriatura != null && attackerId == FirebaseAuth.getInstance().currentUser?.uid) {
+                        startCombatWithSelectedCreature(attackerId, defenderId, selectedCriatura)
+                        return@launch
+                    }
+                    if (selectedCriatura != null && defenderId == FirebaseAuth.getInstance().currentUser?.uid) {
+                        startCombatWithSelectedCreatureForDefender(attackerId, defenderId, selectedCriatura)
+                        return@launch
+                    }
+                    startCombatByIds(attackerId, defenderId)
+                    return@launch
+                }
+
+                // Si falta el defensor, crear un combatiente temporal
+                if (!attackerId.isNullOrBlank() && defenderId.isNullOrBlank()) {
+                    val atkSnap = usersRef.child(attackerId).get().await()
+                    val attacker = if (selectedCriatura != null) {
+                        // Validar pertenece al atacante
+                        var belongs = false
+                        val criSnaps = atkSnap.child("criaturas")
+                        for (c in criSnaps.children) {
+                            val cri = c.getValue(Criatura::class.java)
+                            if (cri != null && cri.id == selectedCriatura.id) { belongs = true; break }
+                        }
+                        if (belongs) {
+                            val name = atkSnap.child("name").getValue(String::class.java) ?: "Player"
+                            val clan = atkSnap.child("clan").getValue(String::class.java)
+                            val level = (atkSnap.child("nivel").getValue(Int::class.java) ?: 1)
+                            val resources = (atkSnap.child("coins").getValue(Int::class.java) ?: 0)
+                            val attack = selectedCriatura.dano ?: (5 + level * 3)
+                            val maxHealth = selectedCriatura.salud ?: (100 + level * 10)
+                            Combatant(id = attackerId, name = name, clan = clan, level = level, attack = attack, maxHealth = maxHealth, resources = resources).also { it.creatureImage = selectedCriatura.imagen }
+                        } else buildCombatantFromSnapshot(attackerId, atkSnap)
+                    } else buildCombatantFromSnapshot(attackerId, atkSnap)
+
+                    val dummy = Combatant(id = "opponent_temp", name = "Oponente", clan = null, level = 1, attack = 8, maxHealth = 100, resources = 0)
+                    startCombat(attacker, dummy)
+                    return@launch
+                }
+
+                // Si falta el atacante pero hay defensor
+                if (attackerId.isNullOrBlank() && !defenderId.isNullOrBlank()) {
+                    val defSnap = usersRef.child(defenderId).get().await()
+                    val defender = if (selectedCriatura != null) {
+                        var belongs = false
+                        val criSnaps = defSnap.child("criaturas")
+                        for (c in criSnaps.children) {
+                            val cri = c.getValue(Criatura::class.java)
+                            if (cri != null && cri.id == selectedCriatura.id) { belongs = true; break }
+                        }
+                        if (belongs) {
+                            val name = defSnap.child("name").getValue(String::class.java) ?: "Player"
+                            val clan = defSnap.child("clan").getValue(String::class.java)
+                            val level = (defSnap.child("nivel").getValue(Int::class.java) ?: 1)
+                            val resources = (defSnap.child("coins").getValue(Int::class.java) ?: 0)
+                            val attack = selectedCriatura.dano ?: (5 + level * 3)
+                            val maxHealth = selectedCriatura.salud ?: (100 + level * 10)
+                            Combatant(id = defenderId, name = name, clan = clan, level = level, attack = attack, maxHealth = maxHealth, resources = resources).also { it.creatureImage = selectedCriatura.imagen }
+                        } else buildCombatantFromSnapshot(defenderId, defSnap)
+                    } else buildCombatantFromSnapshot(defenderId, defSnap)
+
+                    val dummyAtk = Combatant(id = "opponent_temp", name = "Oponente", clan = null, level = 1, attack = 8, maxHealth = 100, resources = 0)
+                    startCombat(dummyAtk, defender)
+                    return@launch
+                }
+
+            } catch (e: Exception) {
+                Log.e("CombatVM", "forceStartCombat error: ${e.message}")
             }
         }
     }
