@@ -1,0 +1,296 @@
+[
+  {
+    "id": 1,
+    "nombre": "La Candelaria",
+    "lat": 4.60971,
+    "lng": -74.08175,
+    "clima": "Frío",
+    "altitud": 2600,
+    "zona": "Centro histórico",
+    "recursos": [
+      { "nombre": "Cultura", "cantidad": 100 },
+      { "nombre": "Turismo", "cantidad": 80 }
+    ],
+    "clanesPeleando": [
+      { "nombre": "Dragones", "poder": 120 },
+      { "nombre": "Fénix", "poder": 90 }
+    ]
+  },
+  {
+    "id": 2,
+    "nombre": "Monserrate",
+    "lat": 4.6736,
+    "lng": -74.0565,
+    "clima": "Frío",
+    "altitud": 3150,
+    "zona": "Montaña",
+    "recursos": [
+      { "nombre": "Madera", "cantidad": 50 },
+      { "nombre": "Agua", "cantidad": 40 }
+    ],
+    "clanesPeleando": [
+      { "nombre": "Águilas", "poder": 75 }
+    ]
+  },
+  {
+    "id": 3,
+    "nombre": "Usaquén",
+    "lat": 4.6943,
+    "lng": -74.0301,
+    "clima": "Templado",
+    "altitud": 2600,
+    "zona": "Residencial",
+    "recursos": [
+      { "nombre": "Comercio", "cantidad": 60 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 4,
+    "nombre": "Parque de la 93",
+    "lat": 4.6762,
+    "lng": -74.0488,
+    "clima": "Templado",
+    "altitud": 2600,
+    "zona": "Urbana",
+    "recursos": [
+      { "nombre": "Entretenimiento", "cantidad": 90 }
+    ],
+    "clanesPeleando": [
+      { "nombre": "Lobos", "poder": 40 }
+    ]
+  },
+  {
+    "id": 5,
+    "nombre": "Chapinero",
+    "lat": 4.6533,
+    "lng": -74.0628,
+    "clima": "Templado",
+    "altitud": 2620,
+    "zona": "Residencial y comercial",
+    "recursos": [
+      { "nombre": "Comercio", "cantidad": 80 },
+      { "nombre": "Educación", "cantidad": 60 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 6,
+    "nombre": "Parque Simón Bolívar",
+    "lat": 4.6584,
+    "lng": -74.0930,
+    "clima": "Templado",
+    "altitud": 2580,
+    "zona": "Recreativa",
+    "recursos": [
+      { "nombre": "Naturaleza", "cantidad": 100 },
+      { "nombre": "Eventos", "cantidad": 80 }
+    ],
+    "clanesPeleando": [
+      { "nombre": "Centauros", "poder": 70 }
+    ]
+  },
+  {
+    "id": 7,
+    "nombre": "Museo del Oro",
+    "lat": 4.6019,
+    "lng": -74.0725,
+    "clima": "Frío",
+    "altitud": 2600,
+    "zona": "Centro",
+    "recursos": [
+      { "nombre": "Cultura", "cantidad": 100 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 8,
+    "nombre": "Jardín Botánico",
+    "lat": 4.6582,
+    "lng": -74.0936,
+    "clima": "Templado",
+    "altitud": 2580,
+    "zona": "Recreativa",
+    "recursos": [
+      { "nombre": "Naturaleza", "cantidad": 90 },
+      { "nombre": "Flora", "cantidad": 80 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 9,
+    "nombre": "Plaza de Bolívar",
+    "lat": 4.5981,
+    "lng": -74.0760,
+    "clima": "Frío",
+    "altitud": 2600,
+    "zona": "Centro histórico",
+    "recursos": [
+      { "nombre": "Historia", "cantidad": 100 }
+    ],
+    "clanesPeleando": [
+      { "nombre": "Guerreros del Sol", "poder": 85 }
+    ]
+  },
+  {
+    "id": 10,
+    "nombre": "Zona T",
+    "lat": 4.6675,
+    "lng": -74.0537,
+    "clima": "Templado",
+    "altitud": 2600,
+    "zona": "Comercial",
+    "recursos": [
+      { "nombre": "Entretenimiento", "cantidad": 95 },
+      { "nombre": "Comercio", "cantidad": 90 }
+    ],
+    "clanesPeleando": [
+      { "nombre": "Cóndores", "poder": 60 }
+    ]
+  },
+  {
+    "id": 11,
+    "nombre": "Andrés DC",
+    "lat": 4.6670,
+    "lng": -74.0545,
+    "clima": "Templado",
+    "altitud": 2600,
+    "zona": "Zona Rosa",
+    "recursos": [
+      { "nombre": "Gastronomía", "cantidad": 95 },
+      { "nombre": "Fiesta", "cantidad": 100 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 12,
+    "nombre": "Maloka",
+    "lat": 4.6412,
+    "lng": -74.1117,
+    "clima": "Templado",
+    "altitud": 2570,
+    "zona": "Educativa",
+    "recursos": [
+      { "nombre": "Ciencia", "cantidad": 100 },
+      { "nombre": "Tecnología", "cantidad": 90 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 13,
+    "nombre": "Salitre Plaza",
+    "lat": 4.6482,
+    "lng": -74.1080,
+    "clima": "Templado",
+    "altitud": 2575,
+    "zona": "Comercial",
+    "recursos": [
+      { "nombre": "Comercio", "cantidad": 85 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 14,
+    "nombre": "Portal 80",
+    "lat": 4.7195,
+    "lng": -74.0922,
+    "clima": "Templado",
+    "altitud": 2570,
+    "zona": "Occidente",
+    "recursos": [
+      { "nombre": "Transporte", "cantidad": 100 },
+      { "nombre": "Comercio", "cantidad": 60 }
+    ],
+    "clanesPeleando": [
+      { "nombre": "Hijos del Viento", "poder": 70 }
+    ]
+  },
+  {
+    "id": 15,
+    "nombre": "Centro Comercial Gran Estación",
+    "lat": 4.6473,
+    "lng": -74.1068,
+    "clima": "Templado",
+    "altitud": 2570,
+    "zona": "Comercial",
+    "recursos": [
+      { "nombre": "Comercio", "cantidad": 90 },
+      { "nombre": "Entretenimiento", "cantidad": 70 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 16,
+    "nombre": "Biblioteca Virgilio Barco",
+    "lat": 4.6474,
+    "lng": -74.0948,
+    "clima": "Templado",
+    "altitud": 2580,
+    "zona": "Cultural",
+    "recursos": [
+      { "nombre": "Educación", "cantidad": 100 },
+      { "nombre": "Cultura", "cantidad": 90 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 17,
+    "nombre": "Museo Nacional",
+    "lat": 4.6178,
+    "lng": -74.0681,
+    "clima": "Frío",
+    "altitud": 2600,
+    "zona": "Centro",
+    "recursos": [
+      { "nombre": "Historia", "cantidad": 100 },
+      { "nombre": "Arte", "cantidad": 80 }
+    ],
+    "clanesPeleando": [
+      { "nombre": "Centinelas", "poder": 50 }
+    ]
+  },
+  {
+    "id": 18,
+    "nombre": "Parque Nacional",
+    "lat": 4.6265,
+    "lng": -74.0638,
+    "clima": "Templado",
+    "altitud": 2620,
+    "zona": "Recreativa",
+    "recursos": [
+      { "nombre": "Naturaleza", "cantidad": 100 },
+      { "nombre": "Deporte", "cantidad": 80 }
+    ],
+    "clanesPeleando": []
+  },
+  {
+    "id": 19,
+    "nombre": "Plaza Usaquén",
+    "lat": 4.6942,
+    "lng": -74.0303,
+    "clima": "Templado",
+    "altitud": 2600,
+    "zona": "Residencial y Comercial",
+    "recursos": [
+      { "nombre": "Gastronomía", "cantidad": 90 },
+      { "nombre": "Cultura", "cantidad": 60 }
+    ],
+    "clanesPeleando": [
+      { "nombre": "Halcones", "poder": 45 }
+    ]
+  },
+  {
+    "id": 20,
+    "nombre": "Museo Botero",
+    "lat": 4.6026,
+    "lng": -74.0705,
+    "clima": "Frío",
+    "altitud": 2600,
+    "zona": "Centro histórico",
+    "recursos": [
+      { "nombre": "Arte", "cantidad": 100 },
+      { "nombre": "Cultura", "cantidad": 90 }
+    ],
+    "clanesPeleando": []
+  }
+]
