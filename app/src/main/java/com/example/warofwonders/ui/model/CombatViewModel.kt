@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 import com.google.firebase.Firebase
 import com.google.firebase.database.*
 import kotlinx.coroutines.tasks.await
@@ -25,6 +26,10 @@ data class CombatUIState(
     val result: CombatResult? = null,
     val isLoading: Boolean = false,
     val errorMessage: String? = null
+    ,
+    // HP actuales durante el combate (se actualizan en tiempo real)
+    val attackerHp: Int? = null,
+    val defenderHp: Int? = null
 )
 
 /**
@@ -40,15 +45,65 @@ class CombatViewModel : ViewModel() {
     val uiState: StateFlow<CombatUIState> = _uiState.asStateFlow()
 
     fun startCombat(attacker: Combatant, defender: Combatant) {
-        _uiState.value = CombatUIState(attacker = attacker, defender = defender, isLoading = true)
+        // Inicializar estado con HP completos
+        _uiState.value = CombatUIState(attacker = attacker, defender = defender, isLoading = true, attackerHp = attacker.maxHealth, defenderHp = defender.maxHealth)
 
         viewModelScope.launch {
             try {
-                val result = combatService.fight(attacker, defender)
+                // Simular rounds con actualizaciones en tiempo real y pequeñas pausas para que la UI las muestre
+                var atkHp = attacker.maxHealth
+                var defHp = defender.maxHealth
+                var rounds = 0
+                val rand = kotlin.random.Random(System.currentTimeMillis())
+
+                while (atkHp > 0 && defHp > 0) {
+                    rounds++
+                    // El atacante golpea
+                    val atkDamage = attacker.attack + rand.nextInt(0, attacker.level + 3)
+                    defHp -= atkDamage
+                    if (defHp < 0) defHp = 0
+
+                    // Actualizar estado para que la UI muestre el daño
+                    _uiState.value = _uiState.value.copy(defenderHp = defHp, attacker = attacker, defender = defender)
+
+                    // Pequeña pausa para visibilidad
+                    kotlinx.coroutines.delay(600)
+
+                    if (defHp <= 0) break
+
+                    // El defensor contraataca
+                    val defDamage = defender.attack + rand.nextInt(0, defender.level + 3)
+                    atkHp -= defDamage
+                    if (atkHp < 0) atkHp = 0
+
+                    // Actualizar estado
+                    _uiState.value = _uiState.value.copy(attackerHp = atkHp, attacker = attacker, defender = defender)
+
+                    // Pausa entre rondas
+                    kotlinx.coroutines.delay(600)
+                }
+
+                val winnerIsAttacker = atkHp > 0
+                val winner = if (winnerIsAttacker) attacker else defender
+                val loser = if (winnerIsAttacker) defender else attacker
+
+                // Se transifere el 10% de los recursos del perdedor (redondeados) por defecto
+                val transferred = ((loser.resources * 0.10).roundToInt()).coerceAtLeast(0)
+
+                val result = CombatResult(
+                    winnerId = winner.id,
+                    loserId = loser.id,
+                    winnerClan = winner.clan,
+                    loserClan = loser.clan,
+                    resourcesTransferred = transferred,
+                    rounds = rounds
+                )
+
                 // aplicar la transferencia de recursos en realtime DB
                 applyResourceTransfer(result)
 
-                _uiState.value = CombatUIState(attacker = attacker, defender = defender, result = result, isLoading = false)
+                // Actualizar estado final (HP y resultado)
+                _uiState.value = CombatUIState(attacker = attacker, defender = defender, result = result, isLoading = false, attackerHp = atkHp, defenderHp = defHp)
             } catch (e: Exception) {
                 _uiState.value = CombatUIState(errorMessage = "Combat error: ${e.message}", isLoading = false)
             }
@@ -82,7 +137,7 @@ class CombatViewModel : ViewModel() {
         val name = snap.child("name").getValue(String::class.java) ?: "Player"
         val clan = snap.child("clan").getValue(String::class.java)
         val level = (snap.child("nivel").getValue(Int::class.java) ?: 1)
-        // Read coins
+        // Leer monedas
         val resources = (snap.child("coins").getValue(Int::class.java) ?: 0)
 
         // Parsear criaturas del snapshot

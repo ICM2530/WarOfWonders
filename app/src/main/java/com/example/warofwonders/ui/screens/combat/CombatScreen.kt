@@ -51,6 +51,12 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
     var selectionVisible by remember { mutableStateOf(true) }
 
     val currentUid = FirebaseAuth.getInstance().currentUser?.uid
+
+    // Cargar inventario al entrar en la pantalla
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        inventarioVM.cargarInventario()
+    }
+
     val isLocalAttacker = currentUid != null && currentUid == attackerId
     val isLocalDefender = currentUid != null && currentUid == defenderId
     val selectionAllowed = isLocalAttacker || isLocalDefender
@@ -99,7 +105,9 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                         title = attacker?.name ?: "User #11",
                         subtitle = attacker?.clan ?: "teusaquillo amigos"
                     )
-                    HealthBar()
+                    // mostrar barra de vida y texto numérico
+                    HealthBar(current = uiState.attackerHp ?: attacker?.maxHealth ?: 0, max = attacker?.maxHealth ?: 0)
+                    Text(text = "HP: ${uiState.attackerHp ?: attacker?.maxHealth ?: 0} / ${attacker?.maxHealth ?: 0}", color = Color.White, fontSize = 12.sp)
                 }
 
                 // info del defensor
@@ -113,7 +121,8 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                         title = defender?.name ?: "User #18",
                         subtitle = defender?.clan ?: "los piratas"
                     )
-                    HealthBar()
+                    HealthBar(current = uiState.defenderHp ?: defender?.maxHealth ?: 0, max = defender?.maxHealth ?: 0)
+                    Text(text = "HP: ${uiState.defenderHp ?: defender?.maxHealth ?: 0} / ${defender?.maxHealth ?: 0}", color = Color.White, fontSize = 12.sp)
                 }
 
                 // Si el combate terminó, mostrar resultado
@@ -142,7 +151,7 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                                             selectionVisible = false
                                             combatViewModel.startCombatByIds(attackerId, defenderId)
                                         }, enabled = !uiState.isLoading) { Text("Iniciar sin criatura") }
-                                        Button(onClick = { navController.popBackStack() }) { Text("Cancelar") }
+                                        // El boton de cancelar se mueve a la parte inferior
                                     }
                                 } else {
                                     LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -178,140 +187,60 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                                                 combatViewModel.startCombatWithSelectedCreatureForDefender(attackerId, defenderId, selectedCriatura)
                                             }
                                         }, enabled = (selectedCriatura != null) && selectionAllowed && !uiState.isLoading) { Text("Iniciar combate") }
-                                        Button(onClick = { navController.popBackStack() }) { Text("Cancelar") }
+                                        // El boton de cancelar se mueve a la parte inferior
                                     }
                                 }
                             }
                         }
                     }
-                    Row(
+                    // (El estatus movido a la pantalla de abajo)
+                }
+            }
+
+
+                    // Area inferior (Placeholders eliminados)
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .align(Alignment.Center)
-                            .padding(horizontal = 24.dp)
-                            .padding(top = 170.dp),
-
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Animal atacante
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                "${attacker?.name ?: "bear"} lvl${attacker?.level ?: 1}",
-                                color = Color.White,
-                                fontSize = 12.sp
-                            )
-                            Image(
-                                painter = painterResource(id = R.drawable.oso),
-                                contentDescription = "Oso",
-                                modifier = Modifier.size(130.dp)
-                            )
-                        }
-
-                        // Animal defensor
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                "${defender?.name ?: "rino"} lvl${defender?.level ?: 2}",
-                                color = Color.White,
-                                fontSize = 12.sp
-                            )
-                            Image(
-                                painter = painterResource(id = R.drawable.rino),
-                                contentDescription = "Rino",
-                                modifier = Modifier.size(130.dp)
-                            )
-                        }
-                    }
-                }
-            }
-
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.4f)
-                    .padding(horizontal = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Top
-                ) {
-
-                    Image(
-                        painter = painterResource(id = R.drawable.inventario),
-                        contentDescription = "Inventario",
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(190.dp),
-                        contentScale = ContentScale.FillWidth
-                    )
-
-                    Spacer(Modifier.width(10.dp))
-
-                    Column(
-                        modifier = Modifier.width(110.dp),
+                            .weight(0.4f)
+                            .padding(horizontal = 10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(
-                            "CLIMA MEDIO",
-                            color = Color.White,
-                            fontSize = 12.sp,
-                            letterSpacing = 0.5.sp
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.mappin),
-                            contentDescription = "Pin",
-                            modifier = Modifier.size(30.dp)
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.oso),
-                            contentDescription = "Oso pequeño",
-                            modifier = Modifier.size(82.dp)
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text("bear lvl1", color = Color.White, fontSize = 12.sp)
-                    }
-                }
+                        Spacer(Modifier.height(8.dp))
+                        if (result == null && !uiState.isLoading) {
+                            if (attackerId == null && defenderId == null) {
+                                Text("No hay nadie a quien enfrentar!...", color = Color.White)
+                            } else {
+                                val atk = attacker
+                                val def = defender
+                                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Button(
+                                        onClick = {
+                                            if (atk != null && def != null) {
+                                                combatViewModel.startCombat(atk, def)
+                                            }
+                                        },
+                                        enabled = (atk != null && def != null) && !uiState.isLoading,
+                                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
+                                    ) {
+                                        Text(text = "Iniciar combate", color = Color.White)
+                                    }
 
-                Spacer(Modifier.height(12.dp))
-
-                if (result == null && !uiState.isLoading) {
-                    if (attackerId == null && defenderId == null) {
-                        Text("No hay nadie a quien enfrentar!...", color = Color.White)
-                    }
-                    else{
-                        val atk = attacker
-                        val def = defender
-                        Button(
-                            onClick = {
-                                if (atk != null && def != null) {
-                                    combatViewModel.startCombat(atk, def)
+                                    Button(onClick = { navController.popBackStack() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB00020))) {
+                                        Text("Cancelar", color = Color.White)
+                                    }
                                 }
-                            },
-                            enabled = (atk != null && def != null) && !uiState.isLoading,
-                            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                            contentPadding = PaddingValues(0.dp)
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.play),
-                                contentDescription = "PLAY",
-                                modifier = Modifier
-                                    .size(width = 200.dp, height = 90.dp)
-                            )
+                            }
+                        } else if (uiState.isLoading) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text("Combate en progreso...", color = Color.White)
+                                Spacer(Modifier.height(6.dp))
+                                Text(text = if (uiState.result == null) "Ronda activa" else "", color = Color.White)
+                            }
                         }
-                    }
-                } else if (uiState.isLoading) {
-                    Text("Combate en progreso...", color = Color.White)
-                }
 
-                Spacer(Modifier.height(6.dp))
-            }
+                        Spacer(Modifier.height(6.dp))
+                    }
         }
     }
 }
@@ -380,14 +309,16 @@ private fun TopNameLine(title: String, subtitle: String) {
 }
 
 @Composable
-private fun HealthBar() {
-
-    Image(
-        painter = painterResource(id = R.drawable.barra),
-        contentDescription = "Barra de vida",
-        modifier = Modifier
-            .height(18.dp)
-            .width(100.dp),
-        contentScale = ContentScale.FillBounds
-    )
+private fun HealthBar(current: Int, max: Int) {
+    // Se podria renderizar la barra (imagen de fondo) y superponer un rectángulo o texto aca?
+    Box(modifier = Modifier.height(18.dp).width(120.dp), contentAlignment = Alignment.Center) {
+        Image(
+            painter = painterResource(id = R.drawable.barra),
+            contentDescription = "Barra de vida",
+            modifier = Modifier
+                .fillMaxSize(),
+            contentScale = ContentScale.FillBounds
+        )
+        Text(text = "$current / $max", color = Color.White, fontSize = 10.sp)
+    }
 }

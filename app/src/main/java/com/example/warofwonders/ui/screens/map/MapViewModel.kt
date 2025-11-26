@@ -515,7 +515,6 @@ class MapViewModel(
         super.onCleared()
     }
 
-    //show alert
     fun clearEncounter() {
         _uiState.update { it.copy(encounterAttackerId = null, encounterDefenderId = null) }
     }
@@ -855,15 +854,10 @@ class MapViewModel(
                     val insideEnemy = checkInsideEnemyTerritory(currentLocation, clans)
                     _uiState.update { it.copy(nearbyUsers = nearbyList, insideEnemyTerritory = insideEnemy) }
 
-                    // Si encontramos un jugador cercano, iniciar encuentro
+                    // Si encontramos un jugador cercano, solo lo reportamos en la lista nearbyUsers
                     if (nearbyPlayerId != null) {
-                        Log.d("MapViewModel", "¡Jugador cercano detectado! UID: $nearbyPlayerId a ${minDistance * 111000}m")
-                        _uiState.update {
-                            it.copy(
-                                encounterAttackerId = currentUser.uid,
-                                encounterDefenderId = nearbyPlayerId
-                            )
-                        }
+                        Log.d("MapViewModel", "Jugador cercano detectado (no iniciar encuentro automáticamente). UID: $nearbyPlayerId a ${minDistance * 111000}m")
+                        // No iniciar encuentro automáticamente — el usuario debe pulsar 'Atacar' en la UI.
                     }
                 } catch (e: Exception) {
                     Log.e("MapViewModel", "Error en detector PvP: ${e.message}")

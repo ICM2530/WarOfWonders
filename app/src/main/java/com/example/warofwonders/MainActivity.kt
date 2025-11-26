@@ -26,6 +26,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
+        }
+
         val locationClient = LocationServices.getFusedLocationProviderClient(this)
         val locationDataSource = LocationDataSource(locationClient = locationClient)
         val locationRepository = LocationRepository(locationDataSource = locationDataSource)
