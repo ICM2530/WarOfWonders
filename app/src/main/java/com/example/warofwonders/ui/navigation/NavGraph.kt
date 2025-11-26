@@ -146,9 +146,11 @@ fun NavGraph(
             val clanViewModel: ClanViewModel = viewModel()
             ClanScreen(
                 viewModel = clanViewModel,
-                onClanSelected = {  }
+                onClanSelected = {  },
+                onBack = { navController.popBackStack() }
             )
         }
+
 
 
 
