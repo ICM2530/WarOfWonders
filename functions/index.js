@@ -56,19 +56,20 @@ exports.onFriendRequestCreated = functions.database
 
     console.log("[onFriendRequestCreated] nombre origen:", fromName);
 
+    // *******************************
+    // *** SOLO DATA PAYLOAD *********
+    // *******************************
     const payload = {
-      notification: {
-        title: "Solicitud de amistad",
-        body: `¡Tienes una nueva solicitud de amistad de ${fromName}!`,
-      },
       data: {
         type: "friend_request",
         fromUid: fromUid,
+        title: "Solicitud de amistad",
+        body: `¡Tienes una nueva solicitud de amistad de ${fromName}!`,
       },
     };
 
     console.log(
-      "[onFriendRequestCreated] payload a enviar:",
+      "[onFriendRequestCreated] payload a enviar (DATA ONLY):",
       JSON.stringify(payload)
     );
 
@@ -146,20 +147,21 @@ exports.onFriendRequestStatusChanged = functions.database
     const titulo = aceptada ? "Solicitud aceptada" : "Solicitud rechazada";
     const verbo = aceptada ? "aceptado" : "rechazado";
 
+    // *******************************
+    // *** SOLO DATA PAYLOAD *********
+    // *******************************
     const payload = {
-      notification: {
-        title: titulo,
-        body: `${toName} ha ${verbo} tu solicitud de amistad.`,
-      },
       data: {
         type: "friend_request_response",
         toUid: toUid,
         status: after,
+        title: titulo,
+        body: `${toName} ha ${verbo} tu solicitud de amistad.`,
       },
     };
 
     console.log(
-      "[onFriendRequestStatusChanged] payload a enviar:",
+      "[onFriendRequestStatusChanged] payload a enviar (DATA ONLY):",
       JSON.stringify(payload)
     );
 
