@@ -17,6 +17,7 @@ import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.StepDetectorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
+import com.example.warofwonders.data.source.local.JsonManagerDataSource
 import com.example.warofwonders.data.source.remote.RestVolleyDataSource
 import com.example.warofwonders.ui.model.InventarioViewModel
 import com.example.warofwonders.ui.model.MyUserState
@@ -53,6 +54,7 @@ fun NavGraph(
     stepDetectorDataSource: StepDetectorDataSource,
     magnetometerDataSource: MagnetometerDataSource,
     restVolleyDataSource: RestVolleyDataSource,
+    jsonManagerDataSource: JsonManagerDataSource,
     startDestination: String
 ) {
     val inventarioVM: InventarioViewModel = viewModel()
@@ -88,7 +90,8 @@ fun NavGraph(
                         temperatureSensorDataSource = temperatureSensorDataSource,
                         magnetometerDataSource = magnetometerDataSource,
                         restVolleyDataSource = restVolleyDataSource,
-                        inventarioVM = InventarioViewModel()
+                        inventarioVM = InventarioViewModel(),
+                        jsonManager = jsonManagerDataSource
                     )
                 }
             )
@@ -107,7 +110,8 @@ fun NavGraph(
                         temperatureSensorDataSource = temperatureSensorDataSource,
                         magnetometerDataSource = magnetometerDataSource,
                         restVolleyDataSource = restVolleyDataSource,
-                        inventarioVM = InventarioViewModel()
+                        inventarioVM = InventarioViewModel(),
+                        jsonManager = jsonManagerDataSource
                     )
                 }
             )

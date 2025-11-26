@@ -16,6 +16,7 @@ import com.example.warofwonders.data.source.hardware.LightSensorDataSource
 import com.example.warofwonders.data.source.hardware.BarometerSensorDataSource
 import com.example.warofwonders.data.source.hardware.TemperatureSensorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
+import com.example.warofwonders.data.source.local.JsonManagerDataSource
 import com.example.warofwonders.data.source.remote.RestVolleyDataSource
 import com.example.warofwonders.ui.model.Criatura
 import com.example.warofwonders.ui.model.InventarioViewModel
@@ -47,7 +48,8 @@ class MapViewModel(
     private val magnetometerDataSource: MagnetometerDataSource,
     private val lightSensorDataSource: LightSensorDataSource,
     private val restVolleyDataSource: RestVolleyDataSource,
-    private val inventarioVM: InventarioViewModel
+    private val inventarioVM: InventarioViewModel,
+    private val jsonManager: JsonManagerDataSource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(MapUiState())
@@ -68,10 +70,7 @@ class MapViewModel(
     private var fakeUsers: MutableList<MapUser> = mutableListOf()
 
     init {
-        _uiState.update {
-            it.copy(currentLocation = LocationData(4.634243207620236, -74.06992472665623))
-        }
-
+        loadUserLastLocation()
         loadUserActiveState()
         observarClanesRealtime()
         loadCreaturesFromFirebaseRealtime()
@@ -79,9 +78,62 @@ class MapViewModel(
         iniciarDetectorRecursos()
         iniciarDetectorPvP()
         seedFakeUser()
+        loadSavedInterestPoints()
 
         viewModelScope.launch {
             inventarioVM.cargarInventario()
+        }
+    }
+
+    private fun loadUserLastLocation() {
+        val currentUser = auth.currentUser ?: return
+        val locationRef = realtimeDB.child("users/${currentUser.uid}/lastLocation")
+
+        locationRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val lat = snapshot.child("latitude").getValue(Double::class.java)
+                val lng = snapshot.child("longitude").getValue(Double::class.java)
+                val alt = snapshot.child("altitude").getValue(Double::class.java) ?: 0.0
+
+                if (lat != null && lng != null) {
+                    _uiState.update { state ->
+                        state.copy(
+                            currentLocation = LocationData(lat, lng, alt),
+                            cameraTarget = LatLng(lat, lng)
+                        )
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("MapViewModel", "Error cargando lastLocation: ${error.message}")
+            }
+        })
+    }
+
+    fun saveSelectedInterestPoint(point: InterestPointData) {
+        jsonManager.saveInterestPoint(point)
+    }
+
+    private fun loadSavedInterestPoints() {
+        val savedPoints = jsonManager.readInterestPoints()
+        _uiState.update { it.copy(interestPoint = savedPoints) }
+    }
+
+    fun visitPoi() {
+        viewModelScope.launch {
+            val db = FirebaseDatabase.getInstance().reference
+            val userRef = db.child("users").child(auth.currentUser?.uid ?: return@launch)
+            val snapshot = userRef.get().await()
+
+            val currentExp = (snapshot.child("xp").value as? Number)?.toInt() ?: 0
+            val currentCoins = (snapshot.child("coins").value as? Number)?.toInt() ?: 0
+
+            val updates = mapOf(
+                "xp" to (currentExp + 20),
+                "coins" to (currentCoins + 50)
+            )
+            userRef.updateChildren(updates)
         }
     }
 
@@ -195,7 +247,8 @@ class MapViewModel(
     }
 
     fun loadInterestPoints() {
-        if (_uiState.value.interestPoint.isEmpty()) {
+        if (_uiState.value.interestPoint.size < 20) {
+            _uiState.update { it.copy(interestPoint = emptyList()) }
             viewModelScope.launch {
                 restVolleyDataSource.loadInterestPoints { list ->
                     _uiState.update { it.copy(interestPoint = list) }
@@ -203,6 +256,7 @@ class MapViewModel(
             }
         } else {
             _uiState.update { it.copy(interestPoint = emptyList()) }
+            loadSavedInterestPoints()
         }
     }
 

@@ -54,7 +54,7 @@ fun ClanInfoBox(
 ) {
     AlertDialog(
         onDismissRequest = onClose,
-        containerColor = Color(0x66C79E63),
+        containerColor = Color(0xE6E49C6C),
         title = {
             Text(
                 clan.nombre,

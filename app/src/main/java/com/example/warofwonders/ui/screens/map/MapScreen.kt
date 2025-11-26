@@ -12,12 +12,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.FiberManualRecord
+import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.ToggleOff
@@ -62,12 +65,14 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.warofwonders.R
+import com.example.warofwonders.data.model.InterestPointData
 import com.example.warofwonders.ui.navigation.AppScreens
 import com.example.warofwonders.ui.screens.map.components.ClanInfoBox
 import com.example.warofwonders.ui.screens.map.components.CreatureAlert
 import com.example.warofwonders.ui.screens.map.components.FloatingButton
 import com.example.warofwonders.ui.screens.map.components.FriendsBottomSheet
 import com.example.warofwonders.ui.screens.map.components.ImageIconButton
+import com.example.warofwonders.ui.screens.map.components.PoiBottomCard
 import com.example.warofwonders.ui.shared.utils.bitmapDescriptorFromVector
 import com.example.warofwonders.ui.shared.utils.distanceBetween
 import com.example.warofwonders.ui.shared.utils.isPermissionGranted
@@ -193,6 +198,8 @@ fun MapScreenContent(
     var showFriendsModal by remember { mutableStateOf(false) }
     var mostrarClanInfo by remember { mutableStateOf(false) }
     var mostrarMiembrosClan by remember { mutableStateOf(false) }
+    var selectedPoi by remember { mutableStateOf<InterestPointData?>(null) }
+    var selectedPoiCanVisit by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.cameraTarget) {
         uiState.cameraTarget?.let { target ->
@@ -216,8 +223,9 @@ fun MapScreenContent(
                 viewModel.stopSelectedFriendListener()
                 mostrarMiembrosClan = false
                 viewModel.cerrarClanInfo()
+                selectedPoi = null
             },
-            onMapLongClick = { pos -> onMapLongClick(pos) }
+            onMapLongClick = { pos -> onMapLongClick(pos) },
         ) {
             Marker(
                 state = rememberUpdatedMarkerState(position = location),
@@ -285,20 +293,7 @@ fun MapScreenContent(
                 )
             }
 
-            uiState.interestPoint.forEach { poi ->
-                Marker(
-                    state = rememberUpdatedMarkerState(
-                        position = LatLng(poi.lat, poi.lng)
-                    ),
-                    title = poi.name,
-                    snippet = poi.address,
-                    icon = poi.icon?.let { bitmap ->
-                        BitmapDescriptorFactory.fromBitmap(bitmap)
-                    }
-                )
-            }
-
-            uiState.selectedFriendMarker.let { friend ->
+            uiState.selectedFriendMarker?.let { friend ->
                 Marker(
                     state = rememberUpdatedMarkerState(
                         position = LatLng(friend.latitude ?: 0.0, friend.longitude ?: 0.0)
@@ -330,6 +325,47 @@ fun MapScreenContent(
                     }
                 }
             }
+
+            uiState.interestPoint.forEach { poi ->
+                Marker(
+                    state = rememberUpdatedMarkerState(
+                        position = LatLng(poi.lat, poi.lng)
+                    ),
+                    icon = poi.icon?.let { BitmapDescriptorFactory.fromBitmap(it) }
+                        ?: bitmapDescriptorFromVector(context, R.drawable.poi, maxDp = 28f), // ícono por defecto
+                    onClick = {
+                        val distance = distanceBetween(
+                            uiState.currentLocation.latitude,
+                            uiState.currentLocation.longitude,
+                            poi.lat,
+                            poi.lng
+                        )
+
+                        selectedPoi = poi.copy()
+                        selectedPoiCanVisit = distance <= 500
+                        true
+                    }
+                )
+            }
+        }
+
+        selectedPoi?.let { poi ->
+            PoiBottomCard(
+                poi = poi,
+                onAddClick = {
+                    selectedPoi?.let { viewModel.saveSelectedInterestPoint(it) }
+                    selectedPoi = null
+                },
+                onVisitClick = {
+                    viewModel.visitPoi()
+                },
+                canVisit = selectedPoiCanVisit,
+                isLocal = uiState.interestPoint.size < 20,
+                modifier = Modifier
+                    .width(300.dp)
+                    .align(Alignment.Center)
+                    .padding(16.dp)
+            )
         }
 
         Column(
@@ -443,7 +479,6 @@ fun MapScreenContent(
             )
         }
     }
-
 
     if (uiState.alreadyOwnedCreature) {
         Box(
