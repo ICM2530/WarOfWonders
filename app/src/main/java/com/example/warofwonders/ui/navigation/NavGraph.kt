@@ -1,13 +1,10 @@
 package com.example.warofwonders.ui.navigation
 
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -77,10 +74,6 @@ fun NavGraph(
         }
     }
 
-    val currentUserId = currentUser?.id ?: ""
-    val currentUserClanId = currentUser?.clanid ?: ""
-
-
     NavHost(navController = navController, startDestination = startDestination) {
         composable(route = AppScreens.StartUp.name) {
             StartUpScreen(navController = navController)
@@ -141,26 +134,21 @@ fun NavGraph(
             )
         }
 
-
         composable(AppScreens.Clan.name) {
-            val clanViewModel: ClanViewModel = viewModel()
+            val clanVM: ClanViewModel = viewModel()
             ClanScreen(
-                viewModel = clanViewModel,
-                onClanSelected = {  },
+                viewModel = clanVM,
+                onClanSelected = { },
                 onBack = { navController.popBackStack() }
             )
         }
 
-
-
-
-
-
-
-
-
         composable(route = AppScreens.Chat.name) {
-            ChatScreen(navController = navController)
+            // Aquí ya usamos el ChatScreen que recibe MyUserState
+            ChatScreen(
+                navController = navController,
+                currentUser = currentUser ?: MyUserState()
+            )
         }
 
         composable(route = AppScreens.Settings.name) {
@@ -196,19 +184,19 @@ fun NavGraph(
 
         composable(route = AppScreens.Shop.name) {
 
-            val userVM: MyUserViewModel = viewModel()
-            val currentUser by userVM.currentUser.collectAsState()
+            val userVMShop: MyUserViewModel = viewModel()
+            val currentUserShop by userVMShop.currentUser.collectAsState()
 
             LaunchedEffect(Unit) {
                 val uid = FirebaseAuth.getInstance().currentUser?.uid
                 if (uid != null) {
-                    userVM.loadUser(uid)
+                    userVMShop.loadUser(uid)
                 }
             }
 
             ShopScreen(
                 navController = navController,
-                userState = currentUser ?: MyUserState(),
+                userState = currentUserShop ?: MyUserState(),
                 inventarioVM = inventarioVM
             )
         }
