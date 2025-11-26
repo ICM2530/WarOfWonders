@@ -11,11 +11,19 @@ class JsonManagerDataSource(private val context: Context) {
 
     fun saveInterestPoint(point: InterestPointData) {
         val list = readInterestPoints().toMutableList()
-        // Evitar duplicados por id
         if (list.none { it.id == point.id }) {
             list.add(point)
         }
         writeList(list)
+    }
+
+    fun deleteJsonIfExists(): Boolean {
+        val file = File(context.filesDir, filename)
+        return if (file.exists()) {
+            file.delete()
+        } else {
+            false
+        }
     }
 
     fun readInterestPoints(): List<InterestPointData> {
