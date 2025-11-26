@@ -44,6 +44,7 @@ fun PoiBottomCard(
     poi: InterestPointData,
     onVisitClick: () -> Unit,
     onAddClick: () -> Unit,
+    onClose: () -> Unit,
     canVisit: Boolean,
     isLocal: Boolean,
     modifier: Modifier = Modifier
@@ -126,6 +127,17 @@ fun PoiBottomCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
+                    Button(
+                        onClick = onClose,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Brown,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.width(120.dp).padding(0.dp)
+                    ) {
+                        Text(text = "Salir", fontSize = 12.sp)
+                    }
+
                     if (canVisit && !isLocal) {
                         OutlinedButton(onClick = onVisitClick, border = BorderStroke(2.dp, Brown)) {
                             Text(text = "Visitar", color = Color.White, fontSize = 12.sp)
@@ -150,42 +162,6 @@ fun PoiBottomCard(
                     }
                 }
             }
-        }
-    }
-}
-@Preview(showBackground = true)
-@Composable
-fun PreviewPoiBottomCard() {
-    val fakePoi = InterestPointData(
-        id = 1,
-        name = "Café Central",
-        type = "Restaurant",
-        iconography = "",
-        address = "Calle 123 #45-67",
-        locality = "Bogotá",
-        admin = "Administrador Ejemplo",
-        phone = "3001234567",
-        lat = 4.60971,
-        lng = -74.08175,
-        icon = null
-    )
-
-    MaterialTheme {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            PoiBottomCard(
-                poi = fakePoi,
-                onVisitClick = { },
-                onAddClick = { },
-                canVisit = true,
-                isLocal = false,
-                modifier = Modifier
-                    .width(340.dp)
-                    .align(Alignment.CenterHorizontally)
-                    .padding(16.dp)
-            )
         }
     }
 }

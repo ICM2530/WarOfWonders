@@ -463,7 +463,7 @@ class MapViewModel(
                 targetMarker = newMarker,
                 cameraTarget = location,
                 cameraZoom = 16f
-            )
+            )   
         }
 
         val current = _uiState.value.currentLocation

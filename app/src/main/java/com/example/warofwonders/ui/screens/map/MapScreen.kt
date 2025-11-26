@@ -225,7 +225,6 @@ fun MapScreenContent(
                 viewModel.stopSelectedFriendListener()
                 mostrarMiembrosClan = false
                 viewModel.cerrarClanInfo()
-                selectedPoi = null
             },
             onMapLongClick = { pos -> onMapLongClick(pos) },
         ) {
@@ -345,6 +344,7 @@ fun MapScreenContent(
 
                         selectedPoi = poi.copy()
                         selectedPoiCanVisit = distance <= 500
+                        viewModel.loadRouteFromPoints(listOf(location, LatLng(poi.lat, poi.lng)))
                         true
                     }
                 )
@@ -360,6 +360,9 @@ fun MapScreenContent(
                 },
                 onVisitClick = {
                     viewModel.visitPoi()
+                },
+                onClose = {
+                    selectedPoi = null
                 },
                 canVisit = selectedPoiCanVisit,
                 isLocal = uiState.interestPoint.size < 20,
