@@ -18,18 +18,12 @@ import com.example.warofwonders.data.source.remote.RestVolleyDataSource
 import com.example.warofwonders.ui.navigation.NavGraph
 import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.android.gms.location.LocationServices
-import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.auth.FirebaseAuth
-import com.example.warofwonders.data.repository.FcmTokenManager
 import com.example.warofwonders.data.source.local.JsonManagerDataSource
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 1001)
-        }
 
         val locationClient = LocationServices.getFusedLocationProviderClient(this)
         val locationDataSource = LocationDataSource(locationClient = locationClient)
@@ -51,10 +45,6 @@ class MainActivity : ComponentActivity() {
             AppScreens.Home.name
         } else {
             AppScreens.StartUp.name
-        }
-
-        if (isUserLoggedIn) {
-            FcmTokenManager.updateTokenIfLoggedIn()
         }
 
         setContent {

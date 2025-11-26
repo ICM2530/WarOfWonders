@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.gms.google.services)
     alias(libs.plugins.mapsplatform.secrets.plugin)
+    alias(libs.plugins.firebase.crashlytics)
 }
 
 android {
@@ -90,7 +91,8 @@ dependencies {
     implementation("com.android.volley:volley:1.2.1")
     implementation("com.google.maps.android:maps-compose-utils:2.11.4")
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
-    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

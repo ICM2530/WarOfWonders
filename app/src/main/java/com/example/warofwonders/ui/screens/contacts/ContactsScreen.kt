@@ -34,7 +34,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -50,6 +49,11 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ServerValue
+import android.os.Build
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.google.firebase.messaging.FirebaseMessaging
 
 data class Contact(
     val id: String,
@@ -94,6 +98,42 @@ fun ContactsScreen() {
     val context = LocalContext.current
     val contentResolver = context.contentResolver
     val contactsPermissionState = rememberPermissionState(Manifest.permission.READ_CONTACTS)
+
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission(),
+            onResult = { isGranted ->
+                if (isGranted) {
+                    Log.d("NotificationPermission", "Permission granted")
+                } else {
+                    Log.d("NotificationPermission", "Permission denied")
+                }
+            }
+        )
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+
+        val currentUid = FirebaseAuth.getInstance().currentUser?.uid
+        if (currentUid != null) {
+            FirebaseMessaging.getInstance().token
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        val token = task.result
+                        Log.d("FCMToken", "Token: $token")
+
+                        val usersRef = database.getReference(pathUsers)
+                        usersRef.child(currentUid).child("fcmToken").setValue(token)
+                    } else {
+                        Log.d("FCMToken", "Error getting token", task.exception)
+                    }
+                }
+        } else {
+            Log.d("FCMToken", "No hay usuario logueado, no se guarda token")
+        }
+    }
 
     var friends by remember { mutableStateOf<List<Pair<String, Contact>>>(emptyList()) }
     var incomingRequests by remember { mutableStateOf<List<Pair<String, Contact>>>(emptyList()) }
