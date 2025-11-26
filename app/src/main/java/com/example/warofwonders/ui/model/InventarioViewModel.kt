@@ -45,8 +45,12 @@ class InventarioViewModel : ViewModel() {
 
     val mensajeError: State<String> get() = _mensajeError
 
-
-
+    init {
+        // Cargar inventario al crear el ViewModel
+        viewModelScope.launch {
+            cargarInventario()
+        }
+    }
 
 
 
