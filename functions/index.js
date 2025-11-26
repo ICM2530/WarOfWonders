@@ -5,6 +5,35 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 
+exports.onUserGameEvent = functions.database
+  .ref("/userEvents/{uid}/{eventId}")
+  .onCreate(async (snapshot, context) => {
+    const uid = context.params.uid;
+    const eventData = snapshot.val();
+    if (!eventData) return null;
+
+    const tokenSnap = await admin
+      .database()
+      .ref(`/users/${uid}/fcmToken`)
+      .once("value");
+
+    const token = tokenSnap.val();
+    if (!token) return null;
+
+    const title = eventData.title || "Notificación";
+    const body = eventData.body || "Tienes una actualización en el juego";
+
+    const payload = {
+      data: {
+        type: "game_event",
+        title: title,
+        body: body,
+      },
+    };
+
+    return admin.messaging().sendToDevice(token, payload);
+  });
+
 exports.onFriendRequestCreated = functions.database
   .ref("/friendRequests/{toUid}/{fromUid}")
   .onCreate(async (snapshot, context) => {
