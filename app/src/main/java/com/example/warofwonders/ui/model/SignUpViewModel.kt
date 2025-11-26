@@ -47,4 +47,20 @@ class SignUpViewModel : ViewModel() {
     fun updatePassError(e: String) {
         _form.value = _form.value.copy(passError = e,)
     }
+
+    fun updateLatitude(lat: Double?) {
+        _form.value = _form.value.copy(latitude = lat)
+    }
+
+    fun updateLongitude(lng: Double?) {
+        _form.value = _form.value.copy(longitude = lng)
+    }
+
+    fun updateAltitude(alt: Double?) {
+        _form.value = _form.value.copy(altitude = alt)
+    }
+
+    fun updateLocationError(e: String) {
+        _form.value = _form.value.copy(locationError = e)
+    }
 }

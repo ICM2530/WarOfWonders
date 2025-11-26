@@ -76,6 +76,11 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                         "xp" to state.xp,
                         "clanid" to state.clanid,
                         "profileImageUrl" to profileUrl,
+                        "lastLocation" to mapOf(
+                            "latitude" to state.latitude,
+                            "longitude" to state.longitude,
+                            "altitude" to state.altitude
+                        ),
                         "active" to true
                     )
 

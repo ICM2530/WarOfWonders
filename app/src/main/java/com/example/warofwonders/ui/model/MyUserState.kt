@@ -26,6 +26,9 @@ data class MyUserState(
     // Inventario
     val criaturas: List<Criatura> = emptyList(),
     val recursos: List<Recurso> = emptyList(),
-
-    )
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val altitude: Double? = null,
+    val locationError: String = ""
+)
 
