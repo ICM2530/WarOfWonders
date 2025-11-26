@@ -127,17 +127,6 @@ fun PoiBottomCard(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    Button(
-                        onClick = onClose,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Brown,
-                            contentColor = Color.White
-                        ),
-                        modifier = Modifier.width(120.dp).padding(0.dp)
-                    ) {
-                        Text(text = "Salir", fontSize = 12.sp)
-                    }
-
                     if (canVisit && !isLocal) {
                         OutlinedButton(onClick = onVisitClick, border = BorderStroke(2.dp, Brown)) {
                             Text(text = "Visitar", color = Color.White, fontSize = 12.sp)
@@ -160,6 +149,16 @@ fun PoiBottomCard(
                             Text(text = "Guardar", fontSize = 12.sp)
                         }
                     }
+                }
+                Button(
+                    onClick = onClose,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Brown,
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.width(100.dp).padding(0.dp)
+                ) {
+                    Text(text = "Salir", fontSize = 12.sp)
                 }
             }
         }
