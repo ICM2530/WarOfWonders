@@ -35,7 +35,6 @@ import com.google.accompanist.permissions.shouldShowRationale
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ServerValue
 import android.os.Build
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import com.google.firebase.messaging.FirebaseMessaging
@@ -84,54 +83,28 @@ fun ContactsScreen() {
     val contentResolver = context.contentResolver
     val contactsPermissionState = rememberPermissionState(Manifest.permission.READ_CONTACTS)
 
-    Log.d("ContactsScreen", "Composable creado")
-
     val notificationPermissionLauncher =
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.RequestPermission(),
-            onResult = { isGranted ->
-                Log.d("ContactsScreen", "POST_NOTIFICATIONS resultado: $isGranted")
-            }
+            onResult = { }
         )
 
     LaunchedEffect(Unit) {
-        Log.d("ContactsScreen", "LaunchedEffect START")
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            Log.d("ContactsScreen", "Solicitando permiso POST_NOTIFICATIONS…")
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        } else {
-            Log.d("ContactsScreen", "API < 33, no se pide POST_NOTIFICATIONS")
         }
 
         val currentUid = FirebaseAuth.getInstance().currentUser?.uid
-        Log.d("ContactsScreen", "currentUid: $currentUid")
 
         if (currentUid != null) {
             FirebaseMessaging.getInstance().token
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val token = task.result
-                        Log.d("FCMToken", "Token obtenido en ContactsScreen: $token")
-
                         val usersRef = database.getReference(pathUsers)
-                        val path = "$pathUsers$currentUid/fcmToken"
-                        Log.d("FCMToken", "Guardando token en: $path")
-
-                        usersRef.child(currentUid).child("fcmToken")
-                            .setValue(token)
-                            .addOnSuccessListener {
-                                Log.d("FCMToken", "Token guardado correctamente")
-                            }
-                            .addOnFailureListener { e ->
-                                Log.e("FCMToken", "Error guardando token", e)
-                            }
-                    } else {
-                        Log.e("FCMToken", "Error getting token", task.exception)
+                        usersRef.child(currentUid).child("fcmToken").setValue(token)
                     }
                 }
-        } else {
-            Log.d("FCMToken", "No hay usuario logueado, no se guarda token")
         }
     }
 
@@ -155,29 +128,13 @@ fun ContactsScreen() {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Log.d(
-                "ContactsScreen",
-                "Estado permiso contactos: isGranted=${contactsPermissionState.status.isGranted}, shouldShowRationale=${contactsPermissionState.status.shouldShowRationale}"
-            )
-
             when {
                 contactsPermissionState.status.isGranted -> {
-                    Log.d("ContactsScreen", "Permiso contactos concedido, cargando contactos")
                     val contacts = loadContacts(contentResolver)
-                    Log.d("ContactsScreen", "Contactos leídos: ${contacts.size}")
 
                     LaunchedEffect(reloadKey) {
-                        Log.d("ContactsScreen", "LaunchedEffect reloadKey=$reloadKey")
                         findFriendsInFirebase(contacts) { matched ->
-                            Log.d(
-                                "ContactsScreen",
-                                "findFriendsInFirebase -> matched=${matched.size}"
-                            )
                             loadFriendsAndRequests(matched) { relations ->
-                                Log.d(
-                                    "ContactsScreen",
-                                    "loadFriendsAndRequests -> friends=${relations.friends.size}, incoming=${relations.incomingRequests.size}, avail=${relations.availableToRequest.size}"
-                                )
                                 friends = relations.friends
                                 incomingRequests = relations.incomingRequests
                                 contactsToRequest = relations.availableToRequest
@@ -190,23 +147,17 @@ fun ContactsScreen() {
                         requests = incomingRequests,
                         availableToRequest = contactsToRequest,
                         onSendRequest = { uid ->
-                            Log.d("FriendRequest", "onSendRequest a uid=$uid")
                             sendFriendRequest(uid, context) {
-                                Log.d("FriendRequest", "onSendRequest completado, reloadKey++")
                                 reloadKey++
                             }
                         },
                         onAcceptRequest = { uid ->
-                            Log.d("FriendRequest", "onAcceptRequest desde uid=$uid")
                             respondToFriendRequest(uid, true, context) {
-                                Log.d("FriendRequest", "onAcceptRequest completado, reloadKey++")
                                 reloadKey++
                             }
                         },
                         onRejectRequest = { uid ->
-                            Log.d("FriendRequest", "onRejectRequest desde uid=$uid")
                             respondToFriendRequest(uid, false, context) {
-                                Log.d("FriendRequest", "onRejectRequest completado, reloadKey++")
                                 reloadKey++
                             }
                         }
@@ -222,10 +173,7 @@ fun ContactsScreen() {
                         color = Color.White
                     )
                     Button(
-                        onClick = {
-                            Log.d("ContactsScreen", "Usuario pulsa 'Conceder permiso' (rationale)")
-                            contactsPermissionState.launchPermissionRequest()
-                        },
+                        onClick = { contactsPermissionState.launchPermissionRequest() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(30.dp),
@@ -244,10 +192,7 @@ fun ContactsScreen() {
                         color = Color.White
                     )
                     Button(
-                        onClick = {
-                            Log.d("ContactsScreen", "Usuario pulsa 'Conceder permiso' (else)")
-                            contactsPermissionState.launchPermissionRequest()
-                        },
+                        onClick = { contactsPermissionState.launchPermissionRequest() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(30.dp),
@@ -382,7 +327,6 @@ fun DrawContactCard(
             contentDescription = "Fondo contenedor contacto",
             contentScale = ContentScale.FillBounds,
             modifier = Modifier.matchParentSize()
-
         )
 
         Row(
@@ -391,7 +335,6 @@ fun DrawContactCard(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
-            // ICONO
             Image(
                 painter = painterResource(R.drawable.iconocontacto),
                 contentDescription = "Contacto",
@@ -402,7 +345,6 @@ fun DrawContactCard(
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            // NOMBRE
             Text(
                 text = contact.name,
                 color = Color.White,
@@ -412,7 +354,6 @@ fun DrawContactCard(
                 modifier = Modifier.weight(0.55f)
             )
 
-            // BOTÓN
             if (showAddButton) {
                 Spacer(modifier = Modifier.width(4.dp))
 
@@ -430,12 +371,9 @@ fun DrawContactCard(
                     )
                 }
             }
-
-
         }
     }
 }
-
 
 @Composable
 fun FriendRequestCard(
@@ -463,7 +401,6 @@ fun FriendRequestCard(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 10.dp)
         ) {
-            // ICONO
             Image(
                 painter = painterResource(R.drawable.iconocontacto),
                 contentDescription = "Contacto",
@@ -474,7 +411,6 @@ fun FriendRequestCard(
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            // NOMBRE
             Text(
                 text = contact.name,
                 color = Color.White,
@@ -486,7 +422,6 @@ fun FriendRequestCard(
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            // BOTONES ACEPTAR / RECHAZAR
             Row(
                 modifier = Modifier.weight(0.40f),
                 verticalAlignment = Alignment.CenterVertically,
@@ -519,7 +454,6 @@ fun FriendRequestCard(
         }
     }
 }
-
 
 private fun normalizePhone(num: String): String =
     num.filter { it.isDigit() }.takeLast(10)
