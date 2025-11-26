@@ -18,6 +18,7 @@ data class MyUserState(
     val level: Int = 0,
     val xp: Int = 0,
     val clanid: String = "",
+    val clanRole: String = "",
     val profileImageUrl: String = "",
 
     val friends: Map<String, Boolean> = emptyMap(),

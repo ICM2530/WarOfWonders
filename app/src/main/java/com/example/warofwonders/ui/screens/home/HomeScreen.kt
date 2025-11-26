@@ -97,7 +97,7 @@ fun HomeScreen(navController: NavHostController,) {
                     modifier = Modifier
                         .weight(1f)
                         .aspectRatio(1.4f),
-                    onClick = { navController.navigate(AppScreens.Chat.name) }
+                    onClick = { navController.navigate(AppScreens.Clan.name) }
                 )
             }
 

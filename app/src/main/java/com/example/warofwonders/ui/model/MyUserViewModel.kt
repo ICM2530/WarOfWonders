@@ -20,6 +20,9 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
 
     private val myRef = database.getReference(pathUsers)
 
+
+
+
     @SuppressLint("StaticFieldLeak")
     private val context = getApplication<Application>().applicationContext
 
@@ -217,5 +220,10 @@ class MyUserViewModel(application: Application) : AndroidViewModel(application) 
                 _currentUser.value = user
             }
     }
+
+
+
+
+
 
 }

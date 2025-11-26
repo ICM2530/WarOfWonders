@@ -1,9 +1,11 @@
 package com.example.warofwonders.ui.navigation
 
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -19,13 +21,16 @@ import com.example.warofwonders.data.source.hardware.StepDetectorDataSource
 import com.example.warofwonders.data.source.hardware.MagnetometerDataSource
 import com.example.warofwonders.data.source.local.JsonManagerDataSource
 import com.example.warofwonders.data.source.remote.RestVolleyDataSource
+
 import com.example.warofwonders.ui.model.InventarioViewModel
 import com.example.warofwonders.ui.model.MyUserState
 import com.example.warofwonders.ui.model.MyUserViewModel
-import com.example.warofwonders.ui.model.ShopViewModel
+
 import com.example.warofwonders.ui.screens.camera.CameraScreen
 import com.example.warofwonders.ui.screens.chat.ChatScreen
 import com.example.warofwonders.ui.screens.clan.ClanScreen
+import com.example.warofwonders.ui.screens.clan.ClanViewModel
+
 import com.example.warofwonders.ui.screens.combat.CombatScreen
 import com.example.warofwonders.ui.screens.contacts.ContactsScreen
 import com.example.warofwonders.ui.screens.gallery.GalleryScreen
@@ -59,6 +64,21 @@ fun NavGraph(
     val inventarioVM: InventarioViewModel = viewModel()
 
     val navController = rememberNavController()
+
+    val clanViewModel: ClanViewModel = viewModel()
+    val userVM: MyUserViewModel = viewModel()
+    val currentUser by userVM.currentUser.collectAsState()
+
+    LaunchedEffect(Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            userVM.loadUser(uid)
+        }
+    }
+
+    val currentUserId = currentUser?.id ?: ""
+    val currentUserClanId = currentUser?.clanid ?: ""
+
 
     NavHost(navController = navController, startDestination = startDestination) {
         composable(route = AppScreens.StartUp.name) {
@@ -120,9 +140,21 @@ fun NavGraph(
             )
         }
 
-        composable(route = AppScreens.Clan.name) {
-            ClanScreen()
+
+        composable(AppScreens.Clan.name) {
+            val clanViewModel: ClanViewModel = viewModel()
+            ClanScreen(
+                viewModel = clanViewModel,
+                onClanSelected = {  }
+            )
         }
+
+
+
+
+
+
+
 
         composable(route = AppScreens.Chat.name) {
             ChatScreen(navController = navController)
