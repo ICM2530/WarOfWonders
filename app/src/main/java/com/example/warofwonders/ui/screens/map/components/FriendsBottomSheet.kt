@@ -33,7 +33,8 @@ fun FriendsBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = { onClose() },
-        sheetState = sheetState
+        sheetState = sheetState,
+        containerColor = Color(0x81C57E52)
     ) {
         Column(
             modifier = Modifier
@@ -44,7 +45,8 @@ fun FriendsBottomSheet(
             Text(
                 "Amigos (${uiState.friendsList.size})",
                 fontSize = 18.sp,
-                style = androidx.compose.ui.text.TextStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                style = androidx.compose.ui.text.TextStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold),
+                color = Color(0xFFCCBEAC)
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -56,7 +58,7 @@ fun FriendsBottomSheet(
                             .fillMaxWidth()
                             .padding(vertical = 6.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFC5B39C))
                     ) {
                         Row(
                             modifier = Modifier
@@ -108,7 +110,7 @@ fun FriendsBottomSheet(
                                 Text(
                                     friend.email,
                                     fontSize = 12.sp,
-                                    color = Color.Gray
+                                    color = Color(0x81482501)
                                 )
                             }
 
@@ -121,7 +123,7 @@ fun FriendsBottomSheet(
                                 },
                                 enabled = friend.active,
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = if (friend.active) Color(0xFF2196F3) else Color.Gray
+                                    containerColor = if (friend.active) Color(0xFFE37E4A) else Color(0x81BDA181)
                                 )
                             ) {
                                 Icon(Icons.Default.Place, contentDescription = null, tint = Color.White)

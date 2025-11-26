@@ -3,7 +3,9 @@ package com.example.warofwonders.ui.screens.shop
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -50,11 +52,13 @@ fun ShopScreen(
             contentScale = ContentScale.Crop
         )
 
+        val scrollState = rememberScrollState()
         Column(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .fillMaxSize()
+                .verticalScroll(scrollState),
+        horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
 

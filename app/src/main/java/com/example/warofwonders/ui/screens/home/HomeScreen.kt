@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -51,7 +52,8 @@ fun HomeScreen(navController: NavHostController,) {
 
             Box(
                 modifier = Modifier
-                    .size(260.dp)
+                    .fillMaxWidth(0.60f)
+                    .aspectRatio(1f)
                     .clickable { navController.navigate(AppScreens.Map.name) },
                 contentAlignment = Alignment.Center
             ) {
@@ -63,40 +65,42 @@ fun HomeScreen(navController: NavHostController,) {
                 )
             }
 
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight()
                     .padding(bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+
                 ImageButton(
                     imageRes = R.drawable.button_mouse,
                     contentDescription = "Criaturas / Inventario",
                     modifier = Modifier
-                        .width(120.dp)
-                        .height(90.dp),
-                    onClick = { navController.navigate(AppScreens.Inventory.name) },
+                        .weight(1f)
+                        .aspectRatio(1.4f),
+                    onClick = { navController.navigate(AppScreens.Inventory.name) }
                 )
 
                 ImageButton(
                     imageRes = R.drawable.button_battle,
                     contentDescription = "Batalla",
                     modifier = Modifier
-                        .width(120.dp)
-                        .height(90.dp),
-                    onClick = { navController.navigate(AppScreens.Combat.name) },
+                        .weight(1f)
+                        .aspectRatio(1.4f),
+                    onClick = { navController.navigate(AppScreens.Combat.name) }
                 )
 
                 ImageButton(
                     imageRes = R.drawable.button_clan,
                     contentDescription = "Clan / Chat",
                     modifier = Modifier
-                        .width(120.dp)
-                        .height(90.dp),
-                    onClick = { navController.navigate(AppScreens.Chat.name) },
+                        .weight(1f)
+                        .aspectRatio(1.4f),
+                    onClick = { navController.navigate(AppScreens.Chat.name) }
                 )
             }
+
         }
     }
 }

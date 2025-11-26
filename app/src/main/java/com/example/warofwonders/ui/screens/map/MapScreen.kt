@@ -2,7 +2,6 @@ package com.example.warofwonders.ui.screens.map
 
 import android.Manifest
 import android.app.Activity
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -52,7 +51,6 @@ import coil.compose.AsyncImage
 import com.example.warofwonders.ui.components.AlertDialogPopup
 import com.example.warofwonders.ui.screens.map.components.TextFieldSearch
 import com.example.warofwonders.ui.shared.utils.shouldShowPermissionRationale
-import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -64,6 +62,8 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.example.warofwonders.R
+import com.example.warofwonders.ui.navigation.AppScreens
+import com.example.warofwonders.ui.screens.map.components.ClanInfoBox
 import com.example.warofwonders.ui.screens.map.components.CreatureAlert
 import com.example.warofwonders.ui.screens.map.components.FloatingButton
 import com.example.warofwonders.ui.screens.map.components.FriendsBottomSheet
@@ -161,11 +161,6 @@ fun MapScreen(
     }
 }
 
-
-
-
-
-
 @Composable
 fun MapScreenContent(
     uiState: MapUiState,
@@ -195,6 +190,8 @@ fun MapScreenContent(
     }
 
     var showFriendsModal by remember { mutableStateOf(false) }
+    var mostrarClanInfo by remember { mutableStateOf(false) }
+    var mostrarMiembrosClan by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.cameraTarget) {
         uiState.cameraTarget?.let { target ->
@@ -216,6 +213,8 @@ fun MapScreenContent(
             onMapClick = {
                 onMapClick()
                 viewModel.stopSelectedFriendListener()
+                mostrarMiembrosClan = false
+                viewModel.cerrarClanInfo()
             },
             onMapLongClick = { pos -> onMapLongClick(pos) }
         ) {
@@ -275,7 +274,12 @@ fun MapScreenContent(
                     strokeWidth = 3f,
                     clickable = true,
                     onClick = {
-                        Toast.makeText(context, clan.nombre, Toast.LENGTH_SHORT).show()
+                        val clan = uiState.clans.find { it.id == clan.id }
+                        if (clan != null) {
+                            viewModel.seleccionarClan(clan)
+                            mostrarClanInfo = true
+                            mostrarMiembrosClan = false
+                        }
                     }
                 )
             }
@@ -293,16 +297,36 @@ fun MapScreenContent(
                 )
             }
 
-            // Mostrar marcadores para usuarios cercanos (incluye NPCs simulados)
-            uiState.nearbyUsers.forEach { mu ->
-                val lat = mu.lastLocation.latitude
-                val lng = mu.lastLocation.longitude
-                if (!lat.isNaN() && !lng.isNaN()) {
-                    Marker(
-                        state = rememberUpdatedMarkerState(position = LatLng(lat, lng)),
-                        title = mu.displayName ?: "Jugador",
-                        snippet = mu.clanId
-                    )
+            uiState.selectedFriendMarker.let { friend ->
+                Marker(
+                    state = rememberUpdatedMarkerState(
+                        position = LatLng(friend.latitude ?: 0.0, friend.longitude ?: 0.0)
+                    ),
+                    title = "${friend.name} ${friend.lastname}",
+                    snippet = friend.email,
+                    icon = bitmapDescriptorFromVector(context, R.drawable.gemaamazul, maxDp = 28f)
+                )
+            }
+
+            if (mostrarMiembrosClan && uiState.clanSeleccionado != null) {
+                val clanId = uiState.clanSeleccionado.id
+                val iconoMiembro = if (clanId == "Teusaquilloamigos") {
+                    bitmapDescriptorFromVector(context, R.drawable.gemaazul, maxDp = 28f)
+                } else {
+                    bitmapDescriptorFromVector(context, R.drawable.gemanaranja, maxDp = 28f)
+                }
+
+                uiState.clanMiembrosList.forEach { member ->
+                    if (member.active) {
+                        Marker(
+                            state = rememberUpdatedMarkerState(
+                                position = LatLng(member.latitude ?: 0.0, member.longitude ?: 0.0)
+                            ),
+                            title = "${member.name} ${member.lastname}",
+                            snippet = member.email,
+                            icon = iconoMiembro
+                        )
+                    }
                 }
             }
         }
@@ -371,8 +395,6 @@ fun MapScreenContent(
             )
         }
 
-        // Mostrar botón de atacar si el jugador está dentro del territorio de otro clan
-        // o si hay usuarios cercanos (proximidad PvP)
         if (uiState.insideEnemyTerritory || uiState.nearbyUsers.isNotEmpty()) {
             Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                 Button(onClick = { viewModel.attackNearestEnemy() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB00020), contentColor = Color.White)) {
@@ -395,7 +417,20 @@ fun MapScreenContent(
                 }
             )
         }
+
+        if (mostrarClanInfo && uiState.clanSeleccionado != null) {
+            ClanInfoBox(
+                clan = uiState.clanSeleccionado,
+                members = uiState.clanMiembrosList,
+                onShowMembers = {
+                    mostrarClanInfo = false
+                    mostrarMiembrosClan = true
+                },
+                onClose = { viewModel.cerrarClanInfo() }
+            )
+        }
     }
+
 
     if (uiState.alreadyOwnedCreature) {
         Box(

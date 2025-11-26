@@ -61,6 +61,7 @@ class MapViewModel(
     private var friendsRefForListener: DatabaseReference? = null
     private val friendChildListeners = mutableMapOf<String, ValueEventListener>()
     private var selectedFriendListener: ValueEventListener? = null
+    private var clanMembersListeners = mutableMapOf<String, ValueEventListener>()
 
     private var criaturasDisponibles: List<Criatura> = emptyList()
     private var recursosDisponibles: List<Recurso> = emptyList()
@@ -84,11 +85,102 @@ class MapViewModel(
         }
     }
 
+    fun seleccionarClan(clan: ClanData) {
+        _uiState.update {
+            it.copy(
+                clanSeleccionado = clan,
+            )
+        }
+
+        cargarMiembrosClanRealtime(clan)
+    }
+
+    fun cerrarClanInfo() {
+        clanMembersListeners.forEach { (uid, listener) ->
+            realtimeDB.child("users").child(uid).removeEventListener(listener)
+        }
+        clanMembersListeners.clear()
+
+        _uiState.update {
+            it.copy(
+                clanSeleccionado = null,
+                clanMiembrosList = emptyList()
+            )
+        }
+    }
+
+    fun cargarMiembrosClanRealtime(clan: ClanData) {
+        clanMembersListeners.forEach { (uid, listener) ->
+            realtimeDB.child("users").child(uid).removeEventListener(listener)
+        }
+        clanMembersListeners.clear()
+
+        val miembrosIds = clan.miembros.keys.toList()
+        if (miembrosIds.isEmpty()) {
+            _uiState.update { it.copy(clanMiembrosList = emptyList()) }
+            return
+        }
+
+        val listaMiembros = mutableListOf<Friend>()
+
+        miembrosIds.forEach { uid ->
+            val userRef = realtimeDB.child("users").child(uid)
+
+            val listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val name = snapshot.child("name").getValue(String::class.java) ?: ""
+                    val lastname = snapshot.child("lastname").getValue(String::class.java) ?: ""
+                    val email = snapshot.child("email").getValue(String::class.java) ?: ""
+                    val profileImage = snapshot.child("profileImage").getValue(String::class.java)
+                    val active = snapshot.child("active").getValue(Boolean::class.java) ?: false
+
+                    val latitude = snapshot.child("lastLocation/latitude").getValue(Double::class.java)
+                    val longitude = snapshot.child("lastLocation/longitude").getValue(Double::class.java)
+
+                    val friend = Friend(
+                        uid = uid,
+                        name = name,
+                        lastname = lastname,
+                        email = email,
+                        profileImage = profileImage,
+                        active = active,
+                        latitude = latitude,
+                        longitude = longitude
+                    )
+
+                    val index = listaMiembros.indexOfFirst { it.uid == uid }
+                    if (index >= 0) {
+                        listaMiembros[index] = friend
+                    } else {
+                        listaMiembros.add(friend)
+                    }
+
+                    _uiState.update { it.copy(clanMiembrosList = listaMiembros.toList()) }
+                }
+
+                override fun onCancelled(error: DatabaseError) {}
+            }
+
+            userRef.addValueEventListener(listener)
+            clanMembersListeners[uid] = listener
+        }
+    }
+
     private fun observarClanesRealtime() {
         clanesDb.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val lista = snapshot.children.mapNotNull { it.getValue(ClanData::class.java) }
-                _uiState.update { it.copy(clans = lista) }
+
+                _uiState.update { state ->
+                    val clanActual = state.clanSeleccionado
+                    val clanActualizado =
+                        clanActual?.id?.let { id -> lista.find { it.id == id } }
+
+                    state.copy(
+                        clans = lista,
+                        clanSeleccionado = clanActualizado,
+                    )
+                }
             }
 
             override fun onCancelled(error: DatabaseError) {}
@@ -661,11 +753,7 @@ class MapViewModel(
     }
 
 
-    ////////----combates/////
 
-    fun clearEncounter() {
-        _uiState.update { it.copy(encounterAttackerId = null, encounterDefenderId = null) }
-    }
 
 
 
