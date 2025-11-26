@@ -5,7 +5,6 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -21,72 +20,46 @@ import android.content.pm.PackageManager
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     companion object {
-        private const val CHANNEL_ID = "friend_requests_channel"
-        private const val TAG = "MyFCM"
+        private const val CHANNEL_ID = "default_channel"
     }
 
     override fun onCreate() {
         super.onCreate()
-        Log.d(TAG, "Servicio MyFirebaseMessagingService creado")
         createNotificationChannel()
     }
 
     override fun onNewToken(token: String) {
         super.onNewToken(token)
-        Log.d(TAG, "onNewToken llamado, token=$token")
 
-        val currentUid = FirebaseAuth.getInstance().currentUser?.uid
-        Log.d(TAG, "onNewToken currentUid=$currentUid")
-
-        if (currentUid == null) {
-            Log.d(TAG, "onNewToken: no hay usuario logueado, NO se guarda token")
-            return
-        }
+        val currentUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
 
         FirebaseDatabase.getInstance()
             .reference.child("users")
             .child(currentUid)
             .child("fcmToken")
             .setValue(token)
-            .addOnSuccessListener {
-                Log.d(TAG, "onNewToken: token guardado correctamente en Realtime DB")
-            }
-            .addOnFailureListener { e ->
-                Log.e(TAG, "onNewToken: error guardando token en Realtime DB", e)
-            }
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
 
-        Log.d(TAG, "===============================")
-        Log.d(TAG, "onMessageReceived DISPARADO")
-        Log.d(TAG, "De: ${message.from}")
-        Log.d(TAG, "DATA RECIBIDO: ${message.data}")
-        Log.d(TAG, "===============================")
+        val titleFromData = message.data["title"]
+        val bodyFromData = message.data["body"]
 
-        // Ahora SIEMPRE usamos data (los payloads solo contienen data)
-        val title = message.data["title"] ?: "War of Wonders"
-        val body = message.data["body"] ?: "Notificación"
-
-        Log.d(TAG, "Procesando notificación -> title='$title', body='$body'")
+        val title = titleFromData ?: message.notification?.title ?: "War of Wonders"
+        val body = bodyFromData ?: message.notification?.body ?: "Notificación"
 
         showNotification(title, body)
     }
 
     private fun showNotification(title: String, body: String) {
-        Log.d(TAG, "showNotification: title='$title', body='$body'")
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             val hasPermission = ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.POST_NOTIFICATIONS
             ) == PackageManager.PERMISSION_GRANTED
 
-            Log.d(TAG, "showNotification: POST_NOTIFICATIONS granted=$hasPermission")
-
             if (!hasPermission) {
-                Log.d(TAG, "showNotification: NO hay permiso, no se muestra notificación")
                 return
             }
         }
@@ -113,7 +86,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             .build()
 
         val id = System.currentTimeMillis().toInt()
-        Log.d(TAG, "Notificación generada con id=$id")
 
         with(NotificationManagerCompat.from(this)) {
             notify(id, notification)
@@ -122,12 +94,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            Log.d(TAG, "createNotificationChannel llamado")
-
-            val name = "Solicitudes de amistad"
-            val descriptionText = "Notificaciones de amistad"
+            val name = "Notificaciones"
+            val descriptionText = "Notificaciones de la aplicación"
             val importance = NotificationManager.IMPORTANCE_HIGH
-
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
             }
@@ -135,8 +104,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             val notificationManager =
                 getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
-
-            Log.d(TAG, "createNotificationChannel: canal creado")
         }
     }
 }
