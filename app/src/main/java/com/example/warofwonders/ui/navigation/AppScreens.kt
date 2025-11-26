@@ -10,6 +10,7 @@ enum class AppScreens {
     Profile,
     Combat,
     Home,
+    FriendlyBattle,
     Inventory,
     Settings,
     Contacts,

@@ -37,6 +37,7 @@ import com.example.warofwonders.ui.screens.map.MapScreen
 import com.example.warofwonders.ui.screens.map.MapViewModel
 import com.example.warofwonders.ui.screens.settings.SettingsScreen
 import com.example.warofwonders.ui.screens.shop.ShopScreen
+import com.example.warofwonders.ui.screens.friendlybattle.FriendlyBattleScreen
 
 import com.example.warofwonders.ui.shared.GenericViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
@@ -135,6 +136,10 @@ fun NavGraph(
         composable(route = AppScreens.Combat.name) {
             // ruta sin argumentos
             CombatScreen(navController = navController, attackerId = null, defenderId = null)
+        }
+
+        composable(route = AppScreens.FriendlyBattle.name) {
+            FriendlyBattleScreen(navController = navController)
         }
 
         composable(route = AppScreens.Combat.name + "/{attackerId}/{defenderId}") { backStackEntry ->

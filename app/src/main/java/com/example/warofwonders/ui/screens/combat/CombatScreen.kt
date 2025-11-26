@@ -1,6 +1,7 @@
 package com.example.warofwonders.ui.screens.combat
 
 import androidx.compose.foundation.Image
+import coil.compose.AsyncImage
 import androidx.compose.foundation.clickable
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.foundation.layout.*
@@ -49,6 +50,7 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
 
     var selectedCriatura by remember { mutableStateOf<Criatura?>(null) }
     var selectionVisible by remember { mutableStateOf(true) }
+    var hasConfirmed by remember { mutableStateOf(false) }
 
     val currentUid = FirebaseAuth.getInstance().currentUser?.uid
 
@@ -61,11 +63,17 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
     val isLocalDefender = currentUid != null && currentUid == defenderId
     val selectionAllowed = isLocalAttacker || isLocalDefender
 
-    // Mostrar selector de criatura antes de iniciar combate
+    // Mostrar selector de criatura antes de iniciar combate y cargar preview de combatientes
     androidx.compose.runtime.LaunchedEffect(attackerId, defenderId) {
         // resetear selección cada vez que cambian los ids
         selectedCriatura = null
         selectionVisible = true
+        hasConfirmed = false
+        // cargar nombres/clanes/imagenes previas
+        if (attackerId != null && defenderId != null) {
+            combatViewModel.loadCombatantsPreview(attackerId, defenderId)
+            combatViewModel.startEncounterListener(attackerId, defenderId)
+        }
     }
 
     Box(Modifier.fillMaxSize()) {
@@ -101,10 +109,17 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                         .padding(start = 10.dp, top = 8.dp),
                     horizontalAlignment = Alignment.Start
                 ) {
-                    TopNameLine(
-                        title = attacker?.name ?: "User #11",
-                        subtitle = attacker?.clan ?: "teusaquillo amigos"
-                    )
+                    // Mostrar imagen de criatura y nombre/clan
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val atkImage = if (selectionVisible && selectedCriatura != null && isLocalAttacker) selectedCriatura?.imagen else attacker?.creatureImage
+                        if (!atkImage.isNullOrBlank()) {
+                            AsyncImage(model = atkImage, contentDescription = "Atacante criatura", modifier = Modifier.size(64.dp).padding(end = 8.dp), contentScale = ContentScale.Crop)
+                        }
+                        TopNameLine(
+                            title = attacker?.name ?: "User #11",
+                            subtitle = attacker?.clan ?: "teusaquillo amigos"
+                        )
+                    }
                     // mostrar barra de vida y texto numérico
                     HealthBar(current = uiState.attackerHp ?: attacker?.maxHealth ?: 0, max = attacker?.maxHealth ?: 0)
                     Text(text = "HP: ${uiState.attackerHp ?: attacker?.maxHealth ?: 0} / ${attacker?.maxHealth ?: 0}", color = Color.White, fontSize = 12.sp)
@@ -117,10 +132,16 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                         .padding(end = 10.dp, top = 8.dp),
                     horizontalAlignment = Alignment.End
                 ) {
-                    TopNameLine(
-                        title = defender?.name ?: "User #18",
-                        subtitle = defender?.clan ?: "los piratas"
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.End) {
+                        TopNameLine(
+                            title = defender?.name ?: "User #18",
+                            subtitle = defender?.clan ?: "los piratas"
+                        )
+                        val defImage = if (selectionVisible && selectedCriatura != null && isLocalDefender) selectedCriatura?.imagen else defender?.creatureImage
+                        if (!defImage.isNullOrBlank()) {
+                            AsyncImage(model = defImage, contentDescription = "Defensor criatura", modifier = Modifier.size(64.dp).padding(start = 8.dp), contentScale = ContentScale.Crop)
+                        }
+                    }
                     HealthBar(current = uiState.defenderHp ?: defender?.maxHealth ?: 0, max = defender?.maxHealth ?: 0)
                     Text(text = "HP: ${uiState.defenderHp ?: defender?.maxHealth ?: 0} / ${defender?.maxHealth ?: 0}", color = Color.White, fontSize = 12.sp)
                 }
@@ -135,7 +156,7 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                         Card(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
-                                .padding(16.dp),
+                                .padding(bottom = 16.dp),
                             shape = RoundedCornerShape(12.dp),
                             colors = CardDefaults.cardColors(containerColor = Color(0xFF2E2E2E))
                         ) {
@@ -159,7 +180,8 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                                             val isSelected = selectedCriatura?.id == criatura.id
                                             Card(
                                                 modifier = Modifier
-                                                    .size(120.dp)
+                                                    .width(150.dp)
+                                                    .height(170.dp)
                                                     .clickable { selectedCriatura = criatura },
                                                 shape = RoundedCornerShape(8.dp),
                                                 border = if (isSelected) BorderStroke(2.dp, Color.Yellow) else null,
@@ -168,36 +190,52 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                                                 )
                                             ) {
                                                 Column(modifier = Modifier.padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                                                    Text(criatura.nombre, color = Color.White)
-                                                    Spacer(Modifier.height(4.dp))
-                                                    Text("HP: ${criatura.salud}", color = Color.White)
-                                                    Text("DMG: ${criatura.dano}", color = Color.White)
+                                                    if (!criatura.imagen.isNullOrBlank()) {
+                                                        AsyncImage(model = criatura.imagen, contentDescription = criatura.nombre, modifier = Modifier.size(72.dp), contentScale = ContentScale.Crop)
+                                                        Spacer(Modifier.height(8.dp))
+                                                    }
+                                                    Text(criatura.nombre, color = Color.White, fontSize = 13.sp, maxLines = 1)
+                                                    Spacer(Modifier.height(6.dp))
+                                                    Text("HP: ${criatura.salud}", color = Color.White, fontSize = 12.sp)
+                                                    Text("DMG: ${criatura.dano}", color = Color.White, fontSize = 12.sp)
                                                 }
                                             }
                                         }
                                     }
                                     Spacer(Modifier.height(8.dp))
-                                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                        Button(onClick = {
-                                            // bloquear UI inmediatamente para evitar doble envio
-                                            selectionVisible = false
-                                            if (isLocalAttacker) {
-                                                combatViewModel.startCombatWithSelectedCreature(attackerId, defenderId, selectedCriatura)
-                                            } else if (isLocalDefender) {
-                                                combatViewModel.startCombatWithSelectedCreatureForDefender(attackerId, defenderId, selectedCriatura)
-                                            }
-                                        }, enabled = (selectedCriatura != null) && selectionAllowed && !uiState.isLoading) { Text("Iniciar combate") }
-                                        // El boton de cancelar se mueve a la parte inferior
-                                    }
+                                    // Eliminado el botón duplicado aquí para dejar solo el botón inferior
                                 }
                             }
                         }
                     }
-                    // (El estatus movido a la pantalla de abajo)
                 }
             }
 
+            // Fila central con las imágenes de las criaturas (aparecen solo cuando el combate ha iniciado)
+            if (uiState.isLoading) {
+                Box(modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp, bottom = 24.dp), contentAlignment = Alignment.Center) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(40.dp)) {
+                        val atkCenterImage = attacker?.creatureImage ?: (if (selectionVisible && selectedCriatura != null && isLocalAttacker) selectedCriatura?.imagen else null)
+                        if (!atkCenterImage.isNullOrBlank()) {
+                            AsyncImage(model = atkCenterImage, contentDescription = "Atacante criatura (centro)", modifier = Modifier.size(120.dp), contentScale = ContentScale.Crop)
+                        } else {
+                            Spacer(modifier = Modifier.size(120.dp))
+                        }
 
+                        val defCenterImage = defender?.creatureImage ?: (if (selectionVisible && selectedCriatura != null && isLocalDefender) selectedCriatura?.imagen else null)
+                        if (!defCenterImage.isNullOrBlank()) {
+                            AsyncImage(model = defCenterImage, contentDescription = "Defensor criatura (centro)", modifier = Modifier.size(120.dp), contentScale = ContentScale.Crop)
+                        } else {
+                            Spacer(modifier = Modifier.size(120.dp))
+                        }
+                    }
+                }
+            } else {
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+                    // (El estatus movido a la pantalla de abajo)
                     // Area inferior (Placeholders eliminados)
                     Column(
                         modifier = Modifier
@@ -216,14 +254,14 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Button(
                                         onClick = {
-                                            if (atk != null && def != null) {
-                                                combatViewModel.startCombat(atk, def)
-                                            }
+                                            // Confirmar la selección en Firebase y esperar al otro jugador
+                                            hasConfirmed = true
+                                            combatViewModel.confirmSelectionForEncounter(attackerId, defenderId, selectedCriatura)
                                         },
-                                        enabled = (atk != null && def != null) && !uiState.isLoading,
+                                        enabled = ((!uiState.isLoading) && !hasConfirmed && (((selectedCriatura != null) && selectionAllowed) || ((atk != null && def != null)))),
                                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2E7D32))
                                     ) {
-                                        Text(text = "Iniciar combate", color = Color.White)
+                                        Text(text = if (!hasConfirmed) "Confirmar y esperar" else "Esperando...", color = Color.White)
                                     }
 
                                     Button(onClick = { navController.popBackStack() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB00020))) {
@@ -242,10 +280,11 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
                         Spacer(Modifier.height(6.dp))
                     }
         }
-    }
-}
+        }
 
-@Composable
+    }
+
+    @Composable
 private fun CombatResultDisplay(result: com.example.warofwonders.data.model.CombatResult, combatViewModel: CombatViewModel, navController: NavController) {
     Box(
         modifier = Modifier
@@ -264,8 +303,9 @@ private fun CombatResultDisplay(result: com.example.warofwonders.data.model.Comb
                 fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(16.dp))
+            val winnerName = combatViewModel.getWinner()?.name ?: result.winnerId
             Text(
-                "${result.winnerId} gana!",
+                "${winnerName} gana!",
                 color = Color.Yellow,
                 fontSize = 18.sp
             )
@@ -295,17 +335,20 @@ private fun CombatResultDisplay(result: com.example.warofwonders.data.model.Comb
 
 @Composable
 private fun TopNameLine(title: String, subtitle: String) {
-    Text(
-        text = title,
-        color = Color.White,
-        fontSize = 13.sp,
-        fontWeight = FontWeight.Bold
-    )
-    Text(
-        text = subtitle,
-        color = Color.White,
-        fontSize = 11.sp
-    )
+    Column {
+        Text(
+            text = title,
+            color = Color.White,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = subtitle,
+            color = Color.White,
+            fontSize = 12.sp
+        )
+    }
 }
 
 @Composable

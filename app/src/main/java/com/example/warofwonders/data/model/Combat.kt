@@ -10,6 +10,10 @@ data class Combatant(
     val maxHealth: Int = 100,
     val resources: Int = 0 // monedas o las unidades de recursos que vayamos a usar para que el perdedor pierda
 )
+{
+    // Imagen de criatura
+    var creatureImage: String? = null
+}
 
 data class CombatResult(
     val winnerId: String,

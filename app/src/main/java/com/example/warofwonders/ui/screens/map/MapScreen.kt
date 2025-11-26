@@ -118,7 +118,8 @@ fun MapScreen(
         onPlaceTextFieldChange = { newText -> viewModel.updatePlaceQuery(newText) },
         onSearchPlace = { newQuery -> viewModel.searchPlaceQuery(newQuery) },
         onRequestPermission = {
-            if (shouldShowRequestPermissionRationale(context as Activity, locationPermission)) {
+            val activity = context as? Activity
+            if (activity != null && shouldShowRequestPermissionRationale(activity, locationPermission)) {
                 showRationale = true
             } else {
                 permissionLauncher.launch(locationPermission)
@@ -396,8 +397,20 @@ fun MapScreenContent(
         }
 
         if (uiState.insideEnemyTerritory || uiState.nearbyUsers.isNotEmpty()) {
-            Column(modifier = Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Button(onClick = { viewModel.attackNearestEnemy() }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB00020), contentColor = Color.White)) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = 24.dp),
+                contentAlignment = Alignment.BottomCenter
+            ) {
+                Button(
+                    onClick = { viewModel.attackNearestEnemy() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFB00020),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
                     Text(text = "Atacar")
                 }
             }

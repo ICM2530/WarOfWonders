@@ -18,10 +18,13 @@ fun bitmapDescriptorFromVector(context: Context, vectorResId: Int, maxDp: Float)
     val density = context.resources.displayMetrics.density
     val maxPx = (maxDp * density).toInt()
 
-    val vectorDrawable = androidx.core.content.ContextCompat.getDrawable(context, vectorResId)!!
+    val vectorDrawable = androidx.core.content.ContextCompat.getDrawable(context, vectorResId)
+        ?: return com.google.android.gms.maps.model.BitmapDescriptorFactory.defaultMarker()
 
-    val intrinsicWidth = vectorDrawable.intrinsicWidth
-    val intrinsicHeight = vectorDrawable.intrinsicHeight
+    var intrinsicWidth = vectorDrawable.intrinsicWidth
+    var intrinsicHeight = vectorDrawable.intrinsicHeight
+    if (intrinsicWidth <= 0) intrinsicWidth = (maxOf(1f, context.resources.displayMetrics.density * 24f)).toInt()
+    if (intrinsicHeight <= 0) intrinsicHeight = (maxOf(1f, context.resources.displayMetrics.density * 24f)).toInt()
     val scale = minOf(maxPx / intrinsicWidth.toFloat(), maxPx / intrinsicHeight.toFloat())
 
     val width = (intrinsicWidth * scale).toInt()

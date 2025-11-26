@@ -84,11 +84,11 @@ fun HomeScreen(navController: NavHostController,) {
 
                 ImageButton(
                     imageRes = R.drawable.button_battle,
-                    contentDescription = "Batalla",
+                    contentDescription = "Batalla amistosa",
                     modifier = Modifier
                         .weight(1f)
                         .aspectRatio(1.4f),
-                    onClick = { navController.navigate(AppScreens.Combat.name) }
+                    onClick = { navController.navigate(AppScreens.FriendlyBattle.name) }
                 )
 
                 ImageButton(

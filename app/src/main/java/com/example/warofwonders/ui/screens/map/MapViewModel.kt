@@ -169,7 +169,14 @@ class MapViewModel(
     private fun observarClanesRealtime() {
         clanesDb.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val lista = snapshot.children.mapNotNull { it.getValue(ClanData::class.java) }
+                val lista = snapshot.children.mapNotNull { child ->
+                    try {
+                        child.getValue(ClanData::class.java)
+                    } catch (e: Exception) {
+                        Log.w("MapViewModel", "Error deserializing clan from snapshot: ${e.message}")
+                        null
+                    }
+                }
 
                 _uiState.update { state ->
                     val clanActual = state.clanSeleccionado
@@ -781,7 +788,7 @@ class MapViewModel(
 
                 val currentUser = auth.currentUser ?: continue
                 val currentLocation = _uiState.value.currentLocation
-                val PVP_RANGE = 0.00018 // ~20 metros en grados (aproximado)
+                val PVP_RANGE = 0.00009 // ~10 metros en grados (aproximado) — reducido desde 0.00018
 
                 try {
                     // Leer todas las ubicaciones de usuarios
