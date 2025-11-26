@@ -10,12 +10,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.warofwonders.ui.model.Clan
 import com.example.warofwonders.ui.model.MyUserState
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 @Composable
 fun ClanScreen(
     viewModel: ClanViewModel,
-    onClanSelected: () -> Unit
+    onClanSelected: () -> Unit,
+    onBack: () -> Unit
 ) {
     val clanes by viewModel.clanes.collectAsState()
     val mensaje by viewModel.mensaje.collectAsState()
@@ -150,27 +156,29 @@ fun ClanScreen(
                     }
                 }
             }
-        }
+        } else {
+            // Buscar el clan en la lista de clanes cargada en el viewModel
+            val clan = clanes.find { it.id == u.clanid }
 
-        // -----------------------------------------------------------------
-        // YA TIENE CLAN
-        // -----------------------------------------------------------------
-        else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp)
-                    .verticalScroll(rememberScrollState())
-            ) {
-                Text(
-                    "Ya perteneces al clan:",
-                    style = MaterialTheme.typography.titleMedium
+            if (clan != null) {
+                ClanDetailScreen(
+                    clan = clan,
+                    currentUser = u,
+                    onBack = onBack
                 )
-                Text(
-                    u.clanid,
-                    style = MaterialTheme.typography.headlineMedium
-                )
+
+
+            } else {
+
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Clan no encontrado", style = MaterialTheme.typography.bodyMedium)
+                }
             }
         }
     }
-}
+
+    }
+
