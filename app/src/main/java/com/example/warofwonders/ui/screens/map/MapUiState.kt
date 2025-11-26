@@ -28,7 +28,7 @@ data class MapUiState(
 
     val isActive: Boolean = false,
     val friendsList: List<Friend> = emptyList(),
-    val selectedFriendMarker: Friend = Friend(),
+    val selectedFriendMarker: Friend? = null,
     val clans: List<ClanData> = emptyList(),
     val clanSeleccionado: ClanData? = null,
     val clanMiembrosList: List<Friend> = emptyList(),

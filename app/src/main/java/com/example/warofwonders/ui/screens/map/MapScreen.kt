@@ -292,7 +292,7 @@ fun MapScreenContent(
                 )
             }
 
-            uiState.selectedFriendMarker.let { friend ->
+            uiState.selectedFriendMarker?.let { friend ->
                 Marker(
                     state = rememberUpdatedMarkerState(
                         position = LatLng(friend.latitude ?: 0.0, friend.longitude ?: 0.0)
@@ -371,15 +371,6 @@ fun MapScreenContent(
             modifier = Modifier.align(Alignment.BottomEnd).padding(24.dp).wrapContentSize(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            FloatingButton(
-                onClick = { viewModel.toggleShowSavedInterestPoints() },
-                modifier = Modifier.size(62.dp),
-                icon = Icons.AutoMirrored.Filled.List,
-                contentDescription = "Mostrar/Ocultar puntos guardados",
-                contentColor = White,
-                backgroundImage = painterResource(id = R.drawable.chatbutton)
-            )
-
             FloatingButton(
                 onClick = {
                     showFriendsModal = true

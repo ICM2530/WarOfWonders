@@ -70,10 +70,7 @@ class MapViewModel(
     private var fakeUsers: MutableList<MapUser> = mutableListOf()
 
     init {
-        _uiState.update {
-            it.copy(currentLocation = LocationData(4.634243207620236, -74.06992472665623))
-        }
-
+        loadUserLastLocation()
         loadUserActiveState()
         observarClanesRealtime()
         loadCreaturesFromFirebaseRealtime()
@@ -88,6 +85,32 @@ class MapViewModel(
         }
     }
 
+    private fun loadUserLastLocation() {
+        val currentUser = auth.currentUser ?: return
+        val locationRef = realtimeDB.child("users/${currentUser.uid}/lastLocation")
+
+        locationRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val lat = snapshot.child("latitude").getValue(Double::class.java)
+                val lng = snapshot.child("longitude").getValue(Double::class.java)
+                val alt = snapshot.child("altitude").getValue(Double::class.java) ?: 0.0
+
+                if (lat != null && lng != null) {
+                    _uiState.update { state ->
+                        state.copy(
+                            currentLocation = LocationData(lat, lng, alt),
+                            cameraTarget = LatLng(lat, lng)
+                        )
+                    }
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("MapViewModel", "Error cargando lastLocation: ${error.message}")
+            }
+        })
+    }
+
     fun saveSelectedInterestPoint(point: InterestPointData) {
         jsonManager.saveInterestPoint(point)
     }
@@ -95,15 +118,6 @@ class MapViewModel(
     private fun loadSavedInterestPoints() {
         val savedPoints = jsonManager.readInterestPoints()
         _uiState.update { it.copy(interestPoint = savedPoints) }
-    }
-
-    fun toggleShowSavedInterestPoints() {
-        val currentlyEmpty = _uiState.value.interestPoint.isEmpty()
-        if (currentlyEmpty) {
-            loadSavedInterestPoints()
-        } else {
-            _uiState.update { it.copy(interestPoint = emptyList()) }
-        }
     }
 
     fun visitPoi() {
