@@ -1,5 +1,6 @@
 package com.example.warofwonders.ui.screens.clan
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -9,7 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.warofwonders.R
 import com.example.warofwonders.ui.model.Clan
 import com.example.warofwonders.ui.model.MyUserState
 import com.google.firebase.database.DataSnapshot
@@ -65,120 +69,132 @@ fun ClanScreen(
         return
     }
 
-    // -----------------------------------------------------------------
-    // Pantalla principal
-    // -----------------------------------------------------------------
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
 
-        if (mensaje.isNotEmpty()) {
-            Text(
-                text = mensaje,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyLarge
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-        }
+        // FONDO DE LA TIENDA
+        Image(
+            painter = painterResource(id = R.drawable.fondotienda),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
 
         // -----------------------------------------------------------------
-        // NO TIENE CLAN
+        // Pantalla principal
         // -----------------------------------------------------------------
-        if (u.clanid.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
 
-            Text(
-                "No perteneces a un clan",
-                style = MaterialTheme.typography.headlineSmall
-            )
+                .padding(16.dp),
 
-            Spacer(modifier = Modifier.height(20.dp))
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-
-                Button(
-                    onClick = { creandoClan = true },
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text("Crear Clan")
-                }
+            if (mensaje.isNotEmpty()) {
+                Text(
+                    text = mensaje,
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Spacer(modifier = Modifier.height(10.dp))
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            // -----------------------------------------------------------------
+            // NO TIENE CLAN
+            // -----------------------------------------------------------------
+            if (u.clanid.isEmpty()) {
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
+                Text(
+                    "No perteneces a un clan",
+                    style = MaterialTheme.typography.headlineSmall
+                )
 
-                items(clanes) { clan ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        elevation = CardDefaults.cardElevation(4.dp)
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+
+                    Button(
+                        onClick = { creandoClan = true },
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Crear Clan")
+                    }
+                }
 
-                            Text(
-                                clan.nombre,
-                                style = MaterialTheme.typography.titleMedium
-                            )
+                Spacer(modifier = Modifier.height(20.dp))
 
-                            Spacer(modifier = Modifier.height(4.dp))
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
 
-                            Text(
-                                clan.descripcion,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                    items(clanes) { clan ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            elevation = CardDefaults.cardElevation(4.dp)
+                        ) {
+                            Column(modifier = Modifier.padding(16.dp)) {
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    clan.nombre,
+                                    style = MaterialTheme.typography.titleMedium
+                                )
 
-                            Text(
-                                "Miembros: ${clan.miembros.size}",
-                                style = MaterialTheme.typography.bodySmall
-                            )
+                                Spacer(modifier = Modifier.height(4.dp))
 
-                            Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    clan.descripcion,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
 
-                            Button(
-                                onClick = { viewModel.unirseAClan(clan, u) },
-                                modifier = Modifier.align(Alignment.End)
-                            ) {
-                                Text("Unirse")
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Text(
+                                    "Miembros: ${clan.miembros.size}",
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Button(
+                                    onClick = { viewModel.unirseAClan(clan, u) },
+                                    modifier = Modifier.align(Alignment.End)
+                                ) {
+                                    Text("Unirse")
+                                }
                             }
                         }
                     }
                 }
-            }
-        } else {
-            // Buscar el clan en la lista de clanes cargada en el viewModel
-            val clan = clanes.find { it.id == u.clanid }
-
-            if (clan != null) {
-                ClanDetailScreen(
-                    clan = clan,
-                    currentUser = u,
-                    onBack = onBack
-                )
-
-
             } else {
+                // Buscar el clan en la lista de clanes cargada en el viewModel
+                val clan = clanes.find { it.id == u.clanid }
 
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("Clan no encontrado", style = MaterialTheme.typography.bodyMedium)
+                if (clan != null) {
+                    ClanDetailScreen(
+                        clan = clan,
+                        currentUser = u,
+                        onBack = onBack
+                    )
+
+
+                } else {
+
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("Clan no encontrado", style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
             }
         }
-    }
 
-}
+    }}
 

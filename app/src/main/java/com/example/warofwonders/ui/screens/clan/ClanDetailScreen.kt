@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.component1
 import androidx.core.graphics.component2
@@ -73,7 +76,11 @@ fun ClanDetailScreen(
         // -----------------------------
         Card(
             modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = Color(0xFFFFCBA3)
+            ),
             elevation = CardDefaults.cardElevation(6.dp)
+
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
@@ -165,62 +172,66 @@ fun ClanDetailScreen(
 
         // -----------------------------
         // Botón Volver
-        // -----------------------------
         Button(
             onClick = onBack,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFB68047))
         ) {
             Text("Volver")
         }
-    }
 
-    // -----------------------------
-    // Dialogs para acciones
-    // -----------------------------
-    if (dialogUsuario != null && dialogAccion != null) {
-        AlertDialog(
-            onDismissRequest = { dialogUsuario = null; dialogAccion = null },
-            title = {
-                Text(text = "Acciones para ${dialogUsuario!!.name}")
-            },
-            text = {
-                when (dialogAccion) {
-                    "lider" -> Text("Puedes ascender, descender o expulsar a este miembro.")
-                    "colider" -> Text("Puedes ascender a este miembro a colider.")
-                    "salir" -> Text("¿Deseas salir del clan?")
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    dialogUsuario?.let { usuario ->
-                        when (dialogAccion) {
-                            "lider" -> {
-                                // Aquí pones funciones de ascender, descender o expulsar
-                            }
-                            "colider" -> {
-                                db.child("users").child(usuario.id).child("clanRole")
-                                    .setValue("colider")
-                            }
-                            "salir" -> {
-                                // Eliminar usuario del clan
-                                db.child("clanes").child(clan.id).child("miembros")
-                                    .child(usuario.id).removeValue()
-                                db.child("users").child(usuario.id).child("clanid").setValue("")
-                                db.child("users").child(usuario.id).child("clanRole").setValue("")
+
+        // -----------------------------
+        // Dialogs para acciones
+        // -----------------------------
+        if (dialogUsuario != null && dialogAccion != null) {
+            AlertDialog(
+                onDismissRequest = { dialogUsuario = null; dialogAccion = null },
+                title = {
+                    Text(text = "Acciones para ${dialogUsuario!!.name}")
+                },
+                text = {
+                    when (dialogAccion) {
+                        "lider" -> Text("Puedes ascender, descender o expulsar a este miembro.")
+                        "colider" -> Text("Puedes ascender a este miembro a colider.")
+                        "salir" -> Text("¿Deseas salir del clan?")
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        dialogUsuario?.let { usuario ->
+                            when (dialogAccion) {
+                                "lider" -> {
+                                    // Aquí pones funciones de ascender, descender o expulsar
+                                }
+
+                                "colider" -> {
+                                    db.child("users").child(usuario.id).child("clanRole")
+                                        .setValue("colider")
+                                }
+
+                                "salir" -> {
+                                    // Eliminar usuario del clan
+                                    db.child("clanes").child(clan.id).child("miembros")
+                                        .child(usuario.id).removeValue()
+                                    db.child("users").child(usuario.id).child("clanid").setValue("")
+                                    db.child("users").child(usuario.id).child("clanRole")
+                                        .setValue("")
+                                }
                             }
                         }
+                        dialogUsuario = null
+                        dialogAccion = null
+                    }) {
+                        Text("Confirmar")
                     }
-                    dialogUsuario = null
-                    dialogAccion = null
-                }) {
-                    Text("Confirmar")
+                },
+                dismissButton = {
+                    Button(onClick = { dialogUsuario = null; dialogAccion = null }) {
+                        Text("Cancelar")
+                    }
                 }
-            },
-            dismissButton = {
-                Button(onClick = { dialogUsuario = null; dialogAccion = null }) {
-                    Text("Cancelar")
-                }
-            }
-        )
+            )
+        }
     }
 }
