@@ -464,15 +464,69 @@ class CombatViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
-                // Guardar selection id (o null) y marcar confirmed
+                // Guardar selection id (o null) y marcar confirmed en una sola actualización atómica
                 val selectionId = selectedCriatura?.id
-                ref.child("selections").child(uid).setValue(selectionId)
-                ref.child("confirmed").child(uid).setValue(true)
-                ref.child("confirmedAt").child(uid).setValue(ServerValue.TIMESTAMP)
-                Log.d("CombatVM", "Wrote selection for $uid -> $selectionId in $key")
+                val updates: MutableMap<String, Any?> = mutableMapOf()
+                updates["selections/$uid"] = selectionId
+                updates["confirmed/$uid"] = true
+                updates["confirmedAt/$uid"] = ServerValue.TIMESTAMP
+
+                ref.updateChildren(updates as Map<String, Any>).addOnSuccessListener {
+                    Log.d("CombatVM", "Wrote selection for $uid -> $selectionId in $key (atomic)")
+                }.addOnFailureListener { ex ->
+                    Log.w("CombatVM", "Failed atomic write selection for $uid in $key: ${ex.message}")
+                }
             } catch (e: Exception) {
                 Log.e("CombatVM", "confirmSelectionForEncounter error: ${e.message}")
             }
+        }
+    }
+
+    /**
+     * Intentar abandonar/limpiar el encuentro para el usuario local.
+     * Borra la selección/confirmed/confirmedAt del usuario y elimina
+     * el nodo si queda vacío. Ejecuta una transacción segura.
+     */
+    fun leaveEncounter(attackerId: String?, defenderId: String?) {
+        if (attackerId == null || defenderId == null) return
+        val key = encounterKeyFor(attackerId, defenderId)
+        val ref = encountersRef.child(key)
+        val myUid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+
+        try {
+            ref.runTransaction(object : Transaction.Handler {
+                override fun doTransaction(currentData: MutableData): Transaction.Result {
+                    if (currentData.value == null) return Transaction.success(currentData)
+
+                    // Eliminar keys del usuario
+                    currentData.child("selections").child(myUid).value = null
+                    currentData.child("confirmed").child(myUid).value = null
+                    currentData.child("confirmedAt").child(myUid).value = null
+
+                    // Si no quedan children relevantes, borrar todo el nodo
+                    val hasSelections = currentData.child("selections").hasChildren()
+                    val hasConfirmed = currentData.child("confirmed").hasChildren()
+                    val hasProgress = currentData.child("progress").hasChildren()
+                    val hasResult = currentData.child("result").hasChildren()
+                    val started = currentData.child("started").getValue(Boolean::class.java) ?: false
+
+                    if (!hasSelections && !hasConfirmed && !hasProgress && !hasResult && !started) {
+                        currentData.value = null
+                    }
+
+                    return Transaction.success(currentData)
+                }
+
+                override fun onComplete(error: DatabaseError?, committed: Boolean, currentData: DataSnapshot?) {
+                    if (error != null) {
+                        Log.w("CombatVM", "leaveEncounter transaction failed: ${error.message}")
+                    } else {
+                        Log.d("CombatVM", "leaveEncounter completed for $myUid on $key")
+                    }
+                }
+            })
+        } catch (e: Exception) {
+            Log.w("CombatVM", "leaveEncounter exception: ${e.message}")
         }
     }
 
@@ -539,7 +593,18 @@ class CombatViewModel : ViewModel() {
         return combatant
     }
 
-    fun resetCombat() { _uiState.value = CombatUIState() }
+    fun resetCombat() {
+        // Intentar limpiar cualquier rastro en encounters para este usuario
+        try {
+            val attackerId = _uiState.value.attacker?.id
+            val defenderId = _uiState.value.defender?.id
+            if (!attackerId.isNullOrBlank() && !defenderId.isNullOrBlank()) {
+                leaveEncounter(attackerId, defenderId)
+            }
+        } catch (_: Exception) {}
+
+        _uiState.value = CombatUIState()
+    }
 
     fun getWinner(): Combatant? {
         val result = _uiState.value.result ?: return null

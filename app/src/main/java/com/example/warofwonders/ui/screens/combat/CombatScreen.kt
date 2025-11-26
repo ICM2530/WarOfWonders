@@ -14,6 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.clickable
@@ -57,6 +58,13 @@ fun CombatScreen(navController: NavController, attackerId: String?, defenderId: 
     // Cargar inventario al entrar en la pantalla
     androidx.compose.runtime.LaunchedEffect(Unit) {
         inventarioVM.cargarInventario()
+    }
+
+    // Limpiar estado en disposal: si el usuario abandona la pantalla, intentar resetear/limpiar el encounter
+    DisposableEffect(Unit) {
+        onDispose {
+            combatViewModel.resetCombat()
+        }
     }
 
     val isLocalAttacker = currentUid != null && currentUid == attackerId
