@@ -25,6 +25,8 @@ import com.example.warofwonders.ui.model.MyUserState
 import com.example.warofwonders.ui.navigation.AppScreens
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.delay
 
 @Composable
 fun ChatScreen(
@@ -49,11 +51,7 @@ fun ChatScreen(
     }
 
     val clanSubName = remember(clanData?.descripcion) {
-        if (!clanData?.descripcion.isNullOrBlank()) {
-            clanData.descripcion
-        } else {
-            "Amigos"
-        }
+        if (!clanData?.descripcion.isNullOrBlank()) clanData.descripcion else "Amigos"
     }
 
     val currentUserName = remember(currentUser.name, currentUser.lastName) {
@@ -87,9 +85,7 @@ private fun ChatScreenInternal(
     currentUserRole: String
 ) {
     val currentUserId = FirebaseAuth.getInstance().currentUser?.uid.orEmpty()
-
     val messages = remember { mutableStateListOf<ChatMessage>() }
-
     var newMessageText by remember { mutableStateOf("") }
 
     val chatRef = remember(clanId) {
@@ -99,34 +95,41 @@ private fun ChatScreenInternal(
             .child("chat")
     }
 
+    // Listener para cambios instantáneos de Firebase
     DisposableEffect(clanId) {
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val list = mutableListOf<ChatMessage>()
                 for (child in snapshot.children) {
                     val msg = child.getValue(ChatMessage::class.java)
-                    if (msg != null) {
-                        list.add(msg)
-                    }
+                    if (msg != null) list.add(msg)
                 }
                 messages.clear()
                 messages.addAll(list)
             }
-
-            override fun onCancelled(error: DatabaseError) {
-            }
+            override fun onCancelled(error: DatabaseError) {}
         }
-
         chatRef.addValueEventListener(listener)
+        onDispose { chatRef.removeEventListener(listener) }
+    }
 
-        onDispose {
-            chatRef.removeEventListener(listener)
+    // Refresco cada 5 segundos
+    LaunchedEffect(clanId) {
+        while (true) {
+            val snapshot = chatRef.get().await()
+            val list = mutableListOf<ChatMessage>()
+            for (child in snapshot.children) {
+                val msg = child.getValue(ChatMessage::class.java)
+                if (msg != null) list.add(msg)
+            }
+            messages.clear()
+            messages.addAll(list)
+            delay(5000) // 5 segundos
         }
     }
 
     fun sendMessage() {
         if (newMessageText.isBlank() || currentUserId.isBlank() || clanId.isBlank()) return
-
         val key = chatRef.push().key ?: return
         val message = ChatMessage(
             uid = currentUserId,
@@ -147,7 +150,6 @@ private fun ChatScreenInternal(
         )
 
         Column(modifier = Modifier.fillMaxSize()) {
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,12 +161,9 @@ private fun ChatScreenInternal(
                     contentDescription = "Chat frame",
                     modifier = Modifier
                         .fillMaxSize()
-                        .clickable {
-                            navController.navigate(AppScreens.Clan.name)
-                        },
+                        .clickable { navController.navigate(AppScreens.Clan.name) },
                     contentScale = ContentScale.FillBounds
                 )
-
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
@@ -203,9 +202,7 @@ private fun ChatScreenInternal(
                         contentDescription = "Close chat",
                         modifier = Modifier
                             .size(32.dp)
-                            .clickable(
-                                onClick = { navController.navigate(AppScreens.Home.name) }
-                            )
+                            .clickable { navController.navigate(AppScreens.Home.name) }
                     )
                 }
             }
@@ -252,9 +249,7 @@ private fun ChatScreenInternal(
                         BasicTextField(
                             value = newMessageText,
                             onValueChange = { newText ->
-                                if (newText.length <= 500) {
-                                    newMessageText = newText
-                                }
+                                if (newText.length <= 500) newMessageText = newText
                             },
                             textStyle = TextStyle(
                                 color = Color.Black,
@@ -302,7 +297,6 @@ fun ChatBubble(
     ) {
         Box(
             modifier = Modifier
-                // Ancho máximo razonable para que el texto se envuelva
                 .widthIn(min = 120.dp, max = 280.dp)
                 .wrapContentHeight(),
             contentAlignment = Alignment.Center
@@ -318,13 +312,12 @@ fun ChatBubble(
             )
 
             Column(
-                modifier = Modifier
-                    .padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 25.dp,
-                        bottom = 50.dp
-                    ),
+                modifier = Modifier.padding(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 25.dp,
+                    bottom = 50.dp
+                ),
                 horizontalAlignment = if (isCurrentUser) Alignment.End else Alignment.Start
             ) {
                 Text(
@@ -354,3 +347,4 @@ fun ChatBubble(
         }
     }
 }
+

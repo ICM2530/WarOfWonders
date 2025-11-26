@@ -2,6 +2,7 @@ package com.example.warofwonders.ui.screens.clan
 
 
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -10,10 +11,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.warofwonders.ui.model.MyUserState
-
+import com.example.warofwonders.R
 @Composable
 fun CreateClanScreen(
     user: MyUserState,
@@ -25,6 +29,21 @@ fun CreateClanScreen(
 
     var nombre by remember { mutableStateOf("") }
     var descripcion by remember { mutableStateOf("") }
+
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+
+    ) {
+
+        Image(
+            painter = painterResource(id = R.drawable.fondocontactos),
+            contentDescription = "Escenario bosque",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
+        )
+    }
 
     Column(
         modifier = Modifier
@@ -38,7 +57,8 @@ fun CreateClanScreen(
         // Título
         Text(
             text = "Crear Clan",
-            style = MaterialTheme.typography.headlineMedium
+            style = MaterialTheme.typography.headlineMedium,
+            color = Color.White
         )
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -57,7 +77,7 @@ fun CreateClanScreen(
         OutlinedTextField(
             value = nombre,
             onValueChange = { nombre = it },
-            label = { Text("Nombre del Clan") },
+            label = { Text("Nombre del Clan")},
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
@@ -99,7 +119,8 @@ fun CreateClanScreen(
         // Botón volver
         OutlinedButton(
             onClick = onBack,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+
         ) {
             Text("Volver")
         }

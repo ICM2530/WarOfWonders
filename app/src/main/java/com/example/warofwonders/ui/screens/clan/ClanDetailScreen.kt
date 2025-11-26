@@ -71,9 +71,7 @@ fun ClanDetailScreen(
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // -----------------------------
-        // Info del Clan
-        // -----------------------------
+
         Card(
             modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(
@@ -103,9 +101,7 @@ fun ClanDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // -----------------------------
-        // Lista de Miembros
-        // -----------------------------
+
         Text(
             text = "Miembros:",
             style = MaterialTheme.typography.titleMedium
@@ -170,8 +166,7 @@ fun ClanDetailScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // -----------------------------
-        // Botón Volver
+
         Button(
             onClick = onBack,
             modifier = Modifier.fillMaxWidth(),
