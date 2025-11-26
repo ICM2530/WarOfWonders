@@ -515,6 +515,10 @@ class MapViewModel(
         super.onCleared()
     }
 
+    fun clearEncounter() {
+        _uiState.update { it.copy(encounterAttackerId = null, encounterDefenderId = null) }
+    }
+
     //show alert
 
     fun showPressureCreatureAlert(show: Boolean) {
