@@ -164,9 +164,9 @@ fun ClanScreen(
                 ClanDetailScreen(
                     clan = clan,
                     currentUser = u,
-                    viewModel = viewModel,
                     onBack = onBack
                 )
+
 
             } else {
 
@@ -180,5 +180,5 @@ fun ClanScreen(
         }
     }
 
-    }
+}
 

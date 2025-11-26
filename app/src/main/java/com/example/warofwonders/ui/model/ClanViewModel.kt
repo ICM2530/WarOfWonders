@@ -224,37 +224,6 @@ class ClanViewModel : ViewModel() {
         }
     }
 
-    // --------------------------- Ascender usuario ---------------------------
-    fun ascender(usuario: MyUserState, clan: Clan) {
-        val currentRole = _currentUser.value?.clanRole ?: return
-
-        val nuevoRol = when (currentRole) {
-            "lider" -> when (usuario.clanRole) {
-                "miembro" -> "colider"
-                "colider" -> "lider"
-                else -> usuario.clanRole
-            }
-            "colider" -> if (usuario.clanRole == "miembro") "colider" else usuario.clanRole
-            else -> usuario.clanRole
-        }
-
-        usersRef.child(usuario.id).child("clanRole").setValue(nuevoRol)
-    }
-
-
-    // --------------------------- Expulsar usuario ---------------------------
-    fun expulsarUsuario(usuario: MyUserState, clan: Clan) {
-        db.child(clan.id).child("miembros").child(usuario.id).removeValue()
-        usersRef.child(usuario.id).child("clanid").setValue("")
-        usersRef.child(usuario.id).child("clanRole").setValue("")
-    }
-
-    // --------------------------- Salir del clan ---------------------------
-    fun salirse(usuario: MyUserState, clan: Clan) {
-        usersRef.child(usuario.id).child("clanid").setValue("")
-        usersRef.child(usuario.id).child("clanRole").setValue("")
-        db.child(clan.id).child("miembros").child(usuario.id).removeValue()
-    }
 
 
 
